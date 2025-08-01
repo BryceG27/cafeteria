@@ -59,8 +59,7 @@ async function onSubmit() {
                     One<span class="fw-normal">UI</span>
                 </Link>
                 <p class="text-white-75 me-xl-8 mt-2">
-                    Welcome to your amazing app. Feel free to login and start managing
-                    your projects and clients.
+                    Benvenuto sul portale della Mensa. Effettua il login per accedere agli ordini e alla configurazione
                 </p>
             </div>
         </div>
@@ -71,7 +70,7 @@ async function onSubmit() {
             <!-- <strong>{{ store.app.name + " " + store.app.version }}</strong>
                 &copy; {{ store.app.copyright }} -->
             </p>
-            <ul class="list list-inline mb-0 py-2">
+            <ul class="list list-inline mb-0 py-2" v-if="false">
                 <li class="list-inline-item">
                     <a class="text-white-75 fw-medium" href="javascript:void(0)"
                     >Legal</a
@@ -111,11 +110,11 @@ async function onSubmit() {
             <p class="mb-3">
                 <i class="fa fa-2x fa-circle-notch text-primary-light"></i>
             </p>
-            <h1 class="fw-bold mb-2">Sign In</h1>
+            <h1 class="fw-bold mb-2">Entra nel portale</h1>
             <p class="fw-medium text-muted">
-                Welcome, please login or
-                <Link :href="{ name: 'auth-signup3' }">sign up</Link>
-                for a new account.
+                Benvenuto, effettua il login oppure
+                <Link :href="route('profile.sign-in')">registrati</Link>
+                per creare un nuovo account.
             </p>
         </div>
         <!-- END Header -->
@@ -140,7 +139,7 @@ async function onSubmit() {
                         v-if="true"
                         class="invalid-feedback animated fadeIn"
                         >
-                        Please enter your email
+                        Inserisci una email
                     </div>
                 </div>
                 <div class="mb-4">
@@ -159,7 +158,7 @@ async function onSubmit() {
                     v-if="true"
                     class="invalid-feedback animated fadeIn"
                     >
-                    Please enter your password
+                    Inserisci una password
                 </div>
             </div>
             <div
@@ -170,13 +169,13 @@ async function onSubmit() {
                 :to="{ name: 'auth-reminder3' }"
                 class="text-muted fs-sm fw-medium d-block d-lg-inline-block mb-1"
                 >
-                Forgot Password?
+                Password dimenticata?
             </Link>
         </div>
         <div>
             <button type="submit" class="btn btn-lg btn-alt-primary">
                 <i class="fa fa-fw fa-sign-in-alt me-1 opacity-50"></i>
-                Sign In
+                Entra
             </button>
         </div>
     </div>

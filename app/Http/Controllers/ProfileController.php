@@ -60,4 +60,11 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    /**
+     * Register a new account
+     */
+    public function sign_in() {
+        
+    }
 }
