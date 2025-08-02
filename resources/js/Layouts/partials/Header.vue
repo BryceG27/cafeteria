@@ -108,15 +108,29 @@ onUnmounted(() => {
                       src="/assets/media/avatars/avatar10.jpg"
                       alt="Header Avatar"
                     />
-                    <p class="mt-2 mb-0 fw-medium">Administrator</p>
-                    <p class="mb-0 text-muted fs-sm fw-medium">.</p>
+                    <p class="mt-2 mb-0 fw-medium" v-text="$page.props.auth.user.user_group.name" />
+                    <p class="mb-0 text-muted fs-sm fw-medium" v-text="`${$page.props.auth.user.name} ${$page.props.auth.user.surname}`" />
                   </div>
 
-                  <div role="separator" class="dropdown-divider m-0"></div>
+                  <div role="separator" class="dropdown-divider m-0" />
                   <div class="p-2">
-                        <Link :href="route('logout')" method="post" as="button" class="dropdown-item d-flex align-items-center justify-content-between">
-                            <span class="fs-sm fw-medium">Log Out</span>
-                        </Link>
+                    <Link
+                      :href="route('profile.edit')"
+                      class="dropdown-item d-flex align-items-center justify-content-between"
+                    >
+                      <span class="fs-sm fw-medium">Modifica profilo</span>
+                    </Link>
+                  </div>
+                  <div role="separator" class="dropdown-divider m-0" />
+                  <div class="p-2">
+                    <Link 
+                      :href="route('logout')" 
+                      method="post" 
+                      as="button" 
+                      class="dropdown-item d-flex align-items-center justify-content-between"
+                    >
+                      <span class="fs-sm fw-medium" v-text="'Log Out'" />
+                    </Link>
                   </div>
                 </div>
               </div>

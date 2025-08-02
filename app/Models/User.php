@@ -56,4 +56,8 @@ class User extends Authenticatable
             'user_group_id' => 'required|exists:user_groups,id'
         ]);
     }
+
+    public function user_group() {
+        return $this->belongsTo(UserGroup::class);
+    }
 }
