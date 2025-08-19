@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { useTemplateStore } from "@/stores/template";
 
 import BaseNavigation from "@/Components/BaseNavigation.vue";
@@ -11,11 +11,15 @@ import { usePage } from "@inertiajs/vue3";
 
 // Grab menu navigation arrays
 import menu from "@/data/menu";
+import customer_menu from "@/data/customer-menu"
 import { Link } from "@inertiajs/vue3";
 
 const auth = usePage().props.auth
 
-let navigation = menu.main;
+const navigation = computed(() => {
+  return auth.user.user_group_id == 3 ? customer_menu.main : menu.main
+})
+// let navigation = menu.main;
 
 // Component properties
 defineProps({

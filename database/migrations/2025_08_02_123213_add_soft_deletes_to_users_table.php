@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignIdFor(\App\Models\UserGroup::class)->after('id')->constrained()->onCascdate(null);
+            $table->softDeletes();
         });
     }
 
@@ -22,8 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign('user_group_id');
-            $table->dropColumn('user_group_id');
+            $table->dropSoftDeletes();
         });
     }
 };

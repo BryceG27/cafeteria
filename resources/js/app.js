@@ -8,6 +8,8 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
+import PrimeVue from 'primevue/config';
+
 import BaseBlock from "@/Components/BaseBlock.vue";
 import BaseBackground from "@/Components/BaseBackground.vue";
 import BasePageHeading from "@/Components/BasePageHeading.vue";
@@ -22,6 +24,11 @@ createInertiaApp({
             .use(plugin)
             .use(ZiggyVue)
             .use(createPinia())
+            .use(PrimeVue, {
+                theme : {
+                    preset : 'lara',
+                }
+            })
             .component("BaseBlock", BaseBlock)
             .component("BaseBackground", BaseBackground)
             .component("BasePageHeading", BasePageHeading)

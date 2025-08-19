@@ -6,6 +6,7 @@ use App\Models\User;
 use Inertia\Inertia;
 use App\Models\UserGroup;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -14,13 +15,17 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with('user_group')->get();
+        $users = User::where('user_group_id', '>=', Auth::user()->user_group_id)->where('user_group_id', '<>', 3)->with('user_group')->get();
         $user_groups = UserGroup::all();
 
         return Inertia::render('Users/Index', [
             'users' => $users,
             'user_groups' => $user_groups
         ]);
+    }
+
+    public function show_customers() {
+        $customers = User::where('user_group_id', 3)->with('user_group')->get();
     }
 
     /**
