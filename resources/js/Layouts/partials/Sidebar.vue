@@ -10,14 +10,29 @@ import SimpleBar from "simplebar";
 import { usePage } from "@inertiajs/vue3";
 
 // Grab menu navigation arrays
-import menu from "@/data/menu";
+import superadmin_menu from "@/data/superadmin-menu";
+import admin_menu from "@/data/admin-menu";
 import customer_menu from "@/data/customer-menu"
 import { Link } from "@inertiajs/vue3";
 
 const auth = usePage().props.auth
 
 const navigation = computed(() => {
-  return auth.user.user_group_id == 3 ? customer_menu.main : menu.main
+  
+  switch (auth.user.user_group_id) {
+    case 1:
+      return superadmin_menu.main;
+
+    case 2:
+      return admin_menu.main;
+
+    case 3:
+      return customer_menu.main;
+  
+    default:
+      break;
+  }
+  return menu;
 })
 // let navigation = menu.main;
 

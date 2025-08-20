@@ -9,10 +9,14 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
 import PrimeVue from 'primevue/config';
+import Aura from '@primeuix/themes/aura';
 
 import BaseBlock from "@/Components/BaseBlock.vue";
 import BaseBackground from "@/Components/BaseBackground.vue";
 import BasePageHeading from "@/Components/BasePageHeading.vue";
+
+import SuccessMessage from "@/Components/SuccessMessage.vue";
+import ErrorMessage from "@/Components/ErrorMessage.vue";
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -25,9 +29,14 @@ createInertiaApp({
             .use(ZiggyVue)
             .use(createPinia())
             .use(PrimeVue, {
-                theme : {
-                    preset : 'lara',
-                }
+                theme: {
+                    preset: Aura,
+                    options: {
+                        prefix: 'p',
+                        darkModeSelector: '.my-app-dark',
+                        cssLayer: false
+                    }
+                },
             })
             .component("BaseBlock", BaseBlock)
             .component("BaseBackground", BaseBackground)

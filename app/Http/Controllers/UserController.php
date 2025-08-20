@@ -33,7 +33,12 @@ class UserController extends Controller
      */
     public function create()
     {
-        //
+        $user = new User();
+
+        return Inertia::render('Users/Create', [
+            'user' => $user,
+            'user_groups' => UserGroup::where('id', '>', 1)->get()
+        ]);
     }
 
     /**
@@ -57,7 +62,10 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        //
+        return Inertia::render('Users/Create', [
+            'user' => $user,
+            'user_groups' => UserGroup::where('id', '>', 1)->get()
+        ]);
     }
 
     /**
@@ -74,5 +82,13 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         //
+    }
+
+    public function toggle_active(User $user) {
+        $user->update([
+            'is_active' => !$user->is_active
+        ]);
+
+        return redirect()->back()->with('success', 'Stato utente aggiornato con successo.');
     }
 }

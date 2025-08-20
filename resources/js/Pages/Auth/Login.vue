@@ -46,7 +46,7 @@ async function onSubmit() {
 <template>
     <!-- Page Content -->
     <Head title="Login" />
-    <BaseBackground image="/assets/media/photos/photo28@2x.jpg">
+    <BaseBackground image="/assets/media/photos/photo29@2x.jpg">
         <div class="row g-0 bg-primary-dark-op">
             <!-- Meta Info Section -->
             <div
@@ -170,16 +170,16 @@ async function onSubmit() {
                                 </div>
                             </div>
                             <div
-                                class="d-flex justify-content-between align-items-center mb-4"
+                                class="d-flex justify-content-center align-items-center mb-4"
                             >
-                                <div>
+                                <!-- <div>
                                     <Link
-                                        :to="{ name: 'auth-reminder3' }"
+                                        :href="{ name: 'auth-reminder3' }"
                                         class="text-muted fs-sm fw-medium d-block d-lg-inline-block mb-1"
                                         >
                                         Password dimenticata?
                                     </Link>
-                                </div>
+                                </div> -->
                                 <div>
                                     <button type="submit" class="btn btn-lg btn-alt-primary">
                                         <i class="fa fa-fw fa-sign-in-alt me-1 opacity-50"></i>
