@@ -21,6 +21,11 @@ export default {
       icon : "fa fa-users"
     },
     {
+      name : "Clienti",
+      to : route('customers.index'),
+      icon : "fa fa-hand-holding-dollar"
+    },
+    {
       name: "Blocks",
       icon: "si si-energy",
       subActivePaths: "/backend/blocks",

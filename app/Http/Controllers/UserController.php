@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Models\UserGroup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -46,7 +47,12 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validate = User::validate($request);
+        $validate['password'] = Hash::make($validate['password']);
+
+        User::create($validate);
+
+        return redirect()->route('users.index')->with('message', 'Utente creato con successo.');
     }
 
     /**
@@ -62,7 +68,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return Inertia::render('Users/Create', [
+        return Inertia::render('Users/Edit', [
             'user' => $user,
             'user_groups' => UserGroup::where('id', '>', 1)->get()
         ]);
@@ -73,7 +79,15 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        //
+        $validate = User::validate($request);
+        if ($request->filled('password'))
+            $validate['password'] = Hash::make($validate['password']);
+        else
+            $validate['password'] = $user->password; // Keep the old password if not provided
+
+        $user->update($validate);
+
+        return redirect()->route('users.index')->with('message', 'Utente aggiornato con successo.');
     }
 
     /**

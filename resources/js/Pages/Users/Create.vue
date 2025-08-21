@@ -5,25 +5,29 @@ import { useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
 import UserForm from './Components/UserForm.vue';
 
-import InputText from "primevue/inputtext";
-import Dropdown from "primevue/dropdown";
-
 const props = defineProps({
     auth : Object,
     user : Array,
-    userGroups : Array,
+    user_groups : Array,
+    errors : Object,
 });
 
 const submit = () => {
-
+    form.post(route('users.store'), {
+        preserveScroll: true,
+        onSuccess: () => form.reset(),
+    });
 }
 
 const form = useForm({
+    id : props.user.id || null,
     name : props.user.name || '',
     surname : props.user.surname || '',
     email : props.user.email || '',
     user_group_id : props.user.user_group_id || 2, // Default to admin group
     is_active : props.user.is_active || 1, // Default to active
+    password : null,
+    password_confirmation : null,
 });
 
 </script>
@@ -52,8 +56,10 @@ const form = useForm({
 
                 <UserForm 
                     :form="form"
-                    :user-groups="userGroups"
+                    :user-groups="user_groups"
                     :auth="auth"
+                    :errors="errors"
+                    @submit="submit"
                 />
             </BaseBlock>
         </div>

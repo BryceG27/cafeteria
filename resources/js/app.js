@@ -41,6 +41,8 @@ createInertiaApp({
             .component("BaseBlock", BaseBlock)
             .component("BaseBackground", BaseBackground)
             .component("BasePageHeading", BasePageHeading)
+            .component("SuccessMessage", SuccessMessage)
+            .component("ErrorMessage", ErrorMessage)
             .mount(el);
     },
     progress: {
