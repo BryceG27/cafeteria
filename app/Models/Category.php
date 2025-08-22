@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
-class Product extends Model
+class Category extends Model
 {
     use HasFactory;
 
@@ -17,7 +16,7 @@ class Product extends Model
         'is_active'
     ];
 
-    public function products() : HasMany
+    public function products()
     {
         return $this->hasMany(Product::class, 'category_id');
     }

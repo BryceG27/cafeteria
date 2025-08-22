@@ -7,40 +7,39 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 
 const props = defineProps({
-    users: Array,
-    userGroups: Array,
+    categories: Array,
     auth: Object,
 });
 
 </script>
 <template>
-    <Head title="Utenti" />
+    <Head title="Categorie Prodotti" />
 
     <AuthenticatedLayout>
         <div class="content">
             <SuccessMessage />
             <ErrorMessage />
 
-            <BaseBlock title="Utenti" contentClass="pb-3">
+            <BaseBlock title="Categorie Prodotti" contentClass="pb-3">
                 <template #options>
                     <Link 
                         class="btn btn-alt-primary btn-sm"
-                        :href="route('users.create')"
+                        :href="route('categories.create')"
                         v-show="auth.user.user_group_id == 1"
                     >
                         <i class="fa fa-plus me-1"></i>
-                        Nuovo
+                        Nuova
                     </Link>
                 </template>
 
                 <DataTable
                     stripedRows
-                    :value="users"
+                    :value="categories"
                 >
                     <Column field="id" class="text-center" v-if="auth.user.user_group_id == 1">
                         <template #body="{ data }">
                             <Link 
-                                :href="route('users.toggle-active', data.id)"
+                                :href="route('categories.toggle-active', { category : data.id})"
                                 method="put"
                                 as="button"
                                 class="btn btn-sm"
@@ -49,22 +48,15 @@ const props = defineProps({
                                 <i class="fa" :class="!data.is_active ? 'fa-play' : 'fa-pause'"></i>
                             </Link>
                             <Link 
-                                :href="route('users.edit', data.id)"
+                                :href="route('categories.edit', { category : data.id} )"
                                 class="btn btn-sm btn-alt-info ms-2"
-                                v-if="data.user_group_id == 2"
                             >
                                 <i class="fa fa-pencil"></i>
                             </Link>
                         </template>
                     </Column>
-                    <Column header="Utente">
-                        <template #body="{ data }">
-                            <span 
-                                v-text="`${data.name} ${data.surname}`"
-                            />
-                        </template>
-                    </Column>
-                    <Column header="Ruolo" field="user_group.name" />
+                    <Column field="name" header="Nome" />
+                    <Column field="description" header="Descrizione" />
                     <Column field="is_active" header="Stato">
                         <template #body="{ data }">
                             <span v-if="data.is_active" class="badge bg-success">Attivo</span>

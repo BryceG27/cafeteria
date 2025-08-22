@@ -9,7 +9,14 @@ export default {
     {
       name: "Dashboard",
       to: route('dashboard'),
+      group : 'dashboard',
       icon: "si si-speedometer",
+    },
+    {
+      name : "Clienti",
+      to : route('customers.index'),
+      group : 'customers',
+      icon : "fa fa-hand-holding-dollar"
     },
     {
       name: "Configurazione",
@@ -18,17 +25,20 @@ export default {
     {
       name : "Utenti",
       to : route('users.index'),
+      group : 'users',
       icon : "fa fa-users"
-    },
-    {
-      name : "Clienti",
-      to : route('customers.index'),
-      icon : "fa fa-hand-holding-dollar"
     },
     {
       name : "Prodotti",
       to : route('products.index'),
+      group : 'products',
       icon : "fa fa-box-open"
+    },
+    {
+      name : "Categorie Prodotti",
+      to : route('categories.index'),
+      group : 'categories',
+      icon : "fa fa-tags"
     },
     {
       name: "Blocks",

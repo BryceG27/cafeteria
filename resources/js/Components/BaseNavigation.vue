@@ -128,8 +128,10 @@ function linkClicked(e, submenu) {
         <Link
           :href="node.to && node.to !== '#' ? node.to : ''"
           class="nav-main-link"
-          :class="{ 'active' : route(route().current()) === node.to}"
+          :class="{ 'active' : route().current(`${node.group}.*`)}"
         >
+          <!-- route(route().current()) === node.to -->
+          
           <i v-if="node.icon" :class="`nav-main-link-icon ${node.icon}`"></i>
           <span v-if="node.name" class="nav-main-link-name">
             {{ node.name }}
