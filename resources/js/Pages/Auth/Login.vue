@@ -144,11 +144,10 @@ async function onSubmit() {
                                     v-model="form.email"
                                 />
                                 <div
-                                    v-if="true"
+                                    v-if="errors.email"
                                     class="invalid-feedback animated fadeIn"
-                                >
-                                    Inserisci una email
-                                </div>
+                                    v-text="errors.email"
+                                />
                             </div>
                             <div class="mb-4">
                                 <input
@@ -163,11 +162,10 @@ async function onSubmit() {
                                     v-model="form.password"
                                 />
                                 <div
-                                    v-if="true"
+                                    v-if="errors.password"
                                     class="invalid-feedback animated fadeIn"
-                                >
-                                    Inserisci una password
-                                </div>
+                                    v-text="errors.password"
+                                />
                             </div>
                             <div
                                 class="d-flex justify-content-center align-items-center mb-4"

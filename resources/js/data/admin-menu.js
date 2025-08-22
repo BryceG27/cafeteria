@@ -16,14 +16,14 @@ export default {
       heading: true,
     },
     {
-      name : "Utenti",
-      to : route('users.index'),
-      icon : "fa fa-users"
-    },
-    {
       name : "Clienti",
       to : route('customers.index'),
       icon : "fa fa-hand-holding-dollar"
+    },
+    {
+      name : "Prodotti",
+      to : route('products.index'),
+      icon : "fa fa-box-open"
     },
     {
       name: "Blocks",

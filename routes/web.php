@@ -4,6 +4,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CustomerController;
 
@@ -26,6 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/users/{user}/toggle-active', [UserController::class, 'toggle_active'])->middleware(['auth', 'verified'])->name('users.toggle-active');
 
     Route::resource('customers', CustomerController::class)->middleware(['auth', 'verified']);
+    Route::resource('products', ProductController::class)->middleware(['auth', 'verified']);
 });
 
 require __DIR__.'/auth.php';

@@ -26,6 +26,11 @@ export default {
       icon : "fa fa-hand-holding-dollar"
     },
     {
+      name : "Prodotti",
+      to : route('products.index'),
+      icon : "fa fa-box-open"
+    },
+    {
       name: "Blocks",
       icon: "si si-energy",
       subActivePaths: "/backend/blocks",
