@@ -29,7 +29,7 @@ const emit = defineEmits(['submit']);
                 />
             </div>
         </div>
-        <div class="row pb-3 align-items-center">
+        <div class="row pb-3">
             <div class="col-md-6">
                 <label for="name" class="form-label">Nome</label> <br></br>
                 <InputText 

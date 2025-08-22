@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Inertia\Inertia;
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -12,7 +14,9 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Products/Index', [
+            'products' => Product::with('category')->get()
+        ]);
     }
 
     /**
@@ -20,7 +24,10 @@ class ProductController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Products/Create', [
+            'categories' => Category::all(),
+            'product' => new Product()
+        ]);
     }
 
     /**
@@ -28,7 +35,16 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validate = Product::validate($request);
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+            $validate['image'] = $imagePath;
+        }
+
+        Product::create($validate);
+
+        return redirect()->route('products.index')->with('message', 'Prodotto creato con successo.');
     }
 
     /**
@@ -44,7 +60,10 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        //
+        return Inertia::render('Products/Edit', [
+            'categories' => Category::all(),
+            'product' => $product
+        ]);
     }
 
     /**
@@ -52,7 +71,17 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        //
+        dd($request->all());
+        $validate = Product::validate($request);
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+            $validate['image'] = $imagePath;
+        }
+
+        $product->update($validate);
+
+        return redirect()->route('products.index')->with('message', 'Prodotto aggiornato con successo.');
     }
 
     /**
@@ -61,5 +90,13 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         //
+    }
+
+    public function toggle_active(Product $product) {
+        $product->update([
+            'is_active' => !$product->is_active
+        ]);
+
+        return redirect()->back()->with('success', 'Stato prodotto aggiornato con successo.');
     }
 }

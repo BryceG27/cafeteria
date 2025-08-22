@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->double('price')->default(0.0);
             $table->foreignIdFor(\App\Models\Category::class, 'category_id')->constrained()->onDelete('cascade');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

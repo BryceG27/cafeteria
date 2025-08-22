@@ -63,7 +63,16 @@ const props = defineProps({
                         </template>
                     </Column>
                     <Column field="email" header="Email" />
-                    <Column header="Totale pagato" />
+                    <Column header="Totale pagato">
+                        <template #body="{ data }">
+                            &euro;
+                        </template>
+                    </Column>
+                    <Column header="Totale ordinato">
+                        <template #body="{ data }">
+                            &euro;
+                        </template>
+                    </Column>
                     <Column field="is_active" header="Stato">
                         <template #body="{ data }">
                             <span v-if="data.is_active" class="badge bg-success">Attivo</span>
