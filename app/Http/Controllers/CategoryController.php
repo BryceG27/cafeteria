@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
 {
@@ -32,20 +33,12 @@ class CategoryController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
+    {        
         $validate = Category::validate($request);
 
         Category::create($validate);
 
         return redirect()->route('categories.index')->with('message', 'Categoria creata con successo.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Category $category)
-    {
-        //
     }
 
     /**
@@ -64,24 +57,19 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $validate = Category::validate($request, $category->id);
-
         $category->update($validate);
 
         return redirect()->route('categories.index')->with('message', 'Categoria aggiornata con successo.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Category $category)
-    {
-        //
-    }
-
     public function toggle_active(Category $category)
     {
+
+
         $category->is_active = !$category->is_active;
         $category->save();
+        if(!$category->is_active)
+            $category->products()->update(['is_active' => false]);
 
         return redirect()->back()->with('message', 'Stato della categoria aggiornato con successo.');
         

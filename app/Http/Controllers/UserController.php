@@ -25,10 +25,6 @@ class UserController extends Controller
         ]);
     }
 
-    public function show_customers() {
-        $customers = User::where('user_group_id', 3)->with('user_group')->get();
-    }
-
     /**
      * Show the form for creating a new resource.
      */
@@ -53,14 +49,6 @@ class UserController extends Controller
         User::create($validate);
 
         return redirect()->route('users.index')->with('message', 'Utente creato con successo.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(User $user)
-    {
-        //
     }
 
     /**
@@ -95,7 +83,9 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        //
+        $user->delete();
+
+        return redirect()->route('users.index')->with('message', 'Utente eliminato con successo.');
     }
 
     public function toggle_active(User $user) {

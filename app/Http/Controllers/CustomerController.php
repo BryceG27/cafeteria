@@ -63,6 +63,8 @@ class CustomerController extends Controller
      */
     public function destroy(User $user)
     {
-        //
+        $user->delete();
+
+        return redirect()->back()->with('message', 'Cliente eliminato con successo');
     }
 }
