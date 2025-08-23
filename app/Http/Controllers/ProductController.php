@@ -71,7 +71,6 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        dd($request->all());
         $validate = Product::validate($request);
 
         if ($request->hasFile('image')) {

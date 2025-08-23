@@ -28,13 +28,17 @@ const submit = () => {
         }).then((result) => {
             if (result.isConfirmed) {
                 form.post(route('products.store'), {
-                    _method: 'patch',
                     preserveScroll: true,
                     onSuccess: () => form.reset(),
                 });
             }
         });
         return;
+    } else {
+        form.post(route('products.store'), {
+            preserveScroll: true,
+            onSuccess: () => form.reset(),
+        });
     }
 }
 

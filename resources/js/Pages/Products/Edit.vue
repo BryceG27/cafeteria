@@ -34,6 +34,11 @@ const submit = () => {
             }
         });
         return;
+    } else {
+        form.post(route('products.update', { product : props.product.id }), {
+            preserveScroll: true,
+            onSuccess: () => form.reset(),
+        });
     }
 }
 

@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
 
     /* Products */
     Route::resource('products', ProductController::class)->middleware(['auth', 'verified'])->except(['update']);
+    Route::post('/products/{product}', [ProductController::class, 'update'])->middleware(['auth', 'verified'])->name('products.update');
     Route::put('/products/{product}/toggle-active', [ProductController::class, 'toggle_active'])->middleware(['auth', 'verified'])->name('products.toggle-active');
 
     /* Product Categories */

@@ -100,14 +100,20 @@ const emit = defineEmits(['submit']);
                     type="file"
                     class="form-control"
                     inputClass="form-control"
-                    v-model="form.image"
                     :class="{ 'is-invalid': errors.image }"
+                    @input="form.image = $event.target.files[0]"
                     accept="image/*"
                 />
                 <InputError class="mt-2" :message="errors.image" />
             </div>
             <div class="col-md-6">
-
+                <Image 
+                    v-if="form.image" 
+                    :src="typeof form.image === 'object' ? URL.createObjectURL(form.image) : `/storage/${form.image}`" 
+                    alt="Immagine prodotto" 
+                    width="100%"
+                />
+                <div v-else class="text-muted">Nessuna immagine caricata</div>
             </div>
         </div>
     </form>
