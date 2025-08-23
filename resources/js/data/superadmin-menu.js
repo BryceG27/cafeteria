@@ -29,16 +29,22 @@ export default {
       icon : "fa fa-users"
     },
     {
+      name : "Categorie Prodotti",
+      to : route('categories.index'),
+      group : 'categories',
+      icon : "fa fa-tags"
+    },
+    {
       name : "Prodotti",
       to : route('products.index'),
       group : 'products',
       icon : "fa fa-box-open"
     },
     {
-      name : "Categorie Prodotti",
-      to : route('categories.index'),
-      group : 'categories',
-      icon : "fa fa-tags"
+      name : "Menu Settimanale",
+      to : route('menus.index'),
+      group : 'menus',
+      icon : "fa fa-calendar-alt"
     },
     {
       name: "Blocks",

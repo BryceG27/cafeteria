@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\belongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -23,6 +24,10 @@ class Product extends Model
     public function category() : belongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function menus() : belongsToMany {
+        return $this->belongsToMany(Menu::class, 'menu_product')->withPivot('quantity');
     }
 
     public static function validate(Request $request) {

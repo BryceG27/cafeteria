@@ -3,6 +3,7 @@
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
+use App\Http\Controllers\MenuController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -40,6 +41,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     /* Product Categories */
     Route::resource('categories', CategoryController::class)->middleware(['auth', 'verified']);
     Route::put('/categories/{category}/toggle-active', [CategoryController::class, 'toggle_active'])->middleware(['auth', 'verified'])->name('categories.toggle-active');
+
+    /* Menus */
+    Route::resource('menus', MenuController::class)->middleware(['auth', 'verified']);
+    Route::put('/menus/{menu}/toggle-active', [MenuController::class, 'toggle_active'])->middleware(['auth', 'verified'])->name('menus.toggle-active');
+
 });
 
 require __DIR__.'/auth.php';
