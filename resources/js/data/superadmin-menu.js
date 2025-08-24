@@ -19,6 +19,12 @@ export default {
       icon : "fa fa-hand-holding-dollar"
     },
     {
+      name: "Ordini Clienti",
+      to: route('orders.index'),
+      group: 'orders',
+      icon: "fa fa-shopping-cart"
+    },
+    {
       name: "Configurazione",
       heading: true,
     },
@@ -46,7 +52,7 @@ export default {
       group : 'menus',
       icon : "fa fa-calendar-alt"
     },
-    {
+    /* {
       name: "Blocks",
       icon: "si si-energy",
       subActivePaths: "/backend/blocks",
@@ -72,6 +78,6 @@ export default {
           to: "backend-blocks-api",
         },
       ],
-    },
+    }, */
   ],
 };

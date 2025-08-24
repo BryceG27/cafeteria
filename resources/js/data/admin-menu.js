@@ -9,23 +9,32 @@ export default {
     {
       name: "Dashboard",
       to: route('dashboard'),
+      group : 'dashboard',
       icon: "si si-speedometer",
+    },
+    {
+      name : "Clienti",
+      to : route('customers.index'),
+      group : 'customers',
+      icon : "fa fa-hand-holding-dollar"
     },
     {
       name: "Configurazione",
       heading: true,
     },
     {
-      name : "Clienti",
-      to : route('customers.index'),
-      icon : "fa fa-hand-holding-dollar"
-    },
-    {
       name : "Prodotti",
       to : route('products.index'),
+      group : 'products',
       icon : "fa fa-box-open"
     },
     {
+      name : "Menu Settimanale",
+      to : route('menus.index'),
+      group : 'menus',
+      icon : "fa fa-calendar-alt"
+    },
+    /* {
       name: "Blocks",
       icon: "si si-energy",
       subActivePaths: "/backend/blocks",
@@ -51,6 +60,6 @@ export default {
           to: "backend-blocks-api",
         },
       ],
-    },
+    }, */
   ],
 };

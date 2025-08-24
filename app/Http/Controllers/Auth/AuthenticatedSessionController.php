@@ -33,6 +33,9 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        if (Auth::user()->user_group_id == 3) 
+            return redirect()->intended(route('orders.index', absolute: false));
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

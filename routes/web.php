@@ -5,15 +5,12 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\ProductCategoryController;
 
-Route::get('/', function () {
-    return redirect(route('dashboard'));
-})->name('home');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
@@ -21,7 +18,16 @@ Route::get('/dashboard', function () {
 
 Route::post('/sign-in', [ProfileController::class, 'sign_in'])->name('profile.sign-in');
 
+Route::middleware(['auth' , 'verified'])->group(function () {
+    /* Orders */
+    Route::resource('orders', OrderController::class)->middleware(['auth', 'verified'])->only(['index', 'show']); 
+});
+
 Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/', function () {
+        return redirect(route('dashboard'));
+    })->name('home');
+    
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -43,7 +49,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/categories/{category}/toggle-active', [CategoryController::class, 'toggle_active'])->middleware(['auth', 'verified'])->name('categories.toggle-active');
 
     /* Menus */
-    Route::resource('menus', MenuController::class)->middleware(['auth', 'verified']);
+    Route::resource('menus', MenuController::class)->middleware(['auth', 'verified'])->except(['show']);
     Route::put('/menus/{menu}/toggle-active', [MenuController::class, 'toggle_active'])->middleware(['auth', 'verified'])->name('menus.toggle-active');
 
 });

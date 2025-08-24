@@ -17,7 +17,7 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if(Auth::user()->user_group_id > 2)
-            return redirect()->route('dashboard')->withErrors('Accesso non autorizzato.');
+            return redirect()->route('orders.index')->withErrors('Accesso non autorizzato.');
         
         return $next($request);
     }
