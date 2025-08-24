@@ -3,60 +3,62 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
 import { useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
-import UserForm from './Components/UserForm.vue';
+import MenuFrom from './Components/MenuForm.vue';
 
 const props = defineProps({
     auth : Object,
-    user : Array,
-    user_groups : Array,
+    menu : Object,
+    categories : Array,
+    products : Array,
     errors : Object,
-});
+})
 
 const submit = () => {
-    form.post(route('users.store'), {
+    form.post(route('menus.store'), {
         preserveScroll: true,
         onSuccess: () => form.reset(),
     });
 }
 
 const form = useForm({
-    id : props.user.id || null,
-    name : props.user.name || '',
-    surname : props.user.surname || '',
-    email : props.user.email || '',
-    user_group_id : props.user.user_group_id || 2, // Default to admin group
-    is_active : props.user.is_active || 1, // Default to active
-    password : null,
-    password_confirmation : null,
-});
+    id : props.menu.id || null,
+    name : props.menu.name || '',
+    start_date : props.menu.start_date || '',
+    end_date : props.menu.end_date || '',
+    is_active : props.menu.is_active || 1, // Default to active
+    description : props.menu.description || '',
+    products : props.menu.products ? props.menu.products.map(p => p.id) : [],
+})
 
 </script>
 <template>
-    <Head title="Inserimento utente" />
+    <Head title="Inserimento menu" />
 
     <AuthenticatedLayout>
         <div class="content">
-            <BaseBlock title="Inserisci un utente" contentClass="pb-3">
+            <BaseBlock title="Crea un menu" contentClass="pb-3">
                 <template #options>
-                    <button 
+                    <button
                         class="btn btn-alt-success btn-sm"
                         @click="submit"
                     >
-                        <i class="fa fa-save me-1"></i>
+                        <i class="fa fa-save me-1">
+                        </i>
                         Salva
                     </button>
-                    <Link 
+                    <Link
                         class="btn btn-alt-danger btn-sm"
-                        :href="route('users.index')"
+                        :href="route('menus.index')"
                     >
                         <i class="fa fa-x me-1"></i>
                         Annulla
                     </Link>
                 </template>
 
-                <UserForm 
+                <MenuFrom 
                     :form="form"
-                    :user-groups="user_groups"
+                    :categories="categories"
+                    :products="products"
                     :auth="auth"
                     :errors="errors"
                     @submit="submit"

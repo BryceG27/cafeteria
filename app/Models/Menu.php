@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Http\Request;
 
 class Menu extends Model
 {
@@ -20,5 +21,23 @@ class Menu extends Model
 
     public function products() : BelongsToMany {
         return $this->belongsToMany(Product::class, 'menu_product')->withPivot('quantity');
+    }
+
+    public static function validate(Request $request) {
+        return $request->validate([
+            'description' => 'nullable|string|max:255',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'is_active' => 'boolean',
+            'price' => 'nullable|numeric|min:0',
+        ]);
+    }
+
+    public function validate_products(Request $request) {
+        $request->validate([
+            'products' => 'array',
+            'products.*.id' => 'exists:products,id',
+            'products.*.quantity' => 'required|integer|min:1',
+        ]);
     }
 }
