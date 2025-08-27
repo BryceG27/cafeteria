@@ -17,6 +17,7 @@ class Menu extends Model
         'end_date',
         'is_active',
         'price',
+        'second_menu_price'
     ];
 
     public function products() : BelongsToMany {
@@ -30,6 +31,7 @@ class Menu extends Model
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'is_active' => 'boolean',
             'price' => 'nullable|numeric|min:0',
+            'second_menu_price' => 'nullable|numeric|min:0',
         ]);
     }
 

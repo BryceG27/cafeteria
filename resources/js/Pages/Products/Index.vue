@@ -53,23 +53,53 @@ const props = defineProps({
                             >
                                 <i class="fa" :class="!data.is_active ? 'fa-play' : 'fa-pause'"></i>
                             </Link>
-                            <Link 
+                            <!-- <Link 
                                 class="btn btn-alt-info btn-sm ms-2"
                                 :href="route('products.edit', { product : data.id })"
                                 v-if="auth.user.user_group_id == 1"
                             >
                                 <i class="fa fa-pencil"></i>
-                            </Link>
+                            </Link> -->
+                            <button class="btn btn-alt-secondary btn-sm ms-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                ...
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <Link
+                                        class="dropdown-item d-flex gap-2 align-items-center" style="font-size: 13px"
+                                        :href="route('products.edit', { product : data.id })"
+                                        v-if="auth.user.user_group_id == 1"
+                                    >
+                                        <button class="btn btn-sm btn-alt-info" type="button">
+                                            <i class="fa fa-pencil"></i>
+                                        </button>
+                                        Modifica
+                                    </Link>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <Link
+                                        class="dropdown-item d-flex gap-2 align-items-center" style="font-size: 13px"
+                                        :href="route('products.destroy', { product : data.id })"
+                                        method="delete"
+                                        as="button"
+                                        v-if="auth.user.user_group_id == 1"
+                                    >
+                                        <button class="btn btn-sm btn-alt-danger" type="button">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                        Cancella
+                                    </Link>
+                                </li>
+                            </ul>
                         </template>
                     </Column>
                     <Column field="name" header="Nome" />
                     <Column field="description" header="Descrizione" />
+                    <Column field="type.name" header="Tipo di pasto" />
                     <Column field="category.name" header="Categoria" />
-                    <Column field="price" header="Prezzo">
-                        <template #body="{ data }">
-                            &euro; <span v-text="`${data.price.toFixed(2)}`" :class="{ 'text-danger' : data.price == 0 }" />  
-                        </template>
-                    </Column>
                     <Column field="is_active" header="Stato">
                         <template #body="{ data }">
                             <span v-if="data.is_active" class="badge bg-success">Attivo</span>

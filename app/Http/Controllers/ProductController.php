@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\ProductType;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -15,7 +16,7 @@ class ProductController extends Controller
     public function index()
     {
         return Inertia::render('Products/Index', [
-            'products' => Product::with('category')->get()
+            'products' => Product::with('category', 'type')->get()
         ]);
     }
 
@@ -26,6 +27,7 @@ class ProductController extends Controller
     {
         return Inertia::render('Products/Create', [
             'categories' => Category::all(),
+            'types' => ProductType::all(),
             'product' => new Product()
         ]);
     }
@@ -62,7 +64,8 @@ class ProductController extends Controller
     {
         return Inertia::render('Products/Edit', [
             'categories' => Category::all(),
-            'product' => $product
+            'types' => ProductType::all(),
+            'product' => $product->load('category', 'type')
         ]);
     }
 

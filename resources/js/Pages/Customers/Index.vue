@@ -21,21 +21,16 @@ const props = defineProps({
             <ErrorMessage />
 
             <BaseBlock title="Clienti" contentClass="pb-3">
-                <template #options>
-                    <Link 
-                        class="btn btn-alt-primary btn-sm"
-                        :href="route('customers.create')"
-                        v-show="auth.user.user_group_id == 1"
-                    >
-                        <i class="fa fa-plus me-1"></i>
-                        Nuovo
-                    </Link>
-                </template>
-
                 <DataTable
                     stripedRows
                     :value="customers"
                 >
+                    <template #empty>
+                        <div class="p-4 text-center">
+                            <i class="fa fa-exclamation-triangle fa-2x"></i>
+                            <p class="mt-2">Nessun cliente inserito</p>
+                        </div>
+                    </template>
                     <Column field="id" class="text-center" v-if="auth.user.user_group_id == 1">
                         <template #body="{ data }">
                             <Link 

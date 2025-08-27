@@ -16,14 +16,20 @@ class Product extends Model
     protected $fillable = [
         'name',
         'description',
-        'category_id',
         'image',
-        'is_active'
+        'is_active',
+        'category_id',
+        'product_type_id'
     ];
 
     public function category() : belongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function type() : belongsTo
+    {
+        return $this->belongsTo(ProductType::class, 'product_type_id');
     }
 
     public function menus() : belongsToMany {
@@ -35,6 +41,7 @@ class Product extends Model
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'category_id' => 'required|exists:categories,id',
+            'product_type_id' => 'required|exists:product_types,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'is_active' => 'required|boolean',
         ]);

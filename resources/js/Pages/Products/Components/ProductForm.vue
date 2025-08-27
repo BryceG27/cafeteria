@@ -1,7 +1,6 @@
 <script setup>
 
 import InputText from "primevue/inputtext";
-import InputNumber from "primevue/inputnumber";
 import Textarea from "primevue/textarea";
 import Dropdown from "primevue/dropdown";
 import SelectButton from "primevue/selectbutton";
@@ -12,11 +11,16 @@ import InputError from "@/Components/InputError.vue";
 const props = defineProps({
     form: Object,
     categories: Array,
+    types: Array,
     auth: Object,
     errors: Object,
 });
 
 const emit = defineEmits(['submit']);
+
+const loadImage = (event) => {
+    props.form.image = event.target.files[0]
+}
 
 </script>
 <template>
@@ -76,20 +80,18 @@ const emit = defineEmits(['submit']);
                 <InputError class="mt-2" :message="errors.category_id" />
             </div>
             <div class="col-md-6">
-                <label for="price" class="form-label">Prezzo</label> <br></br>
-                <InputNumber 
-                    v-model="form.price" 
-                    inputId="price"
+                <label for="product_type_id" class="form-label">Tipo</label> <br></br>
+                <Dropdown 
+                    v-model="form.product_type_id" 
+                    :options="types" 
+                    optionLabel="name" 
+                    optionValue="id" 
+                    placeholder="Seleziona il tipo di prodotto"
+                    inputId="product_type_id"
                     class="w-100"
-                    inputClass="w-100"
-                    placeholder="Prezzo" 
-                    :class="{ 'is-invalid': errors.price }"
-                    mode="currency" 
-                    currency="EUR" 
-                    locale="it-IT"
-                    :min="0"
+                    :class="{ 'is-invalid': errors.product_type_id }"
                 />
-                <InputError class="mt-2" :message="errors.price" />
+                <InputError class="mt-2" :message="errors.product_type_id" />
             </div>
         </div>
 
@@ -101,14 +103,14 @@ const emit = defineEmits(['submit']);
                     class="form-control"
                     inputClass="form-control"
                     :class="{ 'is-invalid': errors.image }"
-                    @input="form.image = $event.target.files[0]"
+                    @input="loadImage($event)"
                     accept="image/*"
                 />
                 <InputError class="mt-2" :message="errors.image" />
             </div>
             <div class="col-md-6">
                 <Image 
-                    v-if="form.image" 
+                    v-if="form.image && typeof(form.image) === 'string'" 
                     :src="typeof form.image === 'object' ? URL.createObjectURL(form.image) : `/storage/${form.image}`" 
                     alt="Immagine prodotto" 
                     width="100%"

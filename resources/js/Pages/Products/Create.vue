@@ -11,6 +11,7 @@ const props = defineProps({
     auth : Object,
     product : Object,
     categories : Array,
+    types : Array,
     errors : Object,
 });
 
@@ -48,7 +49,7 @@ const form = useForm({
     description : props.product.description || '',
     category_id : null, // Default to first category if available
     is_active : props.product.is_active || 1, // Default to active
-    price : props.product.price || 0,
+    product_type_id : null,
     image : null,
 });
 
@@ -79,6 +80,7 @@ const form = useForm({
                 <ProductForm 
                     :form="form"
                     :categories="categories"
+                    :types="types"
                     :auth="auth"
                     :errors="errors"
                     @submit="submit"

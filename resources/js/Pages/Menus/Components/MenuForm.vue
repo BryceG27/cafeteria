@@ -66,6 +66,38 @@ const availableProducts = computed(() => {
         </div>
         <div class="row mb-3">
             <div class="col-md-6">
+                <label for="price" class="form-label">Prezzo menù</label>
+                <InputNumber 
+                    v-form="form.price"
+                    :min="0" 
+                    class="w-100"
+                    inputClass="w-100"
+                    placeholder="Prezzo menù"
+                    mode="currency"
+                    currency="EUR"
+                    locale="it-IT"
+                    :class="{ 'is-invalid': errors.price }"
+                />
+                <InputError class="mt-2" :message="errors.price" />
+            </div>
+            <div class="col-md-6">
+                <label for="second_menu_price" class="form-label">Prezzo menù aggiuntivo</label>
+                <InputNumber 
+                    v-form="form.second_menu_price"
+                    :min="0" 
+                    class="w-100"
+                    inputClass="w-100"
+                    placeholder="Prezzo menù aggiuntivo"
+                    mode="currency"
+                    currency="EUR"
+                    locale="it-IT"
+                    :class="{ 'is-invalid': errors.second_menu_price }"
+                />
+                <InputError class="mt-2" :message="errors.second_menu_price" />
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
                 <label class="form-label">Data inizio</label><br>
                 <Calendar 
                     v-model="form.start_date"
@@ -106,15 +138,15 @@ const availableProducts = computed(() => {
                             <p class="mt-2">Nessun prodotto disponibile</p>
                         </div>
                     </template>
-                    <Column style="width: 20%" class="text-center">
+                    <Column style="" class="text-center">
                         <template #body="{ data }">
                             <button class="btn btn-alt-success btn-sm" @click="add_product_to_menu(data)" type="button">
                                 <i class="fa fa-plus"></i>
                             </button>
                         </template>
                     </Column>
-                    <Column style="width: 25%" header="Nome" field="name" />
-                    <Column style="width: 15%" header="Foto">
+                    <Column style="" header="Nome" field="name" />
+                    <Column style="" header="Foto">
                         <template #body="{ data }">
                             <Image 
                                 v-if="data.image" 
@@ -124,20 +156,15 @@ const availableProducts = computed(() => {
                             />
                         </template>
                     </Column>
-                    <Column style="width: 20%" header="Qta">
+                    <Column style="" header="Qta">
                         <template #body="{ data }">
                             <InputNumber
                                 v-model="data.quantity"
-                                :min="1" 
+                                :min="1"
                                 :max="100" 
                                 class="w-100"
                                 inputClass="w-100 text-center"
                             />
-                        </template>
-                    </Column>
-                    <Column style="width: 10%" header="Prezzo">
-                        <template #body="{ data }">
-                            <span v-text="data.price.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })" />
                         </template>
                     </Column>
                 </Datatable>
@@ -154,15 +181,15 @@ const availableProducts = computed(() => {
                             <p class="mt-2">Nessun prodotto inserito</p>
                         </div>
                     </template>
-                    <Column style="width: 20%" class="text-center">
+                    <Column style="" class="text-center">
                         <template #body="{ data }">
                             <button class="btn btn-alt-danger btn-sm" @click="remove_product_from_menu(data)" type="button">
                                 <i class="fa fa-minus"></i>
                             </button>
                         </template>
                     </Column>
-                    <Column style="width: 25%" header="Nome" field="name" />
-                    <Column style="width: 15%" header="Foto">
+                    <Column style="" header="Nome" field="name" />
+                    <Column style="" header="Foto">
                         <template #body="{ data }">
                             <Image 
                                 v-if="data.image" 
@@ -172,7 +199,7 @@ const availableProducts = computed(() => {
                             />
                         </template>
                     </Column>
-                    <Column style="width: 20%" header="Qta">
+                    <Column style="" header="Qta">
                         <template #body="{ data }">
                             <InputNumber
                                 v-model="data.quantity"
@@ -181,11 +208,6 @@ const availableProducts = computed(() => {
                                 class="w-100"
                                 inputClass="w-100 text-center"
                             />
-                        </template>
-                    </Column>
-                    <Column style="width: 10%" header="Prezzo">
-                        <template #body="{ data }">
-                            <span v-text="(data.price).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })" />
                         </template>
                     </Column>
                 </Datatable>

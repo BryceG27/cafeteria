@@ -26,7 +26,6 @@ const props = defineProps({
                     <Link 
                         class="btn btn-alt-primary btn-sm"
                         :href="route('users.create')"
-                        v-show="auth.user.user_group_id == 1"
                     >
                         <i class="fa fa-plus me-1"></i>
                         Nuovo
@@ -45,22 +44,24 @@ const props = defineProps({
                     </template>
                     <Column field="id" class="text-center" v-if="auth.user.user_group_id == 1">
                         <template #body="{ data }">
-                            <Link 
-                                :href="route('users.toggle-active', data.id)"
-                                method="put"
-                                as="button"
-                                class="btn btn-sm"
-                                :class="!data.is_active ? 'btn-alt-success' : 'btn-alt-warning'"
-                            >
-                                <i class="fa" :class="!data.is_active ? 'fa-play' : 'fa-pause'"></i>
-                            </Link>
-                            <Link 
-                                :href="route('users.edit', data.id)"
-                                class="btn btn-sm btn-alt-info ms-2"
-                                v-if="data.user_group_id == 2"
-                            >
-                                <i class="fa fa-pencil"></i>
-                            </Link>
+                            <template v-if="data.user_group_id != 1">
+                                <Link 
+                                    :href="route('users.toggle-active', data.id)"
+                                    method="put"
+                                    as="button"
+                                    class="btn btn-sm"
+                                    :class="!data.is_active ? 'btn-alt-success' : 'btn-alt-warning'"
+                                >
+                                    <i class="fa" :class="!data.is_active ? 'fa-play' : 'fa-pause'"></i>
+                                </Link>
+                                <Link 
+                                    :href="route('users.edit', data.id)"
+                                    class="btn btn-sm btn-alt-info ms-2"
+                                    v-if="data.user_group_id == 2"
+                                >
+                                    <i class="fa fa-pencil"></i>
+                                </Link>
+                            </template>
                         </template>
                     </Column>
                     <Column header="Utente">
