@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,6 +23,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'surname',
+        'child',
+        'child_allergies',
         'email',
         'password',
         'user_group_id',
@@ -55,9 +58,15 @@ class User extends Authenticatable
         return $request->validate([
             'name'      => 'required|string|max:100',
             'surname'   => 'required|string|max:100',
+            'child'     => 'nullable|string|max:100',
+            'child_allergies' => 'nullable|string|max:255',
             'email'     => ['required','email', Rule::unique('users')->ignore($request->id)],
-            'is_active' => 'required|boolean',
-            'user_group_id' => 'required|exists:user_groups,id',
+            'is_active' => ['boolean', Rule::requiredIf(function() use ($request) {
+                return Auth::user()->user_group_id != 3;
+            })],
+            'user_group_id' => ['exists:user_groups,id', Rule::requiredIf(function() use ($request) {
+                return Auth::user()->user_group_id != 3;
+            })],
             'password' => 'nullable|required_if:id,!=,null|string|min:8|confirmed',
         ],[
             'password.required_if' => 'La password è richiesta durante la creazione di un nuovo utente.',

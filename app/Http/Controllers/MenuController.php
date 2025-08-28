@@ -17,7 +17,9 @@ class MenuController extends Controller
     public function index()
     {
         return Inertia::render('Menus/Index', [
-            'menus' => Menu::orderBy('start_date', 'desc')->with('products')->get()
+            'menus' => Menu::orderBy('start_date', 'desc')->with(['products' => function($query) {
+                $query->with('type');
+            }])->get()
         ]);
     }
 
@@ -28,7 +30,7 @@ class MenuController extends Controller
     {
         return Inertia::render('Menus/Create', [
             'categories' => Category::orderBy('name')->with('products')->get(),
-            'products' => Product::orderBy('name')->with('category')->get()->map(function($product) {
+            'products' => Product::orderBy('name')->with('category', 'type')->get()->map(function($product) {
                 $product->quantity = 1;
                 return $product;
             }),
@@ -74,11 +76,11 @@ class MenuController extends Controller
     {
         return Inertia::render('Menus/Edit', [
             'categories' => Category::orderBy('name')->with('products')->get(),
-            'products' => Product::orderBy('name')->with('category')->get()->map(function($product) {
+            'products' => Product::orderBy('name')->with('category', 'type')->get()->map(function($product) {
                 $product->quantity = 1;
                 return $product;
             }),
-            'menu' => $menu->load('products')
+            'menu' => $menu->load('products.type')
         ]);
     }
 
@@ -95,8 +97,6 @@ class MenuController extends Controller
         if ($request->has('products')) {
             $menu->validate_products($request);
 
-            $ids = [];
-            $quantity = [];
             foreach ($request->input('products') as $product) {
                 $products[$product['id']] = ['quantity' => $product['quantity']];   
             }

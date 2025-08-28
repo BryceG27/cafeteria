@@ -1,9 +1,10 @@
 <script setup>
 import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
+
+import InputText from 'primevue/inputtext'
+import TextArea from 'primevue/textarea'
 
 defineProps({
     mustVerifyEmail: {
@@ -17,9 +18,12 @@ defineProps({
 const user = usePage().props.auth.user;
 
 const form = useForm({
+    id : user.id,
     name: user.name,
     surname : user.surname,
     email: user.email,
+    child: user.child || '',
+    child_allergies: user.child_allergies || '',
 });
 </script>
 
@@ -35,9 +39,10 @@ const form = useForm({
 
         <form @submit.prevent="form.patch(route('profile.update'))" class="mt-6 space-y-6">
             <div>
-                <InputLabel for="name" value="Nome" />
+                <label for="name" v-text="'Nome'" class="form-label" />
 
-                <TextInput
+                <InputText
+                    inputClass="w-100"
                     id="name"
                     type="text"
                     class="mt-1 block w-full"
@@ -51,9 +56,10 @@ const form = useForm({
             </div>
 
             <div>
-                <InputLabel for="surname" value="Cognome" />
+                <label for="surname" v-text="'Cognome'" class="form-label" />
 
-                <TextInput
+                <InputText
+                    inputClass="w-100"
                     id="surname"
                     type="text"
                     class="mt-1 block w-full"
@@ -67,9 +73,10 @@ const form = useForm({
             </div>
 
             <div>
-                <InputLabel for="email" value="Email" />
+                <label for="email" v-text="'Email'" class="form-label" />
 
-                <TextInput
+                <InputText
+                    inputClass="w-100"
                     id="email"
                     type="email"
                     class="mt-1 block w-full"
@@ -81,7 +88,35 @@ const form = useForm({
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div v-if="mustVerifyEmail && user.email_verified_at === null">
+            <div>
+                <label for="child" v-text="'Nome e cognome figlio'" class="form-label" />
+
+                <InputText
+                    inputClass="w-100"
+                    id="child"
+                    class="mt-1 block w-full"
+                    v-model="form.child"
+                    required
+                />
+
+                <InputError class="mt-2" :message="form.errors.child" />
+            </div>
+
+            <div>
+                <label for="child" v-text="'Allergie figlio'" class="form-label" />
+
+                <TextArea
+                    inputClass="w-100"
+                    id="child_allergies"
+                    class="mt-1 block w-full"
+                    v-model="form.child_allergies"
+                    required
+                />
+
+                <InputError class="mt-2" :message="form.errors.child" />
+            </div>
+
+            <div v-if="mustVerifyEmail && user.email_verified_at === null || false">
                 <p class="text-sm mt-2 text-gray-800">
                     Il tuo indirizzo email non è verificato.
                     <Link
@@ -103,7 +138,7 @@ const form = useForm({
             </div>
 
             <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+                <PrimaryButton :disabled="form.processing">Salva</PrimaryButton>
 
                 <Transition
                     enter-active-class="transition ease-in-out"
@@ -111,7 +146,7 @@ const form = useForm({
                     leave-active-class="transition ease-in-out"
                     leave-to-class="opacity-0"
                 >
-                    <p v-if="form.recentlySuccessful" class="text-sm text-gray-600">Saved.</p>
+                    <p v-if="form.recentlySuccessful" class="text-sm text-gray-600">Salvato.</p>
                 </Transition>
             </div>
         </form>

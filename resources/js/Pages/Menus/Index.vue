@@ -2,6 +2,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
+import { ref } from "vue";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -13,6 +14,8 @@ const props = defineProps({
     menus: Array,
     auth: Object,
 });
+
+const expandedRows = ref(null);
 
 const deleteMenu = (id) => {
     Swal.fire({
@@ -61,6 +64,7 @@ const deleteMenu = (id) => {
                 <DataTable
                     stripedRows
                     :value="menus"
+                    v-model:expandedRows="expandedRows"
                 >
                     <template #empty>
                         <div class="p-4 text-center">
@@ -68,8 +72,22 @@ const deleteMenu = (id) => {
                             <p class="mt-2">Nessun menu inserito</p>
                         </div>
                     </template>
-
-                    <Column style="width: 10%" class="text-center">
+                    <template #expansion="{ data }">
+                        <div class="p-4">
+                            <h5>Prodotti nel menu</h5>
+                            <DataTable
+                                :value="data.products"
+                                responsiveLayout="scroll"
+                                stripedRows
+                            >
+                                <Column header="Nome" field="name" />
+                                <Column header="Tipo" field="type.name" />
+                                <Column header="Quantità" field="pivot.quantity"></Column>
+                            </DataTable>
+                        </div>
+                    </template>
+                    <Column expander style="width: 5%" />
+                    <Column style="width: 5%" class="text-center">
                         <template #body="{ data }">
                             <div class="d-flex align-items-center justify-content-center">
 
@@ -113,27 +131,17 @@ const deleteMenu = (id) => {
                             </div>
                         </template>
                     </Column>
-                    <Column style="width: 10%" field="description" header="Descrizione" />
-                    <Column style="width: 10%" field="products" header="Prodotti">
+                    <Column style="width: 15%" field="price" header="Prezzo">
                         <template #body="{ data }">
-                            <div style="max-height: 2.5rem" v-if="data.products">
-                                <ul class="list-group">
-                                    <li class="list-group-item" v-for="product in data.products" :key="product.id" v-text="product.name" />
-                                </ul>
-                            </div>
+                            {{ parseFloat(data.price).toFixed(2) }} €
                         </template>
                     </Column>
-                    <Column style="width: 10%" field="price" header="Prezzo">
-                        <template #body="{ data }">
-                            <!-- {{ data.price.toFixed(2) }} € -->
-                        </template>
-                    </Column>
-                    <Column style="width: 10%" field="start_date" header="Valido dal">
+                    <Column style="width: 15%" field="start_date" header="Valido dal">
                         <template #body="{ data }">
                             {{ moment(data.start_date).format('DD/MM/YYYY') }}
                         </template>
                     </Column>
-                    <Column style="width: 10%" field="end_date" header="Valido al">
+                    <Column style="width: 15%" field="end_date" header="Valido al">
                         <template #body="{ data }">
                             {{ moment(data.end_date).format('DD/MM/YYYY') }}
                         </template>

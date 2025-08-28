@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Menu;
 use Inertia\Inertia;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -15,8 +16,9 @@ class OrderController extends Controller
     public function index()
     {
         if(Auth::user()->user_group_id == 3) {
-            return Inertia::render('Orders/Customer-Index', [
-                'orders' => Order::where('customer_id', Auth::user()->id)->orderBy('created_at', 'desc')->with(['products'])->paginate(10),
+            return Inertia::render('Orders/CustomerIndex', [
+                // 'orders' => Order::where('customer_id', Auth::user()->id)->orderBy('created_at', 'desc')->with(['products'])->paginate(10),
+                'orders' => [],
             ]);
         } else {
             return Inertia::render('Orders/Index', [
@@ -30,7 +32,10 @@ class OrderController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Orders/Create', [
+            'menus' => Menu::where('is_active', true)->whereDate('start_date', '>=', \Carbon\Carbon::now()->format('Y-m-d'))->whereDate('end_date', '<=', \Carbon\Carbon::now()->format('Y-m-d'))->with('products')->get(),
+            'order' => new Order()
+        ]);
     }
 
     /**

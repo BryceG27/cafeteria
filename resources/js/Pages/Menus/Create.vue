@@ -26,7 +26,7 @@ const form = useForm({
     start_date : props.menu.start_date || '',
     end_date : props.menu.end_date || '',
     price : props.menu.price || 0,
-    second_menu_price : props.menu.second_menu_price || 0,
+    second_price : props.menu.second_price || 0,
     is_active : props.menu.is_active || 1, // Default to active
     description : props.menu.description || 'Ogni menù include una mezza naturale e la frutta di stagione.',
     products : props.menu.products ? props.menu.products.map(p => p.id) : [],
