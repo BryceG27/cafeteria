@@ -13,6 +13,18 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('menu_id')->constrained('menus')->onDelete('cascade');
+            $table->string('notes')->nullable();
+            $table->integer('status')->default(0);
+            $table->decimal('subtotal_amount', 10, 2)->default(0);
+            $table->decimal('discount', 10, 2)->default(0);
+            $table->decimal('total_amount', 10, 2)->default(0);
+            $table->string('payment_method')->nullable();
+            $table->date('order_date')->nullable();
+            $table->foreignId('first_dish_id')->constrained('products')->onDelete('set null');
+            $table->foreignId('second_dish_id')->constrained('products')->onDelete('set null');
+            $table->foreignId('side_dish_id')->constrained('products')->onDelete('set null');
             $table->timestamps();
         });
     }

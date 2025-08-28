@@ -26,8 +26,8 @@ class ProductController extends Controller
     public function create()
     {
         return Inertia::render('Products/Create', [
-            'categories' => Category::all(),
-            'types' => ProductType::all(),
+            'categories' => Category::where('is_active', true)->get(),
+            'types' => ProductType::where('is_active', true)->get(),
             'product' => new Product()
         ]);
     }
@@ -63,8 +63,8 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         return Inertia::render('Products/Edit', [
-            'categories' => Category::all(),
-            'types' => ProductType::all(),
+            'categories' => Category::where('is_active', true)->get(),
+            'types' => ProductType::where('is_active', true)->get(),
             'product' => $product->load('category', 'type')
         ]);
     }
