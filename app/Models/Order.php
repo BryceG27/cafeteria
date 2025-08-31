@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Http\Request;
 
 class Order extends Model
 {
@@ -44,7 +45,7 @@ class Order extends Model
             'color' => 'danger',
         ],
         [
-            'value' => 2,
+            'value' => 3,
             'label' => 'Completato',
             'color' => 'success',
         ],
@@ -90,6 +91,11 @@ class Order extends Model
         return $this->belongsToMany(Product::class, 'order_product')
                     ->withPivot('quantity', 'price')
                     ->withTimestamps();
+    }
+
+    public function payments() : HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     public function get_status() {

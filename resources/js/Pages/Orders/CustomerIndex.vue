@@ -68,6 +68,11 @@ const props = defineProps({
                             <span v-text="moment(data.order_date).format('DD/MM/YYYY')" />
                         </template>
                     </Column>
+                    <Column header="Stato" field="status">
+                        <template #body="{ data }">
+                            <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
+                        </template>
+                    </Column>
                 </DataTable>
             </BaseBlock>
         </div>

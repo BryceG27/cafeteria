@@ -5,7 +5,9 @@ import BaseBlock from "@/Components/BaseBlock.vue";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Popover from 'primevue/popover';
+import Dropdown from 'primevue/dropdown';
+
+import { computed, ref } from 'vue';
 
 import moment from 'moment';
 
@@ -14,7 +16,24 @@ const props = defineProps({
     auth: Object,
 });
 
-console.log(props.orders);
+const statuses = computed(() => {
+    return props.orders
+        .map(order => order.status_info)
+        .filter((value, index, self) =>
+            index === self.findIndex((t) => (
+                t.label === value.label && t.color === value.color
+            ))
+        );
+})
+
+const selectedStatus = ref(null);
+
+const filteredOrders = computed(() => {
+    return props.orders.filter(order => {
+        if (!selectedStatus.value) return true;
+        return order.status_info.value === selectedStatus.value;
+    })
+})
 
 </script>
 <template>
@@ -28,10 +47,26 @@ console.log(props.orders);
             <BaseBlock title="Ordini clienti" contentClass="pb-3">
                 <DataTable
                     striped-rows
-                    :value="orders"
+                    :value="filteredOrders"
                     paginator :rows="20" 
                     :rowsPerPageOptions="[5, 10, 20, 50]"
                 >
+
+                    <template #header>
+                        <div class="d-flex align-items-center justify-content-end">
+                            Filtra per stato: 
+                            <Dropdown 
+                                class="ms-2" 
+                                :options="statuses" 
+                                v-model="selectedStatus"
+                                optionLabel="label" 
+                                optionValue="value" 
+                                placeholder="Seleziona stato" 
+                                showClear
+                                style="width: 200px"
+                            />
+                        </div>
+                    </template>
                     <template #empty>
                         <div class="p-4 text-center">
                             <i class="fa fa-exclamation-triangle fa-2x"></i>
@@ -51,7 +86,7 @@ console.log(props.orders);
                     </Column>
                     <Column header="Cliente">
                         <template #body="{ data }">
-                            {{ data.customer.child }}
+                            {{ data.customer.child }} {{ data.customer.child.split(' ').length == 1 ? data.customer.surname : '' }}
                             <a class="link-info ms-1" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa fa-info"></i>
                             </a>
@@ -64,10 +99,10 @@ console.log(props.orders);
                     </Column>
                     <Column header="Prodotti">
                         <template #body="{ data }">
-                            <div class="d-flex align-items-center">
-                                
-                                <template v-if="data.child_allergies != null || data.child_allergies != ''">
-                                    <a class="link-danger ms-3 attention" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="row">
+                                <div 
+                                    v-if="data.child_allergies != undefined && data.child_allergies != ''" class="rounded-2 rounded-end-0 border border-end-0 col-md-2 px-0 d-flex justify-content-center align-items-center">
+                                    <a class="link-danger attention" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="fa fa-exclamation-triangle"></i>
                                     </a>
                                     <ul class="dropdown-menu">
@@ -75,7 +110,29 @@ console.log(props.orders);
                                             <strong>Allergie: </strong><span v-text="`${data.customer.child_allergies}`" />
                                         </li>
                                     </ul>
-                                </template>
+                                </div>
+
+                                <div class="col-md-10 px-0">
+                                    <table class="table table-bordered rounded-2 h-100">
+                                        <tbody>
+                                            <tr v-if="data.first_dish">
+                                                <td class="py-2">
+                                                    <strong>Primo:</strong> <span v-text="data.first_dish.name" />
+                                                </td>
+                                            </tr>
+                                            <tr v-if="data.second_dish">
+                                                <td class="py-2">
+                                                    <strong>Secondo:</strong> <span v-text="data.second_dish.name" />
+                                                </td>
+                                            </tr>
+                                            <tr v-if="data.side_dish">
+                                                <td class="py-2">
+                                                    <strong>Contorno:</strong> <span v-text="data.side_dish.name" />
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
 
                         </template>

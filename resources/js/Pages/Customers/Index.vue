@@ -42,6 +42,12 @@ const props = defineProps({
                             >
                                 <i class="fa" :class="!data.is_active ? 'fa-play' : 'fa-pause'"></i>
                             </Link>
+                            <Link
+                                :href="route('customers.show', { 'customer' : data.id})"
+                                class="btn btn-alt-info btn-sm ms-1"
+                            >
+                                <i class="fa fa-eye"></i>
+                            </Link>
                         </template>
                     </Column>
                     <Column header="Cliente">
@@ -57,6 +63,7 @@ const props = defineProps({
                             />
                         </template>
                     </Column>
+                    <Column header="Figlio" field="child" />
                     <Column field="email" header="Email" />
                     <Column header="Totale pagato">
                         <template #body="{ data }">

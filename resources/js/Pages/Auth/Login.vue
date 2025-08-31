@@ -289,7 +289,6 @@ async function submitRegister() {
                                     class="form-control form-control-lg form-control-alt py-3"
                                     id="child"
                                     name="child"
-                                    placeholder="Nome figlio/a"
                                     v-model="registerForm.child"
                                 />
                                 <label for="child">Nome figlio/a</label>

@@ -9,7 +9,12 @@ export default {
     {
       name: "Ordini",
       to: route("orders.index"),
-      icon: "si si-speedometer",
+      icon: "si si-basket-loaded",
+    },
+    {
+      name: "Pagamenti",
+      to: route("payments.index"),
+      icon: "si si-credit-card",
     },
   ]
 };

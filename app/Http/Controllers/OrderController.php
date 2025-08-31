@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Menu;
 use Inertia\Inertia;
 use App\Models\Order;
+use App\Models\Credit;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,7 +19,10 @@ class OrderController extends Controller
     {
         if(Auth::user()->user_group_id == 3) {
             return Inertia::render('Orders/CustomerIndex', [
-                'orders' => Order::where('customer_id', Auth::user()->id)->where('status', '<>', 2)->orderBy('created_at', 'desc')->with(['first_dish', 'second_dish', 'side_dish'])->get(),
+                'orders' => Order::where('customer_id', Auth::user()->id)->where('status', '<>', 2)->orderBy('created_at', 'desc')->with(['first_dish', 'second_dish', 'side_dish'])->get()->map(function($order) {
+                    $order->status_info = $order->get_status();
+                    return $order;
+                }),
             ]);
         } else {
             return Inertia::render('Orders/Index', [
@@ -106,8 +111,41 @@ class OrderController extends Controller
      */
     public function destroy(Order $order)
     {
+        if($order->has('payments')->count() > 0) {
+            dd($order);
+        }
         $order->update(['status' => 2]);
 
         return redirect()->route('orders.index')->with('success', 'Ordine eliminato con successo.');
+    }
+
+    public function change_status(Order $order, Request $request) {
+        $request->validate([
+            'status' => 'required|in:0,1,2,3'
+        ]);
+
+        if($request->status == 2 && $order->status != 2) {
+            Payment::create([
+                'customer_id' => $order->customer_id,
+                'amount' => $order->total_amount,
+                'payment_date' => \Carbon\Carbon::now()->format('Y-m-d'),
+                'notes' => 'Inserimento manuale pagamento dell\'ordine #' . $order->id,
+                'payment_method_id' => 1,
+            ]);
+        } else if ($order->status == 2 && $request->status != 2) {
+            Credit::create([
+                'user_id' => $order->customer_id,
+                'total' => $order->total_amount,
+                'amount_available' => $order->total_amount,
+                'description' => 'Rimborso credito per ordine #' . $order->id,
+            ]);
+        }
+
+        $order->update([
+            'status' => $request->status
+        ]);
+
+        return redirect()->back()->with('success', 'Stato ordine aggiornato con successo.');
+        
     }
 }

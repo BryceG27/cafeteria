@@ -6,6 +6,7 @@ use Illuminate\Foundation\Application;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoryController;
@@ -24,6 +25,8 @@ Route::middleware(['auth' , 'verified'])->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    Route::resource('payments', PaymentController::class)->middleware(['auth', 'verified'])->except(['show', 'edit', 'update', 'destroy']);
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -52,6 +55,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     /* Menus */
     Route::resource('menus', MenuController::class)->middleware(['auth', 'verified'])->except(['show']);
     Route::put('/menus/{menu}/toggle-active', [MenuController::class, 'toggle_active'])->middleware(['auth', 'verified'])->name('menus.toggle-active');
+
+    Route::put('/orders/{order}/update-status', [OrderController::class, 'change_status'])->middleware(['auth', 'verified'])->name('orders.update-status');
 
 });
 

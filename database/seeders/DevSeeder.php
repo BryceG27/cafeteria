@@ -15,6 +15,7 @@ class DevSeeder extends Seeder
         $this->call([
             UserGroupSeeder::class,
             UserSeeder::class,
+            PaymentMethodSeeder::class,
             CategorySeeder::class,
             ProductTypeSeeder::class,
             ProductSeeder::class,

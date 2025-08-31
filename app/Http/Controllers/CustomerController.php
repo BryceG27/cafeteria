@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Inertia\Inertia;
+use App\Models\Order;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
@@ -19,43 +20,26 @@ class CustomerController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
      * Display the specified resource.
      */
-    public function show(User $user)
+    public function show(User $customer)
     {
-        //
-    }
+        if($customer->user_group_id != 3)
+            return redirect()->back()->withErrors('Utente non valido');
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(User $user)
-    {
-        //
-    }
+        $customer->orders = $customer->orders()->orderBy('created_at', 'desc')->get()->map(function($order) {
+            $order->status_info = $order->get_status();
+            $order->first_dish = $order->first_dish;
+            $order->second_dish = $order->second_dish;
+            $order->side_dish = $order->side_dish;
+            return $order;
+        });
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, User $user)
-    {
-        //
+        return Inertia::render('Customers/Show', [
+            // 'customer' => $customer->load('user_group', 'orders', 'payments', 'credits'),
+            'customer' => $customer->load('user_group', 'payments'),
+            'order_statuses' => Order::get_statuses(),
+        ]);
     }
 
     /**
@@ -66,5 +50,9 @@ class CustomerController extends Controller
         $user->delete();
 
         return redirect()->back()->with('message', 'Cliente eliminato con successo');
+    }
+
+    public function load_credit(User $customer) {
+        
     }
 }
