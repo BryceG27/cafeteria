@@ -3,7 +3,6 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
 import OrderForm from './Components/OrderForm.vue';
-import { onMounted } from "vue";
 
 const props = defineProps({
     menus : Array,
@@ -14,43 +13,34 @@ const props = defineProps({
 })
 
 const submit = () => {
-    form.post(route('orders.store'), {
+    form.put(route('orders.update', props.order.id), {
         preserveScroll: true,
-        onSuccess: () => form.reset(),
     });
 }
 
 const form = useForm({
-    menu_id: null,
-    customer_id : props.auth.user.id,
-    notes : '',
-    status : 0,
-    order_date : null,
-    discount : 0,
-    subtotal_amount : 0,
-    total_amount : 0,
-    first_dish_id : null,
-    second_dish_id : null,
-    side_dish_id : null,
-})
-
-onMounted(() => {
-    if(props.menus.length == 1) {
-        form.menu_id = props.menus[0].id;
-        form.subtotal = props.menus[0].price;
-        form.total = props.menus[0].price;
-    }
+    menu_id: props.order.menu_id,
+    customer_id : props.order.customer_id,
+    notes : props.order.notes,
+    status : props.order.status,
+    order_date : props.order.order_date,
+    discount : props.order.discount,
+    subtotal_amount : props.order.subtotal_amount,
+    total_amount : props.order.total_amount,
+    first_dish_id : props.order.first_dish_id,
+    second_dish_id : props.order.second_dish_id,
+    side_dish_id : props.order.side_dish_id,
 })
 
 </script>
 <template>
-    <Head title="Nuovo ordine" />
+    <Head title="Modifica ordine" />
 
     <AuthenticatedLayout>
         <div class="content">
-            <BaseBlock title="Inserisci nuovo ordine" class="mb-4">
+            <BaseBlock :title="`Modifica ordine ${auth.user.user_group_id != 3 ? ' | ' + order.customer.child : ''}`" class="mb-4">
                 <template #options>
-                    <button
+                    <button 
                         class="btn btn-alt-success btn-sm"
                         @click="submit"
                     >
@@ -72,14 +62,10 @@ onMounted(() => {
                     :order="order"
                     :auth="auth"
                     :errors="errors"
-                    @submit="submit"
                     :statuses="statuses"
+                    @submit="submit"
                 />
-
             </BaseBlock>
         </div>
     </AuthenticatedLayout>
 </template>
-<style>
-    
-</style>

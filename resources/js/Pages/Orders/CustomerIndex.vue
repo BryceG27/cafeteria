@@ -6,6 +6,8 @@ import BaseBlock from "@/Components/BaseBlock.vue";
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 
+import moment from 'moment';
+
 const props = defineProps({
     orders: Array,
     auth: Object,
@@ -36,6 +38,36 @@ const props = defineProps({
                             <p class="mt-2">Nessun ordine creato</p>
                         </div>
                     </template>
+
+                    <Column class="text-center">
+                        <template #body="{ data }">
+                            <Link
+                                :href="route('orders.edit', data.id)"
+                                class="btn btn-alt-warning btn-sm"
+                            >
+                                <i class="fa fa-pencil-alt"></i>
+                            </Link>
+                            <Link
+                                :href="route('orders.destroy', data.id)"
+                                class="btn btn-alt-danger btn-sm ms-2"
+                                as="button"
+                                method="delete"
+                            >
+                                <i class="fa fa-trash"></i>
+                            </Link>
+                        </template>
+                    </Column>
+                    <Column header="Prodotti"></Column>
+                    <Column header="Totale">
+                        <template #body="{ data }">
+                            <span v-text="parseFloat(data.total_amount).toFixed(2)" /> &euro;
+                        </template>
+                    </Column>
+                    <Column header="Valido il">
+                        <template #body="{ data }">
+                            <span v-text="moment(data.order_date).format('DD/MM/YYYY')" />
+                        </template>
+                    </Column>
                 </DataTable>
             </BaseBlock>
         </div>

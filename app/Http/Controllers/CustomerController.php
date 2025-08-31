@@ -14,7 +14,7 @@ class CustomerController extends Controller
     public function index()
     {
         return Inertia::render('Customers/Index', [
-            'customers' => User::where('user_group_id', 3)->with('user_group')->get()
+            'customers' => User::where('user_group_id', 3)->with('user_group', 'orders')->get()
         ]);
     }
 

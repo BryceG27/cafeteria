@@ -76,4 +76,8 @@ class User extends Authenticatable
     public function user_group() {
         return $this->belongsTo(UserGroup::class);
     }
+    
+    public function orders() {
+        return $this->hasMany(Order::class, 'customer_id');
+    }
 }

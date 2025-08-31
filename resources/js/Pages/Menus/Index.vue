@@ -69,7 +69,7 @@ const deleteMenu = (id) => {
                     <template #empty>
                         <div class="p-4 text-center">
                             <i class="fa fa-exclamation-triangle fa-2x"></i>
-                            <p class="mt-2">Nessun menu inserito</p>
+                            <p class="mt-2">Nessun menù inserito</p>
                         </div>
                     </template>
                     <template #expansion="{ data }">

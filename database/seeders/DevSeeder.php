@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\UserGroup;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -17,6 +16,7 @@ class DevSeeder extends Seeder
             UserGroupSeeder::class,
             UserSeeder::class,
             CategorySeeder::class,
+            ProductTypeSeeder::class,
             ProductSeeder::class,
         ]);
     }

@@ -22,27 +22,33 @@ class Order extends Model
         'total_amount',
         'payment_method',
         'order_date',
-        'first_dish',
-        'second_dish',
-        'side_dish',
+        'first_dish_id',
+        'second_dish_id',
+        'side_dish_id',
     ];
 
-    private $STATUSES = [
+    private static $STATUSES = [
         [
             'value' => 0,
             'label' => 'In attesa',
-            'color' => 'alt-secondary',
+            'color' => 'secondary',
         ],
         [
             'value' => 1,
             'label' => 'Pagato',
-            'color' => 'alt-success',
+            'color' => 'info',
         ],
         [
             'value' => 2,
             'label' => 'Annullato',
-            'color' => 'alt-danger',
-        ]
+            'color' => 'danger',
+        ],
+        [
+            'value' => 2,
+            'label' => 'Completato',
+            'color' => 'success',
+        ],
+
     ];
 
     public static function validate(Request $request) {
@@ -56,9 +62,9 @@ class Order extends Model
             'total_amount' => 'nullable|numeric|min:0',
             'payment_method' => 'nullable|string|max:100',
             'order_date' => 'required|date',
-            'first_dish_id' => 'nullable|required_if:second_dish,null|string|max:255|exists:products,id',
-            'second_dish_id' => 'nullable|required_if:first_dish,null|string|max:255|exists:products,id',
-            'side_dish_id' => 'nullable|string|max:255|exists:products,id',
+            'first_dish_id' => 'nullable|required_if:second_dish,null|max:255|exists:products,id',
+            'second_dish_id' => 'nullable|required_if:first_dish,null|max:255|exists:products,id',
+            'side_dish_id' => 'nullable|max:255|exists:products,id',
         ]);
     }
     
@@ -70,7 +76,7 @@ class Order extends Model
         return $this->belongsTo(Product::class, 'second_dish_id');
     }
 
-    public function sider_dish() {
+    public function side_dish() {
         return $this->belongsTo(Product::class, 'side_dish_id');
     }
 
@@ -87,12 +93,16 @@ class Order extends Model
     }
 
     public function get_status() {
-        foreach (self::$STATUSES as $status) {
+        foreach (SELF::$STATUSES as $status) {
             if ($status['value'] == $this->status) {
                 return $status;
             }
         }
 
         return null;
+    }
+
+    public static function get_statuses() {
+        return SELF::$STATUSES;
     }
 }

@@ -20,7 +20,7 @@ Route::post('/sign-in', [ProfileController::class, 'sign_in'])->name('profile.si
 
 Route::middleware(['auth' , 'verified'])->group(function () {
     /* Orders */
-    Route::resource('orders', OrderController::class)->middleware(['auth', 'verified'])->only(['index', 'show', 'create']); 
+    Route::resource('orders', OrderController::class)->middleware(['auth', 'verified'])->except(['show']); 
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

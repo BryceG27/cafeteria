@@ -22,9 +22,9 @@ return new class extends Migration
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->string('payment_method')->nullable();
             $table->date('order_date')->nullable();
-            $table->foreignId('first_dish_id')->constrained('products')->onDelete('set null');
-            $table->foreignId('second_dish_id')->constrained('products')->onDelete('set null');
-            $table->foreignId('side_dish_id')->constrained('products')->onDelete('set null');
+            $table->foreignId('first_dish_id')->nullable()->constrained('products')->onDelete('set null');
+            $table->foreignId('second_dish_id')->nullable()->constrained('products')->onDelete('set null');
+            $table->foreignId('side_dish_id')->nullable()->constrained('products')->onDelete('set null');
             $table->timestamps();
         });
     }

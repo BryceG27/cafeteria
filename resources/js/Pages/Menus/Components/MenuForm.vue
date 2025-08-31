@@ -127,7 +127,6 @@ const availableProducts = computed(() => {
                     class="w-100"
                     inputClass="w-100"
                     :minDate="moment(form.start_date).add(1, 'day').toDate()"
-                    :maxDate="moment(form.start_date).add(1, 'week').toDate()"
                     dateFormat="dd/mm/yy"
                     placeholder="gg/mm/aaaa"
                 />

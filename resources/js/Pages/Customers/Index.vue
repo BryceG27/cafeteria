@@ -65,7 +65,7 @@ const props = defineProps({
                     </Column>
                     <Column header="Totale ordinato">
                         <template #body="{ data }">
-                            &euro;
+                            {{ data.orders.reduce((acc, order) => acc + parseFloat(order.total_amount) , 0).toFixed(2) }} &euro;
                         </template>
                     </Column>
                     <Column field="is_active" header="Stato">
