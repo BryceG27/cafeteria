@@ -10,11 +10,13 @@ export default {
       name: "Ordini",
       to: route("orders.index"),
       icon: "si si-basket-loaded",
+      group: 'orders'
     },
     {
       name: "Pagamenti",
       to: route("payments.index"),
       icon: "si si-credit-card",
+      group: 'payments'
     },
   ]
 };

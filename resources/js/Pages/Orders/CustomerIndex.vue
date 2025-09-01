@@ -1,10 +1,12 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link } from "@inertiajs/vue3";
+import { Head, Link, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+
+import Swal from 'sweetalert2';
 
 import moment from 'moment';
 
@@ -12,6 +14,25 @@ const props = defineProps({
     orders: Array,
     auth: Object,
 });
+
+const destroy = (id) => {
+    const form = useForm({});
+
+    Swal.fire({
+        title: 'Sei sicuro?',
+        text: "Non potrai tornare indietro!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Si, cancella!',
+        cancelButtonText: 'Annulla'
+    }).then((result) => {
+        if (result.isConfirmed)
+            form.delete(route('orders.destroy', { order : id}));
+    })
+}
+
 </script>
 
 <template>
@@ -47,17 +68,66 @@ const props = defineProps({
                             >
                                 <i class="fa fa-pencil-alt"></i>
                             </Link>
-                            <Link
-                                :href="route('orders.destroy', data.id)"
-                                class="btn btn-alt-danger btn-sm ms-2"
-                                as="button"
-                                method="delete"
-                            >
-                                <i class="fa fa-trash"></i>
-                            </Link>
+
+                            <button class="btn btn-alt-secondary btn-sm ms-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" v-if="data.status != 3 && (moment(data.created_at).format('YYYY-MM-DD') <= moment().format('YYYY-MM-DD'))">
+                                ...
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li v-if="data.status == 0">
+                                    <Link
+                                        :href="route('orders.destroy', data.id)"
+                                        class="dropdown-item d-flex gap-2 align-items-center" style="font-size: 13px"
+                                        as="button"
+                                        method="patch"
+                                    >
+                                        <button class="btn btn-alt-success btn-sm">
+                                            <i class="fa fa-dollar-sign"></i>
+                                        </button>
+                                        Effettua pagamento
+                                    </Link>
+                                </li>
+                                <li v-if="data.status == 0">
+                                    <hr class="dropdown-divider"></hr>
+                                </li>
+                                <li v-if="data.status != 3 && (moment(data.created_at).format('YYYY-MM-DD') <= moment().format('YYYY-MM-DD'))">
+                                    <div
+                                        @click="destroy(data.id)"
+                                        class="dropdown-item d-flex gap-2 align-items-center" style="font-size: 13px"
+                                        as="button"
+                                        method="delete"
+                                    >
+                                        <button class="btn btn-alt-danger btn-sm">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                        Cancella
+                                    </div>
+                                </li>
+                            </ul>
                         </template>
                     </Column>
-                    <Column header="Prodotti"></Column>
+                    <Column header="Prodotti">
+                        <template #body="{ data }">
+                            <table class="table table-bordered rounded-2 h-100 align-middle">
+                                <tbody>
+                                    <tr v-if="data.first_dish">
+                                        <td class="p-2 align-middle">
+                                            <strong>Primo:</strong> <span v-text="data.first_dish.name" />
+                                        </td>
+                                    </tr>
+                                    <tr v-if="data.second_dish">
+                                        <td class="p-2 align-middle">
+                                            <strong>Secondo:</strong> <span v-text="data.second_dish.name" />
+                                        </td>
+                                    </tr>
+                                    <tr v-if="data.side_dish">
+                                        <td class="p-2 align-middle">
+                                            <strong>Contorno:</strong> <span v-text="data.side_dish.name" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </template>
+                    </Column>
                     <Column header="Totale">
                         <template #body="{ data }">
                             <span v-text="parseFloat(data.total_amount).toFixed(2)" /> &euro;

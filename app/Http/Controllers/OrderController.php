@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Menu;
 use Inertia\Inertia;
 use App\Models\Order;
@@ -28,6 +29,8 @@ class OrderController extends Controller
             return Inertia::render('Orders/Index', [
                 'orders' => Order::with(['customer', 'first_dish', 'second_dish', 'side_dish'])->orderBy('created_at', 'desc')->get()->map(function($order) {
                     $order->status_info = $order->get_status();
+                    $order->child_name = $order->customer->child . " ";
+                    $order->child_name .= count(explode($order->customer->child, ' ')) == 1 ? $order->customer->surname : '';
                     return $order;
                 }),
                 'order_statuses' => Order::get_statuses(),
@@ -112,12 +115,25 @@ class OrderController extends Controller
      */
     public function destroy(Order $order)
     {
+        $message = 'Ordine eliminato con successo.';
         if($order->has('payments')->count() > 0) {
-            dd($order);
+            if(Carbon::now()->format('Y-m-d H:i') < Carbon::create($order->order_date . '10:00:00')->format('Y-m-d H:i')) {
+                Credit::create([
+                    'user_id' => $order->customer_id,
+                    'total' => $order->total_amount,
+                    'amount_available' => $order->total_amount,
+                    'description' => 'Creato generato per ordine #' . $order->id,
+                ]);
+
+                $message .= ' Credito generato per l\'importo di ' . number_format($order->total_amount, 2) . '€.';
+            } else {
+                $message .= ' Credito non emesso in quanto l\'eliminazione è avvenuta dopo le 10:00.';
+            }
         }
+
         $order->update(['status' => 2]);
 
-        return redirect()->route('orders.index')->with('success', 'Ordine eliminato con successo.');
+        return redirect()->route('orders.index')->with('message', $message);
     }
 
     public function change_status(Order $order, Request $request) {
@@ -142,7 +158,7 @@ class OrderController extends Controller
                 'user_id' => $order->customer_id,
                 'total' => $order->total_amount,
                 'amount_available' => $order->total_amount,
-                'description' => 'Rimborso credito per ordine #' . $order->id,
+                'description' => 'Creato generato per ordine #' . $order->id,
             ]);
         }
 
@@ -150,7 +166,6 @@ class OrderController extends Controller
             'status' => $request->status
         ]);
 
-        return redirect()->back()->with('success', 'Stato ordine aggiornato con successo.');
-        
+        return redirect()->back()->with('message', 'Stato ordine aggiornato con successo.');
     }
 }

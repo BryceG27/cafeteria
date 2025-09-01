@@ -1,5 +1,6 @@
 <script setup>
 import InputNumber from "primevue/inputnumber";
+import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
 import Calendar from "primevue/calendar";
 import SelectButton from "primevue/selectbutton";
@@ -60,7 +61,19 @@ const availableProducts = computed(() => {
             </div>
         </div>
         <div class="row pb-3">
-            <div class="col-md-12">
+            <div class="col-md-6">
+                <label for="name" class="form-label">Nome menù</label>
+                <InputText 
+                    v-model="form.name"
+                    inputId="name"
+                    class="w-100"
+                    inputClass="w-100"
+                    placeholder="Nome menù"
+                    :class="{ 'is-invalid': errors.name }"
+                />
+                <InputError class="mt-2" :message="errors.name" />
+            </div>
+            <div class="col-md-6">
                 <label for="descritpion" class="form-label">Descrizione</label><br>
                 <Textarea 
                     v-model="form.description"

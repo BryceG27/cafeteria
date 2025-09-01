@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('menus', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->nullable();
             $table->text('description')->nullable();
             $table->date('start_date')->default(now());
             $table->date('end_date')->default(now()->addDays(7));

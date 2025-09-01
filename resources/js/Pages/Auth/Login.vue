@@ -65,7 +65,7 @@ async function submitRegister() {
 <template>
     <!-- Page Content -->
     <Head title="Login" />
-    <BaseBackground image="/assets/media/photos/photo29@2x.jpg">
+    <BaseBackground image="/assets/media/photos/photo11@2x.jpg">
         <div class="row g-0 bg-primary-dark-op">
             <!-- Meta Info Section -->
             <div
@@ -77,10 +77,10 @@ async function submitRegister() {
                             :href="route('dashboard')"
                             class="link-fx fw-semibold fs-2 text-white"
                             >
-                            One<span class="fw-normal">UI</span>
+                            Mille<span class="fw-normal">Foglie</span>
                         </Link>
                         <p class="text-white-75 me-xl-8 mt-2">
-                            Benvenuto sul portale della Mensa. Effettua il login per accedere agli ordini e alla configurazione
+                            Benvenuto sul portale della Mensa Ranchibile. Effettua il login per accedere agli ordini e alla configurazione
                         </p>
                     </div>
                 </div>
@@ -121,7 +121,7 @@ async function submitRegister() {
                 :href="route('dashboard')"
                 class="link-fx fw-semibold fs-3 text-dark"
             >
-                One<span class="fw-normal">UI</span>
+                Mille<span class="fw-normal">Foglie</span>
             </Link>
         </div>
         <div class="p-4 w-100 flex-grow-1 d-flex align-items-center">

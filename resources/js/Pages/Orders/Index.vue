@@ -6,6 +6,9 @@ import BaseBlock from "@/Components/BaseBlock.vue";
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dropdown from 'primevue/dropdown';
+import InputText from 'primevue/inputtext';
+import Calendar from "primevue/calendar";
+import { FilterMatchMode } from '@primevue/core/api';
 
 import { computed, ref } from 'vue';
 
@@ -19,9 +22,16 @@ const props = defineProps({
 
 const selectedStatus = ref(1);
 
+const filters = ref({
+    created_at : { value : null, matchMode: 'contains' },
+    child_name : { value : null, matchMode: 'contains' },
+    order_date : { value : null, matchMode: 'equals' },
+    'status_info.value' : { value : null, matchMode: 'contains' },
+});
+
 const filteredOrders = computed(() => {
     return props.orders.filter(order => {
-        if (!selectedStatus.value) return true;
+        if (selectedStatus.value == undefined) return true;
         return order.status_info.value === selectedStatus.value;
     })
 })
@@ -87,9 +97,9 @@ const updateOrderStatus = (event) => {
                             </Link>
                         </template>
                     </Column>
-                    <Column header="Cliente">
+                    <Column header="Cliente" field="child_name">
                         <template #body="{ data }">
-                            {{ data.customer.child }} {{ data.customer.child.split(' ').length == 1 ? data.customer.surname : '' }}
+                            {{ data.child_name }}
                             <a class="link-info ms-1" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa fa-info"></i>
                             </a>
@@ -99,12 +109,20 @@ const updateOrderStatus = (event) => {
                                 </li>
                             </ul>
                         </template>
+                        <template #filter="{ filterModel, filterCallback }">
+                            <InputText 
+                                v-model="filterModel.value" 
+                                @input="filterCallback()" 
+                                placeholder="Cerca per nome" 
+                                class="w-100"
+                            />
+                        </template>
                     </Column>
                     <Column header="Prodotti">
                         <template #body="{ data }">
                             <div class="row">
                                 <div 
-                                    v-if="data.child_allergies != undefined && data.child_allergies != ''" class="rounded-2 rounded-end-0 border border-end-0 col-md-2 px-0 d-flex justify-content-center align-items-center">
+                                    v-if="data.customer.child_allergies != undefined && data.customer.child_allergies != ''" class="rounded-2 rounded-end-0 border border-end-0 col-md-2 px-0 d-flex justify-content-center align-items-center">
                                     <a class="link-danger attention" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="fa fa-exclamation-triangle"></i>
                                     </a>
@@ -116,20 +134,20 @@ const updateOrderStatus = (event) => {
                                 </div>
 
                                 <div class="col-md-10 px-0">
-                                    <table class="table table-bordered rounded-2 h-100">
+                                    <table class="table table-bordered rounded-2 h-100 align-middle">
                                         <tbody>
                                             <tr v-if="data.first_dish">
-                                                <td class="py-2">
+                                                <td class="p-2 align-middle">
                                                     <strong>Primo:</strong> <span v-text="data.first_dish.name" />
                                                 </td>
                                             </tr>
                                             <tr v-if="data.second_dish">
-                                                <td class="py-2">
+                                                <td class="p-2 align-middle">
                                                     <strong>Secondo:</strong> <span v-text="data.second_dish.name" />
                                                 </td>
                                             </tr>
                                             <tr v-if="data.side_dish">
-                                                <td class="py-2">
+                                                <td class="p-2 align-middle">
                                                     <strong>Contorno:</strong> <span v-text="data.side_dish.name" />
                                                 </td>
                                             </tr>
@@ -145,17 +163,37 @@ const updateOrderStatus = (event) => {
                             € {{ data.total_amount }}
                         </template>
                     </Column>
-                    <Column header="Creato il">
+                    <Column header="Creato il" field="created_at">
                         <template #body="{ data }">
                             {{ moment(data.created_at).format('DD/MM/YYYY') }}
                         </template>
+                        <template #filter="{ filterModel, filterCallback }">
+                            <Calendar
+                                v-model="filterModel.value" 
+                                @blur="filterCallback()" 
+                                placeholder="Cerca per data" 
+                                class="w-100"
+                                inputClass="w-100"
+                                dateFormat="dd/mm/yy"
+                            />
+                        </template>
                     </Column>
-                    <Column header="Valido il">
+                    <Column header="Valido il" field="order_date">
                         <template #body="{ data }">
                             {{ moment(data.order_date).format('DD/MM/YYYY') }}
                         </template>
+                        <template #filter="{ filterModel, filterCallback }">
+                            <Calendar
+                                v-model="filterModel.value" 
+                                @blur="filterCallback()" 
+                                placeholder="Cerca per data" 
+                                class="w-100"
+                                inputClass="w-100"
+                                dateFormat="dd/mm/yy"
+                            />
+                        </template>
                     </Column>
-                    <Column header="Stato">
+                    <Column header="Stato" field="status_info.value">
                         <template #body="{ data }">
                             <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
                         </template>
@@ -167,6 +205,18 @@ const updateOrderStatus = (event) => {
                                 optionValue="value" 
                                 class="w-100"
                                 placeholder="Seleziona stato"
+                            />
+                        </template>
+                        <template #filter="{ filterModel, filterCallback }">
+                            <Dropdown 
+                                class="ms-2" 
+                                :options="order_statuses" 
+                                v-model="selectedStatus"
+                                optionLabel="label" 
+                                optionValue="value" 
+                                placeholder="Seleziona stato" 
+                                showClear
+                                style="width: 200px"
                             />
                         </template>
                     </Column>

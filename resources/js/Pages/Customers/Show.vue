@@ -144,9 +144,9 @@ const total_credit = computed(() => {
                                     <template #body="{ data }">
                                         <Link
                                             :href="route('orders.edit', data.id)"
-                                            class="btn btn-alt-warning btn-sm"
+                                            class="btn btn-alt-info btn-sm"
                                         >
-                                            <i class="fa fa-pencil-alt"></i>
+                                            <i class="fa fa-eye"></i>
                                         </Link>
                                     </template>
                                 </Column>
@@ -180,7 +180,7 @@ const total_credit = computed(() => {
                                 </Column>
                                 <Column header="Totale">
                                     <template #body="{ data }">
-                                        € {{ data.total_amount }}
+                                        {{ data.total_amount }} &euro;
                                     </template>
                                 </Column>
                                 <Column header="Creato il">
@@ -272,29 +272,30 @@ const total_credit = computed(() => {
                                     </div>
                                 </template>
 
-                                <Column header="Ordine #">
+                                <Column field="order_id" style="width: 15%" header="Ordine #">
                                     <template #body="{ data }">
-
+                                        <Link
+                                            :href="route('orders.edit', data.id)"
+                                            class="link-info"
+                                        >
+                                            {{ data.order_id }}
+                                        </Link>
                                     </template>
                                 </Column>
-                                <Column header="Totale">
+                                <Column field="amount" style="width: 15%" header="Totale">
                                     <template #body="{ data }">
-
+                                        {{ parseFloat(data.amount).toFixed(2) }} &euro;
                                     </template>
                                 </Column>
-                                <Column header="Metodo di pagamento">
+                                <Column field="method.name" style="width: 30%" header="Metodo di pagamento" />
+                                <Column field="created_at" style="width: 20%" header="Data">
                                     <template #body="{ data }">
-
+                                        {{ moment(data.created_at).format('DD/MM/YYYY') }}
                                     </template>
                                 </Column>
-                                <Column header="Data">
+                                <Column field="status" style="width: 20%" header="Stato">
                                     <template #body="{ data }">
-
-                                    </template>
-                                </Column>
-                                <Column header="Stato">
-                                    <template #body="{ data }">
-
+                                        <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
                                     </template>
                                 </Column>
                             </DataTable>

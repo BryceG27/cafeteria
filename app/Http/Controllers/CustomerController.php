@@ -35,8 +35,13 @@ class CustomerController extends Controller
             return $order;
         });
 
+        $customer->payments = $customer->payments()->with('method')->orderBy('created_at', 'desc')->get()->map(function($payment) {
+            $payment->status_info = $payment->get_status();
+            return $payment;
+        });
+
         return Inertia::render('Customers/Show', [
-            'customer' => $customer->load('user_group', 'payments', 'credits'),
+            'customer' => $customer->load('user_group',  'credits'),
             'order_statuses' => Order::get_statuses(),
         ]);
     }

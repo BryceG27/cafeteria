@@ -14,7 +14,10 @@ class PaymentController extends Controller
     public function index()
     {
         return Inertia::render('Payments/Index', [
-            'payments' => Payment::where('user_id', auth()->id())->get(),
+            'payments' => Payment::where('user_id', auth()->id())->with('order', 'method')->get()->map(function($payment) {
+                $payment->status_info = $payment->get_status();
+                return $payment;
+            })
         ]);
     }
 

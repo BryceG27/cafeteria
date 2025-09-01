@@ -12,6 +12,7 @@ class Menu extends Model
     use HasFactory;
 
     protected $fillable = [
+        'name',
         'description',
         'start_date',
         'end_date',
@@ -26,7 +27,8 @@ class Menu extends Model
 
     public static function validate(Request $request) {
         return $request->validate([
-            'description' => 'nullable|string|max:255',
+            'name' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'is_active' => 'boolean',

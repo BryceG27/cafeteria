@@ -74,6 +74,26 @@ watch(add_second_menu, (newVal) => {
 </script>
 <template>
     <form @submit.prevent="emit('submit')" class="container-fluid">
+        <div class="row pb-3" v-if="menus.length > 0">
+            <div class="col-md-12">
+                <label for="menu_id" class="form-label">Menù</label>
+                <Dropdown 
+                    inputId="menu_id"
+                    optionValue="id"
+                    optionLabel="description"
+                    :options="props.menus"
+                    class="w-100"
+                    inputClass="w-100"
+                    v-model="form.menu_id"
+                    placeholder="Seleziona un menù"
+                >
+                    <template #option="slotProps">
+                        {{ slotProps.option.name }} - {{ slotProps.option.description }}
+                    </template>
+                </Dropdown>
+                <InputError class="mt-2" :message="errors.menu_id" />
+            </div>
+        </div>
         <template v-if="form.menu_id != null">
             <div class="row pb-3">
                 <div class="col-md-12">
@@ -239,9 +259,13 @@ watch(add_second_menu, (newVal) => {
                 </div>
             </div>
         </template>
-        <div class="p-4 text-center" v-else>
+        <div class="p-4 text-center" v-else-if="menus.length == 0">
             <i class="fa fa-exclamation-triangle fa-2x"></i>
             <p class="mt-2">Nessun menù disponibile</p>
+        </div>
+        <div class="p-4 text-center" v-else>
+            <i class="fa fa-exclamation-triangle fa-2x"></i>
+            <p class="mt-2">Nessun menù selezionato</p>
         </div>
     </form>
 </template>
