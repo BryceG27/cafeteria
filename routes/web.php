@@ -31,7 +31,10 @@ Route::middleware(['auth' , 'verified'])->group(function () {
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/', function () {
-        return redirect(route('dashboard'));
+        if(auth()->user()->user_group_id == 3)
+            return redirect(route('orders.index'));
+        else
+            return redirect(route('dashboard'));
     })->name('home');
     
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

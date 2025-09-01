@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link } from "@inertiajs/vue3";
+import { Head, Link, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
 
 import DataTable from 'primevue/datatable';
@@ -14,19 +14,10 @@ import moment from 'moment';
 const props = defineProps({
     orders: Array,
     auth: Object,
+    order_statuses: Array,
 });
 
-const statuses = computed(() => {
-    return props.orders
-        .map(order => order.status_info)
-        .filter((value, index, self) =>
-            index === self.findIndex((t) => (
-                t.label === value.label && t.color === value.color
-            ))
-        );
-})
-
-const selectedStatus = ref(null);
+const selectedStatus = ref(1);
 
 const filteredOrders = computed(() => {
     return props.orders.filter(order => {
@@ -34,6 +25,16 @@ const filteredOrders = computed(() => {
         return order.status_info.value === selectedStatus.value;
     })
 })
+
+const updateOrderStatus = (event) => {
+    const form = useForm({
+        status: event.newData.status,
+    });
+
+    form.put(route('orders.update-status', { order : event.newData.id }), {
+        preserveScroll: true,
+    });
+}
 
 </script>
 <template>
@@ -50,6 +51,8 @@ const filteredOrders = computed(() => {
                     :value="filteredOrders"
                     paginator :rows="20" 
                     :rowsPerPageOptions="[5, 10, 20, 50]"
+                    editMode="cell" 
+                    @cell-edit-complete="updateOrderStatus"
                 >
 
                     <template #header>
@@ -57,7 +60,7 @@ const filteredOrders = computed(() => {
                             Filtra per stato: 
                             <Dropdown 
                                 class="ms-2" 
-                                :options="statuses" 
+                                :options="order_statuses" 
                                 v-model="selectedStatus"
                                 optionLabel="label" 
                                 optionValue="value" 
@@ -155,6 +158,16 @@ const filteredOrders = computed(() => {
                     <Column header="Stato">
                         <template #body="{ data }">
                             <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
+                        </template>
+                        <template #editor="{ data }">
+                            <Dropdown 
+                                v-model="data.status"
+                                :options="order_statuses" 
+                                optionLabel="label" 
+                                optionValue="value" 
+                                class="w-100"
+                                placeholder="Seleziona stato"
+                            />
                         </template>
                     </Column>
                 </DataTable>

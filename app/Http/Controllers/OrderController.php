@@ -30,6 +30,7 @@ class OrderController extends Controller
                     $order->status_info = $order->get_status();
                     return $order;
                 }),
+                'order_statuses' => Order::get_statuses(),
             ]);
         }
     }
@@ -85,7 +86,7 @@ class OrderController extends Controller
         return Inertia::render('Orders/Edit', [
             'menus' => Menu::where('is_active', true)->whereDate('start_date', '<=', \Carbon\Carbon::now()->format('Y-m-d'))->whereDate('end_date', '>=', \Carbon\Carbon::now()->format('Y-m-d'))->with('products')->get(),
             'order' => $order->load('customer'),
-            'statuses' => Order::get_statuses(),
+            'order_statuses' => Order::get_statuses(),
         ]);
     }
 
@@ -124,15 +125,19 @@ class OrderController extends Controller
             'status' => 'required|in:0,1,2,3'
         ]);
 
-        if($request->status == 2 && $order->status != 2) {
+        if($request->status == 1 && $order->status != 1) {
+            // If the order status was not "Paid" and is now set to "Paid", create a payment record
             Payment::create([
-                'customer_id' => $order->customer_id,
+                'user_id' => $order->customer_id,
                 'amount' => $order->total_amount,
                 'payment_date' => \Carbon\Carbon::now()->format('Y-m-d'),
                 'notes' => 'Inserimento manuale pagamento dell\'ordine #' . $order->id,
+                'order_id' => $order->id,
+                'status' => 1,
                 'payment_method_id' => 1,
             ]);
-        } else if ($order->status == 2 && $request->status != 2) {
+        } else if ($order->status == 1 && $request->status != 1) {
+            // If the order status was "Paid" and is now changed to something else, refund the amount to user's credit
             Credit::create([
                 'user_id' => $order->customer_id,
                 'total' => $order->total_amount,

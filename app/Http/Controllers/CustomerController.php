@@ -36,8 +36,7 @@ class CustomerController extends Controller
         });
 
         return Inertia::render('Customers/Show', [
-            // 'customer' => $customer->load('user_group', 'orders', 'payments', 'credits'),
-            'customer' => $customer->load('user_group', 'payments'),
+            'customer' => $customer->load('user_group', 'payments', 'credits'),
             'order_statuses' => Order::get_statuses(),
         ]);
     }

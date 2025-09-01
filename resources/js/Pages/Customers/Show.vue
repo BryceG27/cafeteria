@@ -1,11 +1,15 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link } from "@inertiajs/vue3";
-import { useForm } from "@inertiajs/vue3";
+import { Head, Link, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
+
+import { computed } from "vue";
+
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dropdown from 'primevue/dropdown';
+import InputNumber from 'primevue/inputnumber';
+import FloatLabel from 'primevue/floatlabel';
 
 import moment from "moment";
 
@@ -14,13 +18,6 @@ const props = defineProps({
     customer : Object,
     order_statuses : Array,
 });
-
-const submit = () => {
-    /* form.put(route('customers.update', form.id), {
-        preserveScroll: true,
-        onSuccess: () => form.reset(),
-    }); */
-}
 
 const updateOrderStatus = (event) => {
     const form = useForm({
@@ -32,11 +29,27 @@ const updateOrderStatus = (event) => {
     });
 }
 
+const total_paid = computed(() => {
+    return props.customer.payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+});
+
+const total_due = computed(() => {
+    return props.customer.orders.filter(order => order.status == 0).reduce((sum, order) => sum + parseFloat(order.total_amount), 0);
+});
+
+const total_credit = computed(() => {
+    return props.customer.credits.reduce((sum, order) => sum + parseFloat(order.amount_available), 0);
+});
+
 </script>
 <template>
     <Head :title="`${customer.name} ${customer.surname}`" />
 
     <AuthenticatedLayout>
+
+        <SuccessMessage />
+        <ErrorMessage />
+
         <div class="content">
             <BaseBlock :title="`Dati Cliente: ${customer.name} ${customer.surname}`" content-class="pb-3">
                 <template #options>
@@ -193,6 +206,95 @@ const updateOrderStatus = (event) => {
                                             class="w-100"
                                             placeholder="Seleziona stato"
                                         />
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </div>
+                    </div>
+                </div>
+            </BaseBlock>
+            <BaseBlock title="Pagamenti del cliente" content-class="pb-3">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <DataTable
+                                :value="customer.payments"
+                                stripedRows
+                                style="max-height: 50rem; overflow-y: auto"
+                            >
+                                <template #empty>
+                                    <div class="p-4 text-center">
+                                        <i class="fa fa-exclamation-triangle fa-2x"></i>
+                                        <p class="mt-2">Nessun pagamento effettuato</p>
+                                    </div>
+                                </template>
+                                <template #header>
+                                    <div class="row">
+                                        <div class="col-md-4 d-flex align-items-center justify-content-center">
+                                            <FloatLabel variant="on">
+                                                <InputNumber
+                                                    v-model="total_paid" 
+                                                    inputId="total_paid"
+                                                    mode="currency"
+                                                    currency="EUR"
+                                                    locale="it-IT"
+                                                    readonly
+                                                />
+                                                <label for="total_paid">Totale pagato</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-center justify-content-center">
+                                            <FloatLabel variant="on">
+                                                <InputNumber
+                                                    v-model="total_due" 
+                                                    inputId="total_due"
+                                                    mode="currency"
+                                                    currency="EUR"
+                                                    locale="it-IT"
+                                                    readonly
+                                                />
+                                                <label for="total_due">Totale da pagare</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-center justify-content-center">
+                                            <FloatLabel variant="on">
+                                                <InputNumber
+                                                    v-model="total_credit" 
+                                                    inputId="total_credit"
+                                                    mode="currency"
+                                                    currency="EUR"
+                                                    locale="it-IT"
+                                                    readonly
+                                                />
+                                                <label for="total_credit">Credito</label>
+                                            </FloatLabel>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <Column header="Ordine #">
+                                    <template #body="{ data }">
+
+                                    </template>
+                                </Column>
+                                <Column header="Totale">
+                                    <template #body="{ data }">
+
+                                    </template>
+                                </Column>
+                                <Column header="Metodo di pagamento">
+                                    <template #body="{ data }">
+
+                                    </template>
+                                </Column>
+                                <Column header="Data">
+                                    <template #body="{ data }">
+
+                                    </template>
+                                </Column>
+                                <Column header="Stato">
+                                    <template #body="{ data }">
+
                                     </template>
                                 </Column>
                             </DataTable>

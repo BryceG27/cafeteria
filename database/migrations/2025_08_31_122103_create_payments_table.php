@@ -16,7 +16,7 @@ return new class extends Migration
             $table->float('amount');
             $table->foreignId('payment_method_id')->constrained('payment_methods');
             $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('order_id')->constrained('orders');
+            $table->foreignId('order_id')->nullable()->constrained('orders');
             $table->unsignedBigInteger('status')->default(0); // 0 = pending, 1 = completed, 2 = failed
             $table->timestamps();
         });
