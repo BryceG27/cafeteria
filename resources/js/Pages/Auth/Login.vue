@@ -164,11 +164,7 @@ async function submitRegister() {
                                     />
                                     <label for="login-username">Email</label>
                                 </FloatLabel>
-                                <div
-                                    v-if="errors.email"
-                                    class="invalid-feedback animated fadeIn"
-                                    v-text="errors.email"
-                                />
+                                <InputError class="mt-2" :message="errors.email" />
                             </div>
                             <div class="mb-4">
                                 <FloatLabel variant="on">
@@ -184,11 +180,7 @@ async function submitRegister() {
                                     />
                                     <label for="login-password">Password</label>
                                 </FloatLabel>
-                                <div
-                                    v-if="errors.password"
-                                    class="invalid-feedback animated fadeIn"
-                                    v-text="errors.password"
-                                />
+                                <InputError class="mt-2" :message="errors.password" />
                             </div>
                             <div
                                 class="d-flex justify-content-center align-items-center mb-4"

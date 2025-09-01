@@ -3,6 +3,7 @@
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\OrderController;
@@ -16,6 +17,25 @@ use App\Http\Controllers\CustomerController;
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/update', function() {
+    Artisan::call('migrate', '--step');
+
+    return 'Updated';
+});
+
+Route::get('/migrate-fresh', function() {
+    Artisan::call('migrate:fresh', ['--seed' => true]);
+
+    return 'Migrated Fresh with Seed';
+});
+
+Route::get('/seed', function() {
+    Artisan::call('db:seed');
+
+    return 'Seeded';
+});
+
 
 Route::post('/sign-in', [ProfileController::class, 'sign_in'])->name('profile.sign-in');
 

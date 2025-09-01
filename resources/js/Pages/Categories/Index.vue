@@ -36,6 +36,12 @@ const props = defineProps({
                     stripedRows
                     :value="categories"
                 >
+                    <template #empty>
+                        <div class="p-4 text-center">
+                            <i class="fa fa-exclamation-triangle fa-2x"></i>
+                            <p class="mt-2">Nessuna categoria creata</p>
+                        </div>
+                    </template>
                     <Column field="id" class="text-center" v-if="auth.user.user_group_id == 1">
                         <template #body="{ data }">
                             <Link 

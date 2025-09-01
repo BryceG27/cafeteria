@@ -21,6 +21,13 @@ class UserSeeder extends Seeder
                 'user_group_id' => 1,
                 'password' => Hash::make('password')
             ],
+            [
+                'name' => 'Claudio',
+                'surname' => 'Alimena',
+                'email' => 'claudioalimena@gmail.com',
+                'user_group_id' => 1,
+                'password' => Hash::make('password')
+            ]
         ];
 
         foreach ($users as $user) {
