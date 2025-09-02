@@ -19,7 +19,7 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/update', function() {
-    Artisan::call('migrate', '--step');
+    Artisan::call('migrate');
 
     return 'Updated';
 });
@@ -52,6 +52,7 @@ Route::middleware(['auth' , 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::resource('payments', PaymentController::class)->middleware(['auth', 'verified'])->except(['show', 'edit', 'update', 'destroy']);
+    Route::post('/payments/store/by-admin', [PaymentController::class, 'store_by_admin'])->middleware(['auth', 'verified'])->name('payments.store-by-admin');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {

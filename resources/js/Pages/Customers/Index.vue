@@ -38,14 +38,14 @@ const props = defineProps({
                                     :href="route('users.toggle-active', data.id)"
                                     method="put"
                                     as="button"
-                                    class="btn btn-sm"
+                                    class="btn btn-sm clickable"
                                     :class="!data.is_active ? 'btn-alt-success' : 'btn-alt-warning'"
                                 >
                                     <i class="fa" :class="!data.is_active ? 'fa-play' : 'fa-pause'"></i>
                                 </Link>
                                 <Link
                                     :href="route('customers.show', { 'customer' : data.id})"
-                                    class="btn btn-alt-info btn-sm ms-1"
+                                    class="btn btn-alt-info btn-sm ms-1 clickable"
                                 >
                                     <i class="fa fa-eye"></i>
                                 </Link>
@@ -132,3 +132,9 @@ const props = defineProps({
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+.clickable {
+    cursor: pointer;
+}
+</style>

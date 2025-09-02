@@ -3,13 +3,15 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
 
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dropdown from 'primevue/dropdown';
 import InputNumber from 'primevue/inputnumber';
 import FloatLabel from 'primevue/floatlabel';
+import Dialog from 'primevue/dialog';
+import Textarea from 'primevue/textarea';
 
 import moment from "moment";
 
@@ -17,6 +19,16 @@ const props = defineProps({
     auth : Object,
     customer : Object,
     order_statuses : Array,
+});
+
+const paymentModal = ref(false);
+
+const paymentForm = useForm({
+    amount: 0.00,
+    payment_method_id : 1,
+    notes: 'Pagamento in contanti',
+    user_id: props.customer.id,
+    status : 1
 });
 
 const updateOrderStatus = (event) => {
@@ -41,11 +53,90 @@ const total_credit = computed(() => {
     return props.customer.credits.reduce((sum, order) => sum + parseFloat(order.amount_available), 0);
 });
 
+const submitPayment = () => {
+    paymentForm.post(route('payments.store-by-admin'), {
+        onSuccess: () => {
+            paymentModal.value = false;
+            paymentForm.reset();
+        },
+        preserveScroll: true,
+    });
+}
+
+const denyPayment = () => {
+    paymentModal.value = false;
+    paymentForm.reset();
+}
+
+
 </script>
 <template>
     <Head :title="`${customer.name} ${customer.surname}`" />
 
     <AuthenticatedLayout>
+        
+        <Dialog 
+            v-model:visible="paymentModal" 
+            :header="`Aggiungi pagamento per ${customer.name} ${customer.surname}`" 
+            modal
+            :style="{ width: '50rem' }"
+        >
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12">
+                        <p class="text-muted">
+                            Generazione credito dopo pagamento in contanti
+                        </p>
+                    </div>
+                </div>
+                <div class="row pb-3">
+                    <div class="col-md-12">
+                        <label for="" class="form-label">Importo</label><br>
+                        <InputNumber 
+                            v-model="paymentForm.amount" 
+                            input-id="amount" 
+                            placeholder="Importo"
+                            mode="currency"
+                            currency="EUR"
+                            locale="it-IT"
+                            class="w-100"
+                            inputClass="w-100"
+                        />
+                    </div>
+                </div>
+                <div class="row pb-3">
+                    <div class="col-md-12">
+                        <label for="s" class="form-label">Note aggiuntive</label><br>
+                        <Textarea 
+                            v-model="paymentForm.notes" 
+                            input-id="notes"
+                            rows="3" 
+                            placeholder="Note aggiuntive"
+                            class="w-100"
+                            inputClass="w-100"
+                        />
+                    </div>
+                </div>
+            </div>    
+            <template #footer>
+                <div class="text-end">
+                    <button 
+                        class="btn btn-sm btn-alt-success me-1"
+                        @click="submitPayment"
+                    >
+                        <i class="fa fa-save me-1"></i>
+                        Salva
+                    </button>
+                    <button 
+                        class="btn btn-sm btn-alt-danger"
+                        @click="denyPayment"
+                    >
+                        <i class="fa fa-x me-1"></i>
+                        Chiudi
+                    </button>
+                </div>
+            </template>
+        </Dialog>
 
         <SuccessMessage />
         <ErrorMessage />
@@ -214,6 +305,15 @@ const total_credit = computed(() => {
                 </div>
             </BaseBlock>
             <BaseBlock title="Pagamenti del cliente" content-class="pb-3">
+                <template #options v-if="auth.user.user_group_id == 1">
+                    <button 
+                        class="btn btn-alt-primary btn-sm"
+                        @click="paymentModal = true"    
+                    >
+                        <i class="fa fa-plus"></i>
+                        Aggiungi pagamento
+                    </button>
+                </template>
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-md-12">

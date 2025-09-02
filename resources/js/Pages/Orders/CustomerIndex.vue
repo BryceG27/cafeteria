@@ -111,7 +111,7 @@ const destroy = (id) => {
                                 <li>
                                     <Link
                                         :href="route('orders.edit', data.id)"
-                                        class="d-xl-none dropdown-item d-flex gap-2 align-items-center" 
+                                        class="d-xl-none dropdown-item d-flex gap-2 align-items-center clickable" 
                                         style="font-size: 13px"
                                     >
                                         <button class="btn btn-alt-warning btn-sm">
@@ -122,7 +122,7 @@ const destroy = (id) => {
                                 </li>
                                 <li v-if="data.status == 0">
                                     <div
-                                        class="dropdown-item d-flex gap-2 align-items-center" 
+                                        class="dropdown-item d-flex gap-2 align-items-center clickable" 
                                         style="font-size: 13px"
                                         @click="showDialog = true"
                                     >
@@ -138,7 +138,7 @@ const destroy = (id) => {
                                 <li v-if="data.status != 3 && (moment(data.created_at).format('YYYY-MM-DD') <= moment().format('YYYY-MM-DD'))">
                                     <div
                                         @click="destroy(data.id)"
-                                        class="dropdown-item d-flex gap-2 align-items-center" style="font-size: 13px"
+                                        class="dropdown-item d-flex gap-2 align-items-center clickable" style="font-size: 13px"
                                         as="button"
                                         method="delete"
                                     >
@@ -195,6 +195,8 @@ const destroy = (id) => {
         </div>
     </AuthenticatedLayout>
 </template>
-<style>
-    
+<style scoped>
+    .clickable {
+        cursor: pointer;
+    }
 </style>

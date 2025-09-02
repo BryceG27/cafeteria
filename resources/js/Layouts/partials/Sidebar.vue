@@ -136,7 +136,7 @@ onMounted(() => {
               <i class="fa fa-circle-notch text-primary"></i>
             </span>
             <span class="smini-hide fs-5 tracking-wider">
-              {{ $page.props.appName }}
+              Mille<span class="fw-normal">voglie</span>
             </span>
           </Link>
           <!-- END Logo -->
@@ -153,7 +153,7 @@ onMounted(() => {
             class="d-lg-none btn btn-sm btn-alt-secondary ms-1"
             @click="store.sidebar({ mode: 'close' })"
           >
-            <i class="fa fa-trash"></i>
+            <i class="fa fa-arrow-right"></i>
           </button>
           <!-- END Close Sidebar -->
         </div>

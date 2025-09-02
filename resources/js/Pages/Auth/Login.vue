@@ -65,7 +65,7 @@ async function submitRegister() {
 <template>
     <!-- Page Content -->
     <Head title="Login" />
-    <BaseBackground image="/assets/media/photos/photo11@2x.jpg">
+    <BaseBackground image="/assets/media/photos/mensa-ranchibile.jpg">
         <div class="row g-0 bg-primary-dark-op">
             <!-- Meta Info Section -->
             <div
@@ -77,7 +77,7 @@ async function submitRegister() {
                             :href="route('dashboard')"
                             class="link-fx fw-semibold fs-2 text-white"
                             >
-                            MILLE<span class="fw-normal">VOGLIE</span>
+                            Mille<span class="fw-normal">voglie</span>
                         </Link>
                         <p class="text-white-75 me-xl-8 mt-2">
                             Benvenuto sul portale della Mensa Ranchibile. Effettua il login per accedere agli ordini e alla configurazione
@@ -117,20 +117,26 @@ async function submitRegister() {
             class="hero-static col-lg-8 d-flex flex-column align-items-center bg-body-extra-light"
         >
             <div class="p-3 w-100 d-lg-none text-center">
-            <Link
-                :href="route('dashboard')"
-                class="link-fx fw-semibold fs-3 text-dark"
-            >
-                Mille<span class="fw-normal">Foglie</span>
-            </Link>
-        </div>
+                <Link
+                    :href="route('dashboard')"
+                    class="link-fx fw-semibold fs-3 text-dark"
+                >
+                    Mille<span class="fw-normal">voglie</span>
+                </Link>
+            </div>
         <div class="p-4 w-100 flex-grow-1 d-flex align-items-center">
             <div class="w-100" v-if="!register">
                 <!-- Header -->
                 <div class="text-center mb-5">
-                    <p class="mb-3">
+                    <!-- <p class="mb-3">
                         <i class="fa fa-2x fa-circle-notch text-primary-light"></i>
-                    </p>
+                    </p> -->
+                    <div class="mb-3 d-flex justify-content-center align-items-center gap-3">
+                        <img src="/assets/media/photos/Logo Millevoglie.jpeg" alt="Logo Millevoglie" style="width: 250px; height: 100%" class="rounded">
+                        <div style="height: 175px; overflow: hidden;">
+                            <img src="/assets/media/photos/Logo Mokha.jpeg" alt="Logo Mokha" style="height: 100%; width: 250px; object-fit: cover;" class="rounded">
+                        </div>
+                    </div>
                     <h1 class="fw-bold mb-2">Entra nel portale</h1>
                     <p class="fw-medium text-muted">
                         Benvenuto, effettua il login oppure
@@ -207,9 +213,12 @@ async function submitRegister() {
             </div>
             <div class="w-100" v-if="register">
                 <div class="text-center mb-5">
-                    <p class="mb-3">
+                    <!-- <p class="mb-3">
                         <i class="fa fa-2x fa-circle-notch text-primary-light"></i>
-                    </p>
+                    </p> -->
+                    <div class="mb-3">
+                        <img src="/assets/media/photos/Logo Millevoglie.jpeg" alt="" style="width: 150px">
+                    </div>
                     <h1 class="fw-bold mb-2">Entra nel portale</h1>
                     <p class="fw-medium text-muted">
                         Benvenuto, effettua la registrazione per creare un nuovo account oppure

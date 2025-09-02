@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link } from "@inertiajs/vue3";
+import { Head, Link, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
 import { ref } from "vue";
 
@@ -18,6 +18,7 @@ const props = defineProps({
 const expandedRows = ref(null);
 
 const deleteMenu = (id) => {
+    const form = useForm({});
     Swal.fire({
         title: 'Sei sicuro?',
         text: "Non potrai tornare indietro!",
@@ -29,15 +30,7 @@ const deleteMenu = (id) => {
         cancelButtonText: 'Annulla'
     }).then((result) => {
         if (result.isConfirmed) {
-            Inertia.delete(route('menus.destroy', id), {
-                onSuccess: () => {
-                    Swal.fire(
-                        'Cancellato!',
-                        'Il menu è stato cancellato.',
-                        'success'
-                    )
-                }
-            });
+            form.delete(route('menus.destroy', { menu : id}));
         }
     })
 }
@@ -107,7 +100,8 @@ const deleteMenu = (id) => {
                                 <ul class="dropdown-menu">
                                     <li>
                                         <Link
-                                            class="dropdown-item d-flex gap-2 align-items-center" style="font-size: 13px"
+                                            class="dropdown-item d-flex gap-2 align-items-center clickable" 
+                                            style="font-size: 13px"
                                             :href="route('menus.edit', data.id)"
                                         >
                                             <button class="btn btn-sm btn-alt-info" type="button">
@@ -120,9 +114,12 @@ const deleteMenu = (id) => {
                                         <hr class="dropdown-divider">
                                     </li>
                                     <li>
-                                        <div class="dropdown-item d-flex gap-2 align-items-center" style="font-size: 13px"
+                                        <div 
+                                            class="dropdown-item d-flex gap-2 align-items-center clickable" 
+                                            style="font-size: 13px" 
+                                            @click="deleteMenu(data.id)"
                                         >
-                                            <button class="btn btn-alt-danger btn-sm" @click="deleteMenu(data.id)" type="button">
+                                            <button class="btn btn-alt-danger btn-sm" type="button">
                                                 <i class="fa fa-trash nav-main-link-icon"></i>
                                             </button>
                                             Cancella menu
@@ -153,6 +150,8 @@ const deleteMenu = (id) => {
         </div>
     </AuthenticatedLayout>
 </template>
-<style>
-    
+<style scoped>
+    .clickable {
+        cursor: pointer;
+    }
 </style>

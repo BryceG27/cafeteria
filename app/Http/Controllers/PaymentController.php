@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Inertia\Inertia;
+use App\Models\Credit;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 
@@ -67,5 +68,28 @@ class PaymentController extends Controller
     public function destroy(Payment $payment)
     {
         //
+    }
+
+    public function store_by_admin(Request $request) {
+        $validate = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'payment_method_id' => 'required|exists:payment_methods,id',
+            'user_id' => 'required|exists:users,id',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $validate['status'] = 1; // Completed
+        $validate['order_id'] = null;
+
+        Payment::create($validate);
+
+        Credit::create([
+            'amount_available' => $validate['amount'],
+            'total' => $validate['amount'],
+            'user_id' => $validate['user_id'],
+            'description' => 'Credito aggiunto dall\'amministratore. ' . ($validate['notes'] ?? ''),
+        ]);
+
+        return redirect()->back()->with('message', 'Pagamento e credito aggiunti con successo.');
     }
 }

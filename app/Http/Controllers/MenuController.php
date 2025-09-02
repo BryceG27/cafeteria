@@ -112,6 +112,13 @@ class MenuController extends Controller
      */
     public function destroy(Menu $menu)
     {
-        dd($menu);
+        if($menu->orders()->count() > 0)
+            return redirect()->route('menus.index')->withErrors("Non è possibile eliminare il menu in quanto associato ad uno o più ordini.");
+
+        $menu->products()->detach();
+
+        $menu->delete();
+
+        return redirect()->route('menus.index')->with('success', "Menu eliminato con successo.");
     }
 }

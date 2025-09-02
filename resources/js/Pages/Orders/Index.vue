@@ -245,6 +245,10 @@ const updateOrderStatus = (event) => {
     animation: blink 2s linear infinite;
 }
 
+.clickable {
+    cursor: pointer;
+}
+
 @keyframes blink {
     0% { opacity: 1; }
     50% { opacity: 0.2; }
