@@ -20,6 +20,7 @@ class ProductFactory extends Factory
             'name' => fake()->word(),
             'description' => fake()->sentence(),
             'category_id' => fake()->numberBetween(1, 10),
+            'product_type_id' => fake()->numberBetween(1, 4),
             'is_active' => true
         ];
     }

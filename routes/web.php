@@ -36,6 +36,11 @@ Route::get('/seed', function() {
     return 'Seeded';
 });
 
+Route::get('/storage-link', function() {
+    Artisan::call('storage:link');
+
+    return 'Storage link created';
+});
 
 Route::post('/sign-in', [ProfileController::class, 'sign_in'])->name('profile.sign-in');
 

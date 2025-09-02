@@ -79,6 +79,7 @@ const deleteMenu = (id) => {
                                 :value="data.products"
                                 responsiveLayout="scroll"
                                 stripedRows
+                                style="max-height: 15rem; overflow-y: auto;"
                             >
                                 <Column header="Nome" field="name" />
                                 <Column header="Tipo" field="type.name" />

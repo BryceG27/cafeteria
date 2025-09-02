@@ -74,7 +74,7 @@ watch(add_second_menu, (newVal) => {
 </script>
 <template>
     <form @submit.prevent="emit('submit')" class="container-fluid">
-        <div class="row pb-3" v-if="menus.length > 0">
+        <div class="row pb-3" v-if="menus.length > 1">
             <div class="col-md-12">
                 <label for="menu_id" class="form-label">Menù</label>
                 <Dropdown 

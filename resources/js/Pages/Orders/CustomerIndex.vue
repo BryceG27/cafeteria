@@ -5,15 +5,19 @@ import BaseBlock from "@/Components/BaseBlock.vue";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import Dialog from 'primevue/dialog';
 
 import Swal from 'sweetalert2';
 
 import moment from 'moment';
+import { ref } from "vue";
 
 const props = defineProps({
     orders: Array,
     auth: Object,
 });
+
+const showDialog = ref(false);
 
 const destroy = (id) => {
     const form = useForm({});
@@ -42,6 +46,37 @@ const destroy = (id) => {
         <div class="content">
             <SuccessMessage />
             <ErrorMessage />
+
+            <Dialog
+                v-model:visible="showDialog"
+                modal
+                header="Pagamento"
+                :style="{ width: '30vw' }"
+            >
+                <div class="container-fluid">
+                    <div class="row pb-3">
+                        <div class="col-md-8 offset-md-2">
+                            <button class="btn btn-dark btn-lg w-100">
+                                Paga con Carta di Credito
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row pb-3">
+                        <div class="col-md-8 offset-md-2">
+                            <button class="btn btn-alt-warning btn-lg w-100 text-primary">
+                                Paga con PayPal
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row pb-3">
+                        <div class="col-md-8 offset-md-2">
+                            <button class="btn btn-alt-success btn-lg w-100">
+                                Paga con credito residuo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Dialog>
 
             <BaseBlock title="Ordini" contentClass="pb-3">
                 <template #options>
@@ -74,17 +109,16 @@ const destroy = (id) => {
                             </button>
                             <ul class="dropdown-menu">
                                 <li v-if="data.status == 0">
-                                    <Link
-                                        :href="route('orders.destroy', data.id)"
-                                        class="dropdown-item d-flex gap-2 align-items-center" style="font-size: 13px"
-                                        as="button"
-                                        method="patch"
+                                    <div
+                                        class="dropdown-item d-flex gap-2 align-items-center" 
+                                        style="font-size: 13px"
+                                        @click="showDialog = true"
                                     >
-                                        <button class="btn btn-alt-success btn-sm">
+                                        <button class="btn btn-alt-success btn-sm" type="button">
                                             <i class="fa fa-dollar-sign"></i>
                                         </button>
                                         Effettua pagamento
-                                    </Link>
+                                    </div>
                                 </li>
                                 <li v-if="data.status == 0">
                                     <hr class="dropdown-divider"></hr>

@@ -77,7 +77,7 @@ async function submitRegister() {
                             :href="route('dashboard')"
                             class="link-fx fw-semibold fs-2 text-white"
                             >
-                            Mille<span class="fw-normal">Foglie</span>
+                            MILLE<span class="fw-normal">VOGLIE</span>
                         </Link>
                         <p class="text-white-75 me-xl-8 mt-2">
                             Benvenuto sul portale della Mensa Ranchibile. Effettua il login per accedere agli ordini e alla configurazione
@@ -283,7 +283,7 @@ async function submitRegister() {
                                     name="child"
                                     v-model="registerForm.child"
                                 />
-                                <label for="child">Nome figlio/a</label>
+                                <label for="child">Nome e Cognome figlio/a</label>
                             </FloatLabel>
                             <InputError class="mt-2" :message="errors.child" />
                         </div>
