@@ -39,7 +39,7 @@ const form = useForm({
     <AuthenticatedLayout>
         <div class="content">
             <BaseBlock :title="`Modifica ordine ${auth.user.user_group_id != 3 ? ' | ' + order.customer.child : ''}`" class="mb-4">
-                <template #options>
+                <!-- <template #options>
                     <button 
                         class="btn btn-alt-success btn-sm"
                         @click="submit"
@@ -54,7 +54,7 @@ const form = useForm({
                         <i class="fa fa-x me-1"></i>
                         Annulla
                     </Link>
-                </template>
+                </template> -->
 
                 <OrderForm 
                     :form="form" 

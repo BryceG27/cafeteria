@@ -98,6 +98,12 @@ class Order extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function menu() : BelongsTo
+    {
+        return $this->belongsTo(Menu::class, 'menu_id');
+        
+    }
+
     public function get_status() {
         foreach (SELF::$STATUSES as $status) {
             if ($status['value'] == $this->status) {

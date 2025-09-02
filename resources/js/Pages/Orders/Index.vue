@@ -99,15 +99,17 @@ const updateOrderStatus = (event) => {
                     </Column>
                     <Column header="Cliente" field="child_name">
                         <template #body="{ data }">
-                            {{ data.child_name }}
-                            <a class="link-info ms-1" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fa fa-info"></i>
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li class="dropdown-item">
-                                    <strong>Genitore: </strong><em v-text="`${data.customer.name} ${data.customer.surname}`" />
-                                </li>
-                            </ul>
+                            <div class="d-flex align-items-center">
+                                {{ data.child_name }}
+                                <a class="link-info ms-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa fa-info"></i>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li class="dropdown-item">
+                                        <strong>Genitore: </strong><em v-text="`${data.customer.name} ${data.customer.surname}`" />
+                                    </li>
+                                </ul>
+                            </div>
                         </template>
                         <template #filter="{ filterModel, filterCallback }">
                             <InputText 
@@ -118,11 +120,12 @@ const updateOrderStatus = (event) => {
                             />
                         </template>
                     </Column>
+                    <Column header="Nome menù" field="menu.name" />
                     <Column header="Prodotti">
                         <template #body="{ data }">
                             <div class="row">
                                 <div 
-                                    v-if="data.customer.child_allergies != undefined && data.customer.child_allergies != ''" class="rounded-2 rounded-end-0 border border-end-0 col-md-2 px-0 d-flex justify-content-center align-items-center">
+                                    v-if="data.customer.child_allergies != undefined && data.customer.child_allergies != ''" class="rounded-2 rounded-end-0 border border-end-0 col-md-1 px-0 d-flex justify-content-center align-items-center">
                                     <a class="link-danger attention" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="fa fa-exclamation-triangle"></i>
                                     </a>
@@ -153,6 +156,17 @@ const updateOrderStatus = (event) => {
                                             </tr>
                                         </tbody>
                                     </table>
+                                </div>
+                                <div 
+                                    v-if="data.notes != undefined && data.notes != ''" class="rounded-2 rounded-start-0 border border-start-0 col-md-1 px-0 d-flex justify-content-center align-items-center">
+                                    <a class="link-primary attention" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fa fa-question"></i>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li class="dropdown-item">
+                                            <strong>Note: </strong><span v-text="`${data.notes}`" />
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
 

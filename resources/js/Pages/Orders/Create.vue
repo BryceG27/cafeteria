@@ -49,7 +49,7 @@ onMounted(() => {
     <AuthenticatedLayout>
         <div class="content">
             <BaseBlock title="Inserisci nuovo ordine" class="mb-4">
-                <template #options>
+                <!-- <template #options>
                     <button
                         class="btn btn-alt-success btn-sm"
                         @click="submit"
@@ -64,7 +64,7 @@ onMounted(() => {
                         <i class="fa fa-x me-1"></i>
                         Annulla
                     </Link>
-                </template>
+                </template> -->
 
                 <OrderForm 
                     :form="form" 

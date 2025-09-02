@@ -139,6 +139,7 @@ const destroy = (id) => {
                             </ul>
                         </template>
                     </Column>
+                    <Column header="Nome menù" field="menu.name" />
                     <Column header="Prodotti">
                         <template #body="{ data }">
                             <table class="table table-bordered rounded-2 h-100 align-middle">

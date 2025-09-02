@@ -319,7 +319,7 @@ async function submitRegister() {
                     </div>
 
                     <div class="row g-0 justify-content-center pt-4">
-                        <div class="col-md-2">
+                        <div class="col-md-12 text-center">
                             <button class="btn btn-alt-warning btn-lg" type="submit">
                                 <i class="fa fa-fw fa-check me-1 opacity-50"></i>
                                 Registrati

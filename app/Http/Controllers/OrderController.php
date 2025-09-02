@@ -20,17 +20,18 @@ class OrderController extends Controller
     {
         if(Auth::user()->user_group_id == 3) {
             return Inertia::render('Orders/CustomerIndex', [
-                'orders' => Order::where('customer_id', Auth::user()->id)->where('status', '<>', 2)->orderBy('created_at', 'desc')->with(['first_dish', 'second_dish', 'side_dish'])->get()->map(function($order) {
+                'orders' => Order::where('customer_id', Auth::user()->id)->where('status', '<>', 2)->orderBy('created_at', 'desc')->with(['first_dish', 'second_dish', 'side_dish', 'menu'])->get()->map(function($order) {
                     $order->status_info = $order->get_status();
                     return $order;
                 }),
             ]);
         } else {
             return Inertia::render('Orders/Index', [
-                'orders' => Order::with(['customer', 'first_dish', 'second_dish', 'side_dish'])->orderBy('created_at', 'desc')->get()->map(function($order) {
+                'orders' => Order::with(['customer', 'first_dish', 'second_dish', 'side_dish', 'menu'])->orderBy('created_at', 'desc')->get()->map(function($order) {
                     $order->status_info = $order->get_status();
                     $order->child_name = $order->customer->child . " ";
-                    $order->child_name .= count(explode($order->customer->child, ' ')) == 1 ? $order->customer->surname : '';
+
+                    $order->child_name .= count(explode(' ', $order->customer->child)) == 1 ? $order->customer->surname : '';
                     return $order;
                 }),
                 'order_statuses' => Order::get_statuses(),

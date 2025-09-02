@@ -2,13 +2,16 @@
 import Dropdown from "primevue/dropdown";
 import InputNumber from "primevue/inputnumber";
 import Textarea from "primevue/textarea";
-import InputError from "@/Components/InputError.vue";
 import Calendar from "primevue/calendar";
-import moment from "moment";
-
 import Listbox from "primevue/listbox";
 
+import InputError from "@/Components/InputError.vue";
+import moment from "moment";
+
 import { computed, ref, watch } from "vue";
+import { Link } from "@inertiajs/vue3";
+
+import Swal from "sweetalert2";
 
 const props = defineProps({
     form : Object,
@@ -70,6 +73,23 @@ watch(add_second_menu, (newVal) => {
         props.form.side_dish_id = null;
     }
 });
+
+const goBack = () => {
+    Swal.fire({
+        title: 'Sei sicuro?',
+        text: "Le modifiche non salvate andranno perse!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Si, annulla!',
+        cancelButtonText: 'Rimani'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = route('orders.index');
+        }
+    })
+}
 
 </script>
 <template>
@@ -211,12 +231,15 @@ watch(add_second_menu, (newVal) => {
                                         optionLabel="name" 
                                         optionValue="id"
                                         class="w-100" 
-                                        listStyle="max-height: 12rem"
+                                        listStyle="max-height: 17rem;"
                                         :disabled="form.second_dish_id != null && !add_second_menu"
                                     >
-                                        <template #optiongroup="slotProps">
-                                            <img :alt="slotProps.option.name" :src="slotProps.option.image" style="width: 18px" />
-                                           {{ slotProps.option.name }}
+                                        <template #option="slotProps">
+                                            <!-- <img :alt="slotProps.option.name"  :src="slotProps.option.image" style="width: 18px" /> -->
+                                            <div>
+                                                {{ slotProps.option.name }} <br>
+                                                <span class="text-muted" style="font-size: 12px" v-text="slotProps.option.description" />
+                                            </div>
                                         </template>
                                     </Listbox>
                                 </td>
@@ -228,12 +251,15 @@ watch(add_second_menu, (newVal) => {
                                         optionLabel="name" 
                                         optionValue="id"
                                         class="w-100" 
-                                        listStyle="max-height: 12rem"
+                                        listStyle="max-height: 17rem"
                                         :disabled="form.first_dish_id != null && !add_second_menu"
                                     >
-                                        <template #optiongroup="slotProps">
-                                            <img :alt="slotProps.option.name" :src="slotProps.option.image" style="width: 18px" />
-                                           {{ slotProps.option.name }}
+                                        <template #option="slotProps">
+                                            <!-- <img :alt="slotProps.option.name"  :src="slotProps.option.image" style="width: 18px" /> -->
+                                           <div>
+                                                {{ slotProps.option.name }} <br>
+                                                <span class="text-muted" style="font-size: 12px" v-text="slotProps.option.description" />
+                                            </div>
                                         </template>
                                     </Listbox>
                                 </td>
@@ -244,12 +270,15 @@ watch(add_second_menu, (newVal) => {
                                         optionLabel="name" 
                                         optionValue="id"
                                         class="w-100" 
-                                        listStyle="max-height: 12rem"
+                                        listStyle="max-height: 17rem"
                                         :disabled="(form.first_dish_id != null && !add_second_menu) || form.second_dish_id == null"
                                     >
-                                        <template #optiongroup="slotProps">
-                                            <img :alt="slotProps.option.name" :src="slotProps.option.image" style="width: 18px" />
-                                           {{ slotProps.option.name }}
+                                        <template #option="slotProps">
+                                            <!-- <img :alt="slotProps.option.name"  :src="slotProps.option.image" style="width: 18px" /> -->
+                                           <div>
+                                                {{ slotProps.option.name }} <br>
+                                                <span class="text-muted" style="font-size: 12px" v-text="slotProps.option.description" />
+                                            </div>
                                         </template>
                                     </Listbox>
                                 </td>
@@ -266,6 +295,34 @@ watch(add_second_menu, (newVal) => {
         <div class="p-4 text-center" v-else>
             <i class="fa fa-exclamation-triangle fa-2x"></i>
             <p class="mt-2">Nessun menù selezionato</p>
+        </div>
+
+        <div class="row pb-3 justify-content-center">
+            <div class="col-md-5 text-end">
+                <button
+                    class="btn btn-alt-primary btn-sm"
+                    type="submit"
+                >
+                    <i class="fa fa-save me-1"></i>
+                    Conferma
+                </button>
+            </div>
+            <div class="col-md-2 text-center">
+                <button class="btn btn-alt-info btn-sm">
+                    <i class="fa fa-dollar-sign me-1"></i>
+                    Conferma e paga
+                </button>
+            </div>
+            <div class="col-md-5 text-start">
+                <button
+                    class="btn btn-alt-danger btn-sm"
+                    type="button"
+                    @click="goBack"
+                >
+                    <i class="fa fa-x me-1"></i>
+                    Annulla
+                </button>
+            </div>
         </div>
     </form>
 </template>

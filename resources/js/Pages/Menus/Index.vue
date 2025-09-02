@@ -87,7 +87,7 @@ const deleteMenu = (id) => {
                             </DataTable>
                         </div>
                     </template>
-                    <Column expander style="width: 5%" />
+                    <Column expander style="width: 1%" />
                     <Column style="width: 5%" class="text-center">
                         <template #body="{ data }">
                             <div class="d-flex align-items-center justify-content-center">
@@ -132,17 +132,18 @@ const deleteMenu = (id) => {
                             </div>
                         </template>
                     </Column>
-                    <Column style="width: 15%" field="price" header="Prezzo">
+                    <Column style="width: 15%" field="name" header="Nome" />
+                    <Column style="width: 14%" field="price" header="Prezzo">
                         <template #body="{ data }">
                             {{ parseFloat(data.price).toFixed(2) }} €
                         </template>
                     </Column>
-                    <Column style="width: 15%" field="start_date" header="Valido dal">
+                    <Column style="width: 10%" field="start_date" header="Valido dal">
                         <template #body="{ data }">
                             {{ moment(data.start_date).format('DD/MM/YYYY') }}
                         </template>
                     </Column>
-                    <Column style="width: 15%" field="end_date" header="Valido al">
+                    <Column style="width: 10%" field="end_date" header="Valido al">
                         <template #body="{ data }">
                             {{ moment(data.end_date).format('DD/MM/YYYY') }}
                         </template>
