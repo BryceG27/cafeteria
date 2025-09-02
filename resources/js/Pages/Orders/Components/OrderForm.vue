@@ -121,88 +121,6 @@ const goBack = () => {
                 </div>
             </div>
             <div class="row pb-3">
-                <div class="col-md-4" v-if="auth.user.user_group_id == 1">
-                    <label for="total" class="form-label">Subtotale ordine</label>
-                    <InputNumber 
-                        inputId="total"
-                        class="w-100"
-                        mode="currency" 
-                        currency="EUR" 
-                        locale="it-IT" 
-                        v-model="form.subtotal_amount"
-                        readonly
-                    />
-                </div>
-                <div class="col-md-4" v-if="auth.user.user_group_id == 1">
-                    <label for="total" class="form-label">Sconto</label>
-                    <InputNumber 
-                        inputId="total"
-                        :class="{ 'is-invalid': errors.discount }"
-                        class="w-100"
-                        mode="currency" 
-                        currency="EUR" 
-                        locale="it-IT" 
-                        v-model="form.discount"
-                        :min="0"
-                    />
-                </div>
-                <div :class="{ 'col-md-6' : auth.user.user_group_id == 3, 'col-md-4' : auth.user.user_group_id == 1 }">
-                    <label for="total" class="form-label">Totale ordine</label>
-                    <InputNumber 
-                        inputId="total"
-                        class="w-100"
-                        mode="currency" 
-                        currency="EUR" 
-                        locale="it-IT" 
-                        :value="order_total"
-                        v-model="order_total"
-                        readonly
-                    />
-                </div>
-                <div class="col-md-6 pt-3" v-if="auth.user.user_group_id == 1">
-                    <label for="status" class="form-label">Stato</label>
-                    <Dropdown 
-                        inputId="status"
-                        optionValue="value"
-                        optionLabel="label"
-                        class="w-100"
-                        inputClass="w-100"
-                        :options="statuses"
-                        v-model="form.status"
-                    />
-                </div>
-                <div class="col-md-6" :class="{ 'pt-3' : auth.user.user_group_id == 1 }">
-                    <label for="order_date" class="form-label">Data validità ordine:</label>
-                    <Calendar 
-                        v-model="form.order_date" 
-                        inputId="order_date"
-                        :class="{ 'is-invalid': errors.order_date }"
-                        class="w-100"
-                        inputClass="w-100"
-                        dateFormat="dd/mm/yy"
-                        placeholder="gg/mm/aaaa"
-                        :minDate="moment().toDate()"
-                        :maxDate="selectedMenu ? moment(selectedMenu.end_date).toDate() : null"
-
-                    />
-                    <InputError class="mt-2" :message="errors.order_date" />
-                </div>
-            </div>
-            <div class="row pb-3">
-                <div class="col-md-12">
-                    <label for="notes" class="form-label">Note</label>
-                    <Textarea 
-                        v-model="form.notes"
-                        inputId="notes"
-                        :class="{ 'is-invalid': errors.notes }"
-                        class="w-100"
-                        rows="3"
-                        placeholder="Note aggiuntive..."
-                    />
-                    <InputError class="mt-2" :message="errors.notes" />
-                </div>
-            </div>
-            <div class="row pb-3">
                 <div class="col-md-12">
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" v-model="add_second_menu" id="add_second_menu" />
@@ -213,7 +131,7 @@ const goBack = () => {
             </div>
             <div class="row pb-3">
                 <div class="col-md-12">
-                    <table class="table">
+                    <table class="table d-none d-md-table">
                         <thead>
                             <tr>
                                 <th style="width: 33%">Primo</th>
@@ -285,6 +203,160 @@ const goBack = () => {
                             </tr>
                         </tbody>
                     </table>
+                    <table class="table d-md-none">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <p class="fw-bold border-bottom pb-2">Primo</p>
+                                    <InputError class="mt-2" :message="errors.first_dish_id" />
+                                    <Listbox 
+                                        v-model="form.first_dish_id" 
+                                        :options="first_dishes" 
+                                        optionLabel="name" 
+                                        optionValue="id"
+                                        class="w-100" 
+                                        listStyle="max-height: 17rem;"
+                                        :disabled="form.second_dish_id != null && !add_second_menu"
+                                    >
+                                        <template #option="slotProps">
+                                            <!-- <img :alt="slotProps.option.name"  :src="slotProps.option.image" style="width: 18px" /> -->
+                                            <div>
+                                                {{ slotProps.option.name }} <br>
+                                                <span class="text-muted" style="font-size: 12px" v-text="slotProps.option.description" />
+                                            </div>
+                                        </template>
+                                    </Listbox>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <p class="fw-bold border-bottom pb-2">Secondo</p>
+                                    <InputError class="mt-2" :message="errors.second_dish_id" />
+                                    <Listbox 
+                                        v-model="form.second_dish_id" 
+                                        :options="second_dishes" 
+                                        optionLabel="name" 
+                                        optionValue="id"
+                                        class="w-100" 
+                                        listStyle="max-height: 17rem"
+                                        :disabled="form.first_dish_id != null && !add_second_menu"
+                                    >
+                                        <template #option="slotProps">
+                                            <!-- <img :alt="slotProps.option.name"  :src="slotProps.option.image" style="width: 18px" /> -->
+                                           <div>
+                                                {{ slotProps.option.name }} <br>
+                                                <span class="text-muted" style="font-size: 12px" v-text="slotProps.option.description" />
+                                            </div>
+                                        </template>
+                                    </Listbox>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <p class="fw-bold border-bottom pb-2">Contorno</p>
+                                    <Listbox 
+                                        v-model="form.side_dish_id" 
+                                        :options="side_dishes" 
+                                        optionLabel="name" 
+                                        optionValue="id"
+                                        class="w-100" 
+                                        listStyle="max-height: 17rem"
+                                        :disabled="(form.first_dish_id != null && !add_second_menu) || form.second_dish_id == null"
+                                    >
+                                        <template #option="slotProps">
+                                            <!-- <img :alt="slotProps.option.name"  :src="slotProps.option.image" style="width: 18px" /> -->
+                                           <div>
+                                                {{ slotProps.option.name }} <br>
+                                                <span class="text-muted" style="font-size: 12px" v-text="slotProps.option.description" />
+                                            </div>
+                                        </template>
+                                    </Listbox>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row pb-3">
+                <div class="col-md-4" v-if="auth.user.user_group_id == 1">
+                    <label for="total" class="form-label">Riepilogo Subtotale</label>
+                    <InputNumber 
+                        inputId="total"
+                        class="w-100"
+                        mode="currency" 
+                        currency="EUR" 
+                        locale="it-IT" 
+                        v-model="form.subtotal_amount"
+                        readonly
+                    />
+                </div>
+                <div class="col-md-4" v-if="auth.user.user_group_id == 1">
+                    <label for="total" class="form-label">Sconto</label>
+                    <InputNumber 
+                        inputId="total"
+                        :class="{ 'is-invalid': errors.discount }"
+                        class="w-100"
+                        mode="currency" 
+                        currency="EUR" 
+                        locale="it-IT" 
+                        v-model="form.discount"
+                        :min="0"
+                    />
+                </div>
+                <div :class="{ 'col-md-6' : auth.user.user_group_id == 3, 'col-md-4' : auth.user.user_group_id == 1 }">
+                    <label for="total" class="form-label">Riepilogo Totale</label>
+                    <InputNumber 
+                        inputId="total"
+                        class="w-100"
+                        mode="currency" 
+                        currency="EUR" 
+                        locale="it-IT" 
+                        :value="order_total"
+                        v-model="order_total"
+                        readonly
+                    />
+                </div>
+                <div class="col-md-6 pt-3" v-if="auth.user.user_group_id == 1">
+                    <label for="status" class="form-label">Stato</label>
+                    <Dropdown 
+                        inputId="status"
+                        optionValue="value"
+                        optionLabel="label"
+                        class="w-100"
+                        inputClass="w-100"
+                        :options="statuses"
+                        v-model="form.status"
+                    />
+                </div>
+                <div class="col-md-6 pt-2 pt-md-0" :class="{ 'pt-3' : auth.user.user_group_id == 1 }">
+                    <label for="order_date" class="form-label">Data validità ordine:</label>
+                    <Calendar 
+                        v-model="form.order_date" 
+                        inputId="order_date"
+                        :class="{ 'is-invalid': errors.order_date }"
+                        class="w-100"
+                        inputClass="w-100"
+                        dateFormat="dd/mm/yy"
+                        placeholder="gg/mm/aaaa"
+                        :minDate="moment().toDate()"
+                        :maxDate="selectedMenu ? moment(selectedMenu.end_date).toDate() : null"
+
+                    />
+                    <InputError class="mt-2" :message="errors.order_date" />
+                </div>
+            </div>
+            <div class="row pb-3">
+                <div class="col-md-12">
+                    <label for="notes" class="form-label">Note</label>
+                    <Textarea 
+                        v-model="form.notes"
+                        inputId="notes"
+                        :class="{ 'is-invalid': errors.notes }"
+                        class="w-100"
+                        rows="3"
+                        placeholder="Note aggiuntive..."
+                    />
+                    <InputError class="mt-2" :message="errors.notes" />
                 </div>
             </div>
         </template>
@@ -298,24 +370,27 @@ const goBack = () => {
         </div>
 
         <div class="row pb-3 justify-content-center">
-            <div class="col-md-5 text-end">
+            <div class="col-md-4 col-sm-12 text-md-end text-center pb-3 pb-md-0">
                 <button
-                    class="btn btn-alt-primary btn-sm"
+                    class="btn btn-alt-primary btn-sm w-75"
                     type="submit"
                 >
                     <i class="fa fa-save me-1"></i>
                     Conferma
                 </button>
             </div>
-            <div class="col-md-2 text-center">
-                <button class="btn btn-alt-info btn-sm">
+            <div class="col-md-4 col-sm-12 text-center pb-3 pb-md-0">
+                <button 
+                    class="btn btn-alt-info btn-sm w-75"
+                    type="button"
+                >
                     <i class="fa fa-dollar-sign me-1"></i>
                     Conferma e paga
                 </button>
             </div>
-            <div class="col-md-5 text-start">
+            <div class="col-md-4 col-sm-12 text-md-start text-center pb-3 pb-md-0">
                 <button
-                    class="btn btn-alt-danger btn-sm"
+                    class="btn btn-alt-danger btn-sm w-75"
                     type="button"
                     @click="goBack"
                 >
@@ -326,6 +401,3 @@ const goBack = () => {
         </div>
     </form>
 </template>
-<style>
-    
-</style>

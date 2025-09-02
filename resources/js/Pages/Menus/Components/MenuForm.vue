@@ -177,7 +177,7 @@ const availableProducts = computed(() => {
                         <template #body="{ data }">
                             <Image 
                                 v-if="data.image" 
-                                :src="`/storage/${data.image}`" 
+                                :src="`/storage/app/public/${data.image}`" 
                                 alt="Immagine prodotto" 
                                 width="100%"
                             />

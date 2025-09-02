@@ -99,7 +99,7 @@ const destroy = (id) => {
                         <template #body="{ data }">
                             <Link
                                 :href="route('orders.edit', data.id)"
-                                class="btn btn-alt-warning btn-sm"
+                                class="btn btn-alt-warning btn-sm d-none d-xl-inline"
                             >
                                 <i class="fa fa-pencil-alt"></i>
                             </Link>
@@ -108,6 +108,18 @@ const destroy = (id) => {
                                 ...
                             </button>
                             <ul class="dropdown-menu">
+                                <li>
+                                    <Link
+                                        :href="route('orders.edit', data.id)"
+                                        class="d-xl-none dropdown-item d-flex gap-2 align-items-center" 
+                                        style="font-size: 13px"
+                                    >
+                                        <button class="btn btn-alt-warning btn-sm">
+                                            <i class="fa fa-pencil-alt"></i>
+                                        </button>
+                                        Modifica
+                                    </Link>
+                                </li>
                                 <li v-if="data.status == 0">
                                     <div
                                         class="dropdown-item d-flex gap-2 align-items-center" 

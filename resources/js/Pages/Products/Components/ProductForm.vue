@@ -111,7 +111,7 @@ const loadImage = (event) => {
             <div class="col-md-6">
                 <Image 
                     v-if="form.image && typeof(form.image) === 'string'" 
-                    :src="typeof form.image === 'object' ? URL.createObjectURL(form.image) : `/storage/${form.image}`" 
+                    :src="typeof form.image === 'object' ? URL.createObjectURL(form.image) : `/storage/app/public/${form.image}`" 
                     alt="Immagine prodotto" 
                     width="100%"
                 />

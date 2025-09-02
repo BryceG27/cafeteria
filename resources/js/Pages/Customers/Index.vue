@@ -33,21 +33,67 @@ const props = defineProps({
                     </template>
                     <Column field="id" class="text-center" v-if="auth.user.user_group_id == 1">
                         <template #body="{ data }">
-                            <Link 
-                                :href="route('users.toggle-active', data.id)"
-                                method="put"
-                                as="button"
-                                class="btn btn-sm"
-                                :class="!data.is_active ? 'btn-alt-success' : 'btn-alt-warning'"
-                            >
-                                <i class="fa" :class="!data.is_active ? 'fa-play' : 'fa-pause'"></i>
-                            </Link>
-                            <Link
-                                :href="route('customers.show', { 'customer' : data.id})"
-                                class="btn btn-alt-info btn-sm ms-1"
-                            >
-                                <i class="fa fa-eye"></i>
-                            </Link>
+                            <div class="d-none d-xl-inline me-1">
+                                <Link 
+                                    :href="route('users.toggle-active', data.id)"
+                                    method="put"
+                                    as="button"
+                                    class="btn btn-sm"
+                                    :class="!data.is_active ? 'btn-alt-success' : 'btn-alt-warning'"
+                                >
+                                    <i class="fa" :class="!data.is_active ? 'fa-play' : 'fa-pause'"></i>
+                                </Link>
+                                <Link
+                                    :href="route('customers.show', { 'customer' : data.id})"
+                                    class="btn btn-alt-info btn-sm ms-1"
+                                >
+                                    <i class="fa fa-eye"></i>
+                                </Link>
+                            </div>
+                            <div class="d-inline d-xl-none">
+                                <button class="btn btn-sm btn-alt-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    ...
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <Link 
+                                            :href="route('users.toggle-active', data.id)"
+                                            method="put"
+                                            as="button"
+                                            class="dropdown-item d-flex gap-2 align-items-center"
+                                            style="font-size: 13px"
+                                        >
+                                            <button 
+                                                class="btn btn-sm me-1"
+                                                :class="!data.is_active ? 'btn-alt-success' : 'btn-alt-warning'"
+                                                type="button"
+                                                style="width: 30%"
+                                            >
+                                                <i class="fa" :class="!data.is_active ? 'fa-play' : 'fa-pause'"></i>
+                                            </button>
+                                            <span v-text="!data.is_active ? 'Attiva' : 'Disattiva'" />
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            :href="route('customers.show', { customer : data.id})"
+                                            class="dropdown-item d-flex gap-2 align-items-center"
+                                            style="font-size: 13px"
+                                        >
+                                            <button
+                                                class="btn btn-alt-info btn-sm me-1"
+                                                type="button"
+                                                style="width: 30%"
+                                            >
+                                                <i class="fa fa-eye"></i>
+                                            </button>
+                                            <span>
+                                                Visualizza
+                                            </span>
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </div>
                         </template>
                     </Column>
                     <Column header="Cliente">
