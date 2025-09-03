@@ -216,8 +216,11 @@ async function submitRegister() {
                     <!-- <p class="mb-3">
                         <i class="fa fa-2x fa-circle-notch text-primary-light"></i>
                     </p> -->
-                    <div class="mb-3">
-                        <img src="/assets/media/photos/Logo Millevoglie.jpeg" alt="" style="width: 150px">
+                    <div class="mb-3 d-flex justify-content-center align-items-center gap-3">
+                        <img src="/assets/media/photos/Logo Millevoglie.jpeg" alt="Logo Millevoglie" style="width: 250px; height: 100%" class="rounded">
+                        <div style="height: 175px; overflow: hidden;">
+                            <img src="/assets/media/photos/Logo Mokha.jpeg" alt="Logo Mokha" style="height: 100%; width: 250px; object-fit: cover;" class="rounded">
+                        </div>
                     </div>
                     <h1 class="fw-bold mb-2">Entra nel portale</h1>
                     <p class="fw-medium text-muted">

@@ -25,6 +25,7 @@ const form = useForm({
     name : props.menu.name || '',
     start_date : props.menu.start_date || '',
     end_date : props.menu.end_date || '',
+    validity_date : props.menu.validity_date || '',
     price : props.menu.price || 0,
     second_price : props.menu.second_price || 6.00,
     is_active : props.menu.is_active || 1, // Default to active

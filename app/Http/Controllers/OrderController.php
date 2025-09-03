@@ -44,8 +44,16 @@ class OrderController extends Controller
      */
     public function create()
     {
+        $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
+        $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
+
+        if(in_array(Carbon::now()->locale('it_IT')->dayName, ['sabato', 'domenica'])) {
+            $startDate = Carbon::now()->addWeek()->startOfWeek()->format('Y-m-d');
+            $endDate = Carbon::now()->addWeek()->endOfWeek()->format('Y-m-d');
+        }
+
         return Inertia::render('Orders/Create', [
-            'menus' => Menu::where('is_active', true)->whereDate('start_date', '<=', \Carbon\Carbon::now()->format('Y-m-d'))->whereDate('end_date', '>=', \Carbon\Carbon::now()->format('Y-m-d'))->with('products')->get(),
+            'menus' => Menu::where('is_active', true)->whereDate('start_date', '>=',  $startDate)->whereDate('end_date', '<=', $endDate)->with('products')->get(),
             'order' => new Order(),
             'statuses' => Order::get_statuses(),
         ]);

@@ -18,7 +18,8 @@ class PaymentController extends Controller
             'payments' => Payment::where('user_id', auth()->id())->with('order', 'method')->get()->map(function($payment) {
                 $payment->status_info = $payment->get_status();
                 return $payment;
-            })
+            }),
+            'credits' => Credit::where('user_id', auth()->id())->get(),
         ]);
     }
 

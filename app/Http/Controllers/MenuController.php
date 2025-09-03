@@ -14,10 +14,18 @@ class MenuController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $startOfWeek = Carbon::now()->startOfWeek()->format('Y-m-d');
+        $endOfWeek = Carbon::now()->addWeek()->endOfWeek()->format('Y-m-d');
+
+        /* if($request->has('dateFilter')) {
+            $startOfWeek = Carbon::create($request->dateFilter['start'])->format('Y-m-d');
+            $endOfWeek = Carbon::create($request->dateFilter['end'])->format('Y-m-d');
+        } */
+
         return Inertia::render('Menus/Index', [
-            'menus' => Menu::orderBy('start_date', 'desc')->with(['products' => function($query) {
+            'menus' => Menu::whereDate('start_date', '>=', $startOfWeek)->whereDate('end_date', '<=', $endOfWeek)->orderBy('start_date', 'desc')->with(['products' => function($query) {
                 $query->with('type');
             }])->get()
         ]);
@@ -47,6 +55,7 @@ class MenuController extends Controller
         
         $validate['start_date'] = Carbon::create($request->start_date)->format('Y-m-d');
         $validate['end_date'] = $request->end_date ? Carbon::create($request->end_date)->format('Y-m-d') : Carbon::create($request->start_date)->endOfWeek()->format('Y-m-d');
+        $validate['validity_date'] = $request->validity_date ? Carbon::create($request->validity_date)->format('Y-m-d') : null;
 
         $menu = Menu::create($validate);
         if ($request->has('products')) {
@@ -92,6 +101,7 @@ class MenuController extends Controller
         $validate = Menu::validate($request);
         $validate['start_date'] = Carbon::create($request->start_date)->format('Y-m-d');
         $validate['end_date'] = $request->end_date ? Carbon::create($request->end_date)->format('Y-m-d') : Carbon::create($request->start_date)->endOfWeek()->format('Y-m-d');
+        $validate['validity_date'] = $request->validity_date ? Carbon::create($request->validity_date)->format('Y-m-d') : null;
 
         $menu->update($validate);
         if ($request->has('products')) {

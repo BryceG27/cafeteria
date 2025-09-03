@@ -18,6 +18,7 @@ class Menu extends Model
         'description',
         'start_date',
         'end_date',
+        'validity_date',
         'is_active',
         'price',
         'second_price'
@@ -37,6 +38,7 @@ class Menu extends Model
             'description' => 'nullable|string|max:1000',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'validity_date' => 'nullable|date|after_or_equal:start_date,before_or_equal:validity_date',
             'is_active' => 'boolean',
             'price' => 'nullable|numeric|min:0',
             'second_price' => 'nullable|numeric|min:0',

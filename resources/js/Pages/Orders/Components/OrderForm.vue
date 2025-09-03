@@ -108,7 +108,7 @@ const goBack = () => {
                     placeholder="Seleziona un menù"
                 >
                     <template #option="slotProps">
-                        {{ slotProps.option.name }} - {{ slotProps.option.description }}
+                        {{ slotProps.option.name }}
                     </template>
                 </Dropdown>
                 <InputError class="mt-2" :message="errors.menu_id" />

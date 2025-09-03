@@ -9,10 +9,29 @@ import InputNumber from 'primevue/inputnumber'
 
 import moment from 'moment'
 
+import { computed } from 'vue'
+
 const props = defineProps({
     payments: Array,
+    credits : Array,
     auth : Object,
 })
+
+const total_paid = computed(() => {
+    return props.payments.reduce((total, payment) => {
+        return total + parseFloat(payment.amount);
+    }, 0);
+});
+
+const total_credit = computed(() => {
+    return props.credits.reduce((total, credit) => {
+        return total + parseFloat(credit.amount);
+    }, 0);
+});
+
+const total_due = computed(() => {
+    return 0
+});
 
 </script>
 <template>

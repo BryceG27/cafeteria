@@ -2,10 +2,13 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
-import { ref } from "vue";
+import { ref, reactive } from "vue";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import Calendar from 'primevue/calendar';
+import InputGroup from 'primevue/inputgroup';
+import Button from 'primevue/button';
 
 import moment from 'moment';
 import Swal from 'sweetalert2';
@@ -16,6 +19,11 @@ const props = defineProps({
 });
 
 const expandedRows = ref(null);
+const dateFilter = reactive({ 
+    start: moment().startOf('week').toDate(), 
+    end: moment().endOf('week').toDate() 
+});
+
 
 const deleteMenu = (id) => {
     const form = useForm({});
@@ -34,6 +42,22 @@ const deleteMenu = (id) => {
         }
     })
 }
+
+const changeDateFilter = (e) => {
+    console.log(e);
+    
+    if (e.value && e.value.length === 2) {
+        dateFilter.start = moment(e[0]).toDate().format('YYYY-MM-DD');
+        dateFilter.end = moment(e[1]).toDate().format('YYYY-MM-DD');
+    } else {
+        dateFilter.start = null;
+        dateFilter.end = null;
+    }
+
+    console.log(dateFilter);
+    
+}
+
 </script>
 <template>
     <Head title="Menu" />
@@ -57,8 +81,46 @@ const deleteMenu = (id) => {
                 <DataTable
                     stripedRows
                     :value="menus"
+                    paginator
                     v-model:expandedRows="expandedRows"
+                    :rows="10"
                 >
+                    <template #header>
+                        <div class="row align-items-center justify-content-end">
+                            <div class="col-md-2 text-end">
+                                Filtra per range:
+                            </div>
+                            <div class="col-md-3 d-flex align-items-center">
+                                <InputGroup>
+                                    <Link 
+                                        class="btn btn-alt-danger rounded-end-0"
+                                        method="get"
+                                        as="button"
+                                        :href="route('menus.index')"
+                                    >
+                                        <i class="fa fa-x"></i>
+                                    </Link>
+                                    <Calendar 
+                                        selectionMode="range" 
+                                        dateFormat="dd/mm/yy" 
+                                        @change="changeDateFilter"
+                                        paginator 
+                                        :rows="5" 
+                                        :rowsPerPageOptions="[5, 10, 20, 50]"
+                                    />
+                                    
+                                    <Link 
+                                        class="btn btn-alt-success rounded-start-0"
+                                        method="get"
+                                        as="button"
+                                        :href="route('menus.index', { dateFilter : dateFilter})"
+                                    >
+                                        <i class="fa fa-search"></i>
+                                    </Link>
+                                </InputGroup>
+                            </div>
+                        </div>
+                    </template>
                     <template #empty>
                         <div class="p-4 text-center">
                             <i class="fa fa-exclamation-triangle fa-2x"></i>
@@ -135,14 +197,15 @@ const deleteMenu = (id) => {
                             {{ parseFloat(data.price).toFixed(2) }} €
                         </template>
                     </Column>
-                    <Column style="width: 10%" field="start_date" header="Valido dal">
+                    <Column style="width: 10%" field="start_date" header="Settimana validità">
                         <template #body="{ data }">
-                            {{ moment(data.start_date).format('DD/MM/YYYY') }}
+                            {{ moment(data.start_date).format('DD/MM') }} - {{ moment(data.end_date).format('DD/MM') }}
                         </template>
                     </Column>
-                    <Column style="width: 10%" field="end_date" header="Valido al">
+                    <Column style="width: 10%" field="end_date" header="Valido il">
                         <template #body="{ data }">
-                            {{ moment(data.end_date).format('DD/MM/YYYY') }}
+                            <span v-if="data.validity_date" v-text="moment(data.validity_date).format('DD/MM')" />
+                            <span v-else>-</span>
                         </template>
                     </Column>
                 </DataTable>
