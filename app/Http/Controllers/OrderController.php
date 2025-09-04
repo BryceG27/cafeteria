@@ -71,10 +71,12 @@ class OrderController extends Controller
         $menu = Menu::with('products')->find($request->menu_id);
         $validated['subtotal_amount'] = $menu->price;
         $validated['total_amount'] = $menu->price;
+        $validated['to_be_paid'] = $menu->price;
 
         if($request->first_dish_id && $request->second_dish_id) {
             $validated['subtotal_amount'] += $menu->second_price;
             $validated['total_amount'] += $menu->second_price;
+            $validated['to_be_paid'] += $menu->second_price;
         }
 
         $validated['order_date'] = \Carbon\Carbon::create($request->order_date)->format('Y-m-d');
@@ -111,8 +113,8 @@ class OrderController extends Controller
     {
         $validated = Order::validate($request);
 
-        $menu = Menu::with('products')->find($request->menu_id);
         $validated['total_amount'] = (Float)$order->subtotal_amount - ($request->discount ?? 0);
+        $validated['to_be_paid'] = (Float)$order->subtotal_amount - ($request->discount ?? 0);
 
         $validated['order_date'] = \Carbon\Carbon::create($request->order_date)->format('Y-m-d');
 
@@ -179,4 +181,29 @@ class OrderController extends Controller
 
         return redirect()->back()->with('message', 'Stato ordine aggiornato con successo.');
     }
+
+    public function confirm(Order $order, Request $request) {
+        Payment::create([
+            'user_id' => $order->customer_id,
+            'amount' => $order->total_amount,
+            'payment_date' => \Carbon\Carbon::now()->format('Y-m-d'),
+            'notes' => 'Pagamento effettuato tramite Stripe',
+            'order_id' => $order->id,
+            'status' => 1,
+            'payment_method_id' => $request->payment_method,
+            'stripe_session_id' => $request->session_id ?? null,
+        ]);
+
+        $order->update([
+            'status' => 1,
+            'to_be_paid' => 0,
+        ]);
+
+        return redirect()->route('orders.index')->with('message', 'Pagamento registrato con successo. Grazie!');
+    }
+
+    public function payment_not_completed(Order $order) {
+        return redirect()->route('orders.index')->withErrors('Il pagamento non è stato completato. Ordine non confermato.');
+    }
+
 }

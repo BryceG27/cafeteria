@@ -30,6 +30,7 @@ class Payment extends Model
     protected $fillable = [
         'amount',
         'payment_method_id',
+        'stripe_session_id',
         'status',
         'user_id',
         'order_id',

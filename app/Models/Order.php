@@ -21,6 +21,7 @@ class Order extends Model
         'subtotal_amount',
         'discount',
         'total_amount',
+        'to_be_paid',
         'payment_method',
         'order_date',
         'first_dish_id',

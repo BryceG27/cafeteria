@@ -10,18 +10,31 @@ import Dialog from 'primevue/dialog';
 import Swal from 'sweetalert2';
 
 import moment from 'moment';
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
+import axios from "axios";
+
+import "https://js.stripe.com/v3";
 
 const props = defineProps({
     credits : Array,
     order : Object,
     orders: Array,
     auth: Object,
+    variables: Object,
 });
 
-const showDialog = ref(props.order);
+const selectedOrder = ref(null);
+const showDialog = ref(false);
+
 const credit_available = computed(() => {
     return props.credits.reduce((acc, credit) => acc + parseFloat(credit.amount_available) , 0).toFixed(2);
+});
+
+onMounted(() => {
+    if (props.order) {
+        selectedOrder.value = props.order;
+        showDialog.value = true;
+    }
 });
 
 const destroy = (id) => {
@@ -42,6 +55,26 @@ const destroy = (id) => {
     })
 }
 
+const payWithStripe = () => {
+    axios.post(route('payments.checkout', { order : selectedOrder.value.id, payment_method: 3 }))
+        .then(response => {
+            const stripe = Stripe(props.variables.stripe_key);
+            stripe.redirectToCheckout({ sessionId: response.data.id });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+const payWithCreditAvailable = () => {
+    const form = useForm({});
+
+    form.post(route('payments.checkout', { order : selectedOrder.value.id, payment_method : 1 }), {
+        onSuccess: () => {
+            showDialog.value = false;
+        }
+    });
+}
 </script>
 
 <template>
@@ -56,13 +89,14 @@ const destroy = (id) => {
                 v-model:visible="showDialog"
                 modal
                 header="Pagamento"
+                :closable="false"
                 :style="{ width: '30vw' }"
             >
                 <div class="container-fluid">
                     <div class="row pb-3">
                         <div class="col-md-8 offset-md-2">
-                            <button class="btn btn-dark btn-lg w-100">
-                                Paga con Carta di Credito
+                            <button class="btn btn-dark btn-lg w-100" @click="payWithStripe">
+                                Paga con Stripe
                             </button>
                         </div>
                     </div>
@@ -75,7 +109,7 @@ const destroy = (id) => {
                     </div>
                     <div class="row pb-3" v-if="credit_available > 0">
                         <div class="col-md-8 offset-md-2">
-                            <button class="btn btn-alt-success btn-lg w-100">
+                            <button class="btn btn-alt-success btn-lg w-100" @click="payWithCreditAvailable">
                                 Paga con credito residuo: {{ credit_available }} &euro;
                             </button>
                         </div>
@@ -129,7 +163,7 @@ const destroy = (id) => {
                                     <div
                                         class="dropdown-item d-flex gap-2 align-items-center clickable" 
                                         style="font-size: 13px"
-                                        @click="showDialog = true"
+                                        @click="selectedOrder = data, showDialog = true"
                                     >
                                         <button class="btn btn-alt-success btn-sm" type="button">
                                             <i class="fa fa-dollar-sign"></i>
@@ -229,6 +263,11 @@ const destroy = (id) => {
                     <Column header="Totale">
                         <template #body="{ data }">
                             <span v-text="parseFloat(data.total_amount).toFixed(2)" /> &euro;
+                        </template>
+                    </Column>
+                    <Column header="Da pagare">
+                        <template #body="{ data }">
+                            <span v-text="parseFloat(data.to_be_paid).toFixed(2)" /> &euro;
                         </template>
                     </Column>
                     <Column header="Stato" field="status">

@@ -46,14 +46,18 @@ Route::post('/sign-in', [ProfileController::class, 'sign_in'])->name('profile.si
 
 Route::middleware(['auth' , 'verified'])->group(function () {
     /* Orders */
-    Route::get('/orders/index/{order?}', [OrderController::class, 'index'])->middleware(['auth', 'verified'])->name('orders.index');
     Route::resource('orders', OrderController::class)->middleware(['auth', 'verified'])->except(['index', 'show']);
+    Route::get('/orders/index/{order?}', [OrderController::class, 'index'])->middleware(['auth', 'verified'])->name('orders.index');
+    Route::get('/orders/{order}/confirm', [OrderController::class, 'confirm'])->middleware(['auth', 'verified'])->name('orders.confirm-order');
+    Route::get('/orders/{order}/payment-not-completed', [OrderController::class, 'payment_not_completed'])->middleware(['auth', 'verified'])->name('orders.payment-not-completed');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::resource('payments', PaymentController::class)->middleware(['auth', 'verified'])->except(['show', 'edit', 'update', 'destroy']);
     Route::post('/payments/store/by-admin', [PaymentController::class, 'store_by_admin'])->middleware(['auth', 'verified'])->name('payments.store-by-admin');
+
+    Route::post('/payments/{order}/checkout', [PaymentController::class, 'checkout'])->middleware(['auth', 'verified'])->name('payments.checkout');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
