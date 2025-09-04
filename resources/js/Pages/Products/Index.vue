@@ -35,6 +35,9 @@ const props = defineProps({
                 <DataTable
                     stripedRows
                     :value="products"
+                    paginator
+                    :rows="10"
+                    :rowsPerPageOptions="[10,25,50]"
                 >
                     <template #empty>
                         <div class="p-4 text-center">

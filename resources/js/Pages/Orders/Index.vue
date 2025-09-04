@@ -2,7 +2,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
-import { useTemplateStore } from "@/stores/template";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -10,7 +9,7 @@ import Dropdown from 'primevue/dropdown';
 import InputText from 'primevue/inputtext';
 import Calendar from "primevue/calendar";
 
-import { computed, reactive, onMounted } from 'vue';
+import { computed, reactive } from 'vue';
 
 import moment from 'moment';
 
@@ -20,12 +19,6 @@ const props = defineProps({
     order_statuses: Array,
 });
 
-const store = useTemplateStore();
-
-onMounted(() => {
-    // store.sidebar({ mode: 'mini' })
-    store.sidebarMini({ mode: 'toggle' })
-})
 
 const filters = reactive({
     child_name : null,
@@ -176,8 +169,8 @@ const updateOrderStatus = (event) => {
                                                         </button>
                                                         <ul class="dropdown-menu">
                                                             <li class="dropdown-item">
-                                                                <div style="width: 15rem; height: 15rem">
-                                                                    <img :src="`/storage/app/public/${data.first_dish.image}`" :alt="data.first_dish.name">
+                                                                <div style="width: 15rem; height: 10rem">
+                                                                    <img :src="`/storage/app/public/${data.first_dish.image}`" :alt="data.first_dish.name" class="img-fluid">
                                                                 </div>
                                                             </li>
                                                         </ul>
@@ -195,8 +188,8 @@ const updateOrderStatus = (event) => {
                                                         </button>
                                                         <ul class="dropdown-menu">
                                                             <li class="dropdown-item">
-                                                                <div style="width: 15rem; height: 15rem">
-                                                                    <img :src="`/storage/app/public/${data.second_dish.image}`" :alt="data.second_dish.name">
+                                                                <div style="width: 15rem; height: 10rem">
+                                                                    <img :src="`/storage/app/public/${data.second.image}`" :alt="data.second.name" class="img-fluid">
                                                                 </div>
                                                             </li>
                                                         </ul>
@@ -214,8 +207,8 @@ const updateOrderStatus = (event) => {
                                                         </button>
                                                         <ul class="dropdown-menu">
                                                             <li class="dropdown-item">
-                                                                <div style="width: 15rem; height: 15rem">
-                                                                    <img :src="`/storage/app/public/${data.side_dish.image}`" :alt="data.side_dish.name">
+                                                                <div style="width: 15rem; height: 10rem">
+                                                                    <img :src="`/storage/app/public/${data.side.image}`" :alt="data.side.name" class="img-fluid">
                                                                 </div>
                                                             </li>
                                                         </ul>

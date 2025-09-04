@@ -131,4 +131,12 @@ class MenuController extends Controller
 
         return redirect()->route('menus.index')->with('success', "Menu eliminato con successo.");
     }
+
+    public function toggle_active(Menu $menu) {
+        $menu->update([
+            'is_active' => !$menu->is_active   
+        ]);
+
+        return redirect()->route('menus.index');
+    }
 }

@@ -85,7 +85,7 @@ const changeDateFilter = (e) => {
                     v-model:expandedRows="expandedRows"
                     :rows="10"
                 >
-                    <template #header>
+                    <template #header v-if="false">
                         <div class="row align-items-center justify-content-end">
                             <div class="col-md-2 text-end">
                                 Filtra per range:

@@ -103,6 +103,13 @@ onMounted(() => {
   //    console.log( window.$page );
   // });
   new SimpleBar(document.getElementById("simplebar-sidebar"));
+
+
+  if(route().current() == 'orders.index')
+    store.sidebarMini({ mode: 'on' })
+  else
+    store.sidebarMini({ mode: 'off' })
+
 });
 
 </script>

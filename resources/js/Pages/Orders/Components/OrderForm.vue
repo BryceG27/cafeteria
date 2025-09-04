@@ -102,10 +102,10 @@ const goBack = () => {
         v-model:visible="openDialog"
         modal
         :header="`Immagine prodotto: ${selectedProduct?.name}`"
-        :style="{ width: '35vw', height: '35vh' }"
+        :style="{ width: '30rem', height: '30rem' }"
     >
         <div class="text-center">
-            <img :src="`/storage/app/public/${selectedProduct?.image}`" :alt="selectedProduct?.name" style="max-width: 100%; max-height: 50vh;" />
+            <img :src="`/storage/app/public/${selectedProduct?.image}`" :alt="selectedProduct?.name" style="width: 100%;" />
         </div>
         <template #footer>
             <p class="mt-2 text-center w-100" v-text="selectedProduct?.description" />

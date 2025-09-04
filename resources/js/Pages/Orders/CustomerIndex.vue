@@ -245,8 +245,8 @@ const payWithPayPal = () => {
                                                 </button>
                                                 <ul class="dropdown-menu">
                                                     <li class="dropdown-item">
-                                                        <div style="width: 15rem; height: 15rem">
-                                                            <img :src="`/storage/app/public/${data.first_dish.image}`" :alt="data.first_dish.name">
+                                                        <div style="width: 15rem; height: 10rem">
+                                                            <img :src="`/storage/app/public/${data.first_dish.image}`" :alt="data.first_dish.name" class="img-fluid">
                                                         </div>
                                                     </li>
                                                 </ul>
@@ -264,8 +264,8 @@ const payWithPayPal = () => {
                                                 </button>
                                                 <ul class="dropdown-menu">
                                                     <li class="dropdown-item">
-                                                        <div style="width: 15rem; height: 15rem">
-                                                            <img :src="`/storage/app/public/${data.second_dish.image}`" :alt="data.second_dish.name">
+                                                        <div style="width: 15rem; height: 10rem">
+                                                            <img :src="`/storage/app/public/${data.second_dish.image}`" :alt="data.second_dish.name" class="img-fluid">
                                                         </div>
                                                     </li>
                                                 </ul>
@@ -283,8 +283,8 @@ const payWithPayPal = () => {
                                                 </button>
                                                 <ul class="dropdown-menu">
                                                     <li class="dropdown-item">
-                                                        <div style="width: 15rem; height: 15rem">
-                                                            <img :src="`/storage/app/public/${data.side_dish.image}`" :alt="data.side_dish.name">
+                                                        <div style="width: 15rem; height: 10rem">
+                                                            <img :src="`/storage/app/public/${data.side_dish.image}`" :alt="data.side_dish.name" class="img-fluid">
                                                         </div>
                                                     </li>
                                                 </ul>
