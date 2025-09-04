@@ -6,10 +6,17 @@ use Carbon\Carbon;
 use Stripe\Stripe;
 use Inertia\Inertia;
 use App\Models\Order;
+use PayPal\Api\Payer;
 use App\Models\Credit;
+use PayPal\Api\Amount;
 use App\Models\Payment;
+use PayPal\Api\Transaction;
+use PayPal\Rest\ApiContext;
 use Illuminate\Http\Request;
+use PayPal\Api\RedirectUrls;
 use Stripe\Checkout\Session;
+use PayPal\Auth\OAuthTokenCredential;
+use PayPal\Api\Payment as PayPalPayment;
 
 class PaymentController extends Controller
 {
@@ -25,54 +32,6 @@ class PaymentController extends Controller
             }),
             'credits' => Credit::where('user_id', auth()->id())->get(),
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Payment $payment)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Payment $payment)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Payment $payment)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Payment $payment)
-    {
-        //
     }
 
     public function store_by_admin(Request $request) {
@@ -105,7 +64,7 @@ class PaymentController extends Controller
                 break;
 
             case 2:
-                
+                $this->checkout_with_paypal($order);
                 break;
 
             case 3:
@@ -127,7 +86,7 @@ class PaymentController extends Controller
                 'price_data' => [
                     'currency' => 'eur',
                     'product_data' => [
-                        'name' => $order->menu->name . " " . Carbon::create($order->menu->validity_date)->format('d/m/Y')
+                        'name' => "Pagamento menù: " . $order->menu->name . " " . Carbon::create($order->menu->validity_date)->format('d/m/Y')
                     ],
                     'unit_amount' => $order->to_be_paid * 100,
                 ],
@@ -166,7 +125,7 @@ class PaymentController extends Controller
             } else {
                 // The available credit is not enough, use it all and continue to the next credit
                 $total += $credit->amount_available;
-                
+            
                 // Deduct the used amount from the credit (which will be zero now)
                 $order->to_be_paid -= $credit->amount_available;
                 $credit->amount_available = 0;
@@ -175,21 +134,66 @@ class PaymentController extends Controller
             }
         }
 
+        $notes = $total < $order->to_be_paid ? "Pagamento parziale effettuato con credito residuo." : "Pagamento effettuato con credito residuo.";
+
         Payment::create([
             'user_id' => auth()->id(),
             'amount' => $total,
             'payment_date' => Carbon::now()->format('Y-m-d'),
-            'notes' => 'Pagamento parziale effettuato con credito residuo. Credito #' . $credit->id,
+            'notes' => $notes,
             'order_id' => $order->id,
             'status' => 1,
             'payment_method_id' => 1,
         ]);
 
 
-        if($total < $order->to_be_paid)
+        if($total < $order->to_be_paid) {
             $to_be_paid = number_format($order->to_be_paid, 2, ',', '.');
             return redirect()->back()->withErrors("Scarico da credito effettuato. Restante da pagare: {$to_be_paid} €.");
+        }
 
         return redirect()->route('orders.index')->with('message', 'Pagamento effettuato con successo utilizzando il credito residuo.');
+    }
+
+    public function checkout_with_paypal(Order $order) {
+        $apiContext = new ApiContext(
+            new OAuthTokenCredential(
+                env('PAYPAL_CLIENT_ID'),
+                env('PAYPAL_CLIENT_SECRET')
+            )
+        );
+
+        $payer = new Payer();
+        $payer->setPaymentMethod('paypal');
+
+        $amount = new Amount();
+        $amount->setTotal(number_format($order->to_be_paid, 2, '.', ''));
+        $amount->setCurrency('EUR');
+
+        $transaction = new Transaction();
+        $transaction->setAmount($amount)
+                    ->setDescription("Pagamento menù: ". $order->menu->name . " " . Carbon::create($order->menu->validity_date)->format('d/m/Y'));
+
+        $redirectUrls = new RedirectUrls();
+        $redirectUrls->setReturnUrl(route('orders.confirm-order', ['order' => $order->id]) . '?payment_method=2')
+                     ->setCancelUrl(route('orders.payment-not-completed', ['order' => $order->id]));
+
+        $payment = new PayPalPayment();
+        $payment->setIntent('sale')
+                ->setPayer($payer)
+                ->setTransactions([$transaction])
+                ->setRedirectUrls($redirectUrls);
+
+
+        try {
+            $payment->create(
+                $apiContext
+            );
+
+            return redirect($payment->getApprovalLink());
+            
+        } catch (\Exception $ex) {
+            return redirect()->back()->withErrors('Errore durante la creazione del pagamento PayPal: ' . $ex->getMessage());
+        }
     }
 }

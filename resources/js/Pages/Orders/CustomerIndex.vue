@@ -10,7 +10,7 @@ import Dialog from 'primevue/dialog';
 import Swal from 'sweetalert2';
 
 import moment from 'moment';
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue"
 import axios from "axios";
 
 import "https://js.stripe.com/v3";
@@ -20,12 +20,10 @@ const props = defineProps({
     order : Object,
     orders: Array,
     auth: Object,
-    variables: Object,
 });
 
-const selectedOrder = ref(null);
+const selectedOrder = ref(null)
 const showDialog = ref(false);
-
 const credit_available = computed(() => {
     return props.credits.reduce((acc, credit) => acc + parseFloat(credit.amount_available) , 0).toFixed(2);
 });
@@ -36,6 +34,7 @@ onMounted(() => {
         showDialog.value = true;
     }
 });
+
 
 const destroy = (id) => {
     const form = useForm({});
@@ -75,6 +74,14 @@ const payWithCreditAvailable = () => {
         }
     });
 }
+
+const payWithPayPal = () => {
+    form.post(route('payments.checkout', { order : selectedOrder.value.id, payment_method : 2 }), {
+        onSuccess: () => {
+            showDialog.value = false;
+        }
+    });
+}
 </script>
 
 <template>
@@ -88,33 +95,61 @@ const payWithCreditAvailable = () => {
             <Dialog
                 v-model:visible="showDialog"
                 modal
-                header="Pagamento"
+                :header="`Pagamento menù: ${selectedOrder?.menu?.name} - ${moment(selectedOrder?.date).format('DD/MM')}`"
+                :style="{ width: '50vw', height: '46vh' }"
                 :closable="false"
-                :style="{ width: '30vw' }"
             >
-                <div class="container-fluid">
-                    <div class="row pb-3">
-                        <div class="col-md-8 offset-md-2">
-                            <button class="btn btn-dark btn-lg w-100" @click="payWithStripe">
-                                Paga con Stripe
-                            </button>
-                        </div>
-                    </div>
-                    <div class="row pb-3">
-                        <div class="col-md-8 offset-md-2">
-                            <button class="btn btn-alt-warning btn-lg w-100 text-primary">
-                                Paga con PayPal
-                            </button>
-                        </div>
-                    </div>
-                    <div class="row pb-3" v-if="credit_available > 0">
-                        <div class="col-md-8 offset-md-2">
-                            <button class="btn btn-alt-success btn-lg w-100" @click="payWithCreditAvailable">
-                                Paga con credito residuo: {{ credit_available }} &euro;
-                            </button>
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <th style="width: 40%">Menù</th>
+                                        <td style="width: 60%" v-text="selectedOrder?.menu?.name" />
+                                    </tr>
+                                    <tr>
+                                        <th style="width: 40%">Data</th>
+                                        <td style="width: 60%" v-text="moment(selectedOrder?.order_date).format('DD/MM/YYYY')" />
+                                    </tr>
+                                    <tr>
+                                        <th style="width: 40%">Totale</th>
+                                        <td style="width: 60%" v-text="parseFloat(selectedOrder?.total_amount).toFixed(2) + ' €'" />
+                                    </tr>
+                                    <tr>
+                                        <th style="width: 40%">Da pagare</th>
+                                        <td style="width: 60%" v-text="parseFloat(selectedOrder?.to_be_paid).toFixed(2) + ' €'" />
+                                    </tr>
+                                    <tr v-if="credit_available > 0">
+                                        <th style="width: 40%">Credito disponibile</th>
+                                        <td style="width: 60%" v-text="credit_available + ' €'" />
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
+                <template #footer>
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-4" :class="{ 'col-md-6' : credit_available <= 0, 'col-md-4' : credit_available > 0 }" @click.prevent="payWithStripe">
+                                <button class="btn btn-card btn-lg w-100 gap-2">
+                                    Paga con carta
+                                </button>
+                            </div>
+                            <div class="col-md-4" :class="{ 'col-md-6' : credit_available <= 0, 'col-md-4' : credit_available > 0 }" @click.prevent="payWithCreditAvailable">
+                                <button class="btn btn-paypal btn-lg w-100 text-black d-flex align-items-center justify-content-center gap-2">
+                                    Paga con <img src="/assets/media/various/paypal.png" style="height: 1.5rem" />
+                                </button>
+                            </div>
+                            <div class="col-md-4" v-if="credit_available > 0" @click.prevent="payWithPayPal">
+                                <button class="btn btn-cash btn-lg w-100">
+                                    Paga con credito residuo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
             </Dialog>
 
             <BaseBlock title="Ordini" contentClass="pb-3">
@@ -265,11 +300,6 @@ const payWithCreditAvailable = () => {
                             <span v-text="parseFloat(data.total_amount).toFixed(2)" /> &euro;
                         </template>
                     </Column>
-                    <Column header="Da pagare">
-                        <template #body="{ data }">
-                            <span v-text="parseFloat(data.to_be_paid).toFixed(2)" /> &euro;
-                        </template>
-                    </Column>
                     <Column header="Stato" field="status">
                         <template #body="{ data }">
                             <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
@@ -283,5 +313,35 @@ const payWithCreditAvailable = () => {
 <style scoped>
     .clickable {
         cursor: pointer;
+    }
+
+    .btn-paypal {
+        background-color: #ffc439;
+        color: #003087;
+    }
+
+    .btn-paypal:hover {
+        background-color: #ffb700;
+        color: #002663;
+    }
+
+    .btn-card {
+        background-color: #6772e5;
+        color: #ffffff;
+    }
+
+    .btn-card:hover {
+        background-color: #5469d4;
+        color: #ffffff;
+    }
+
+    .btn-cash {
+        background-color: #50b83c;
+        color: #ffffff;
+    }
+
+    .btn-cash:hover {
+        background-color: #3d9b2c;
+        color: #ffffff;
     }
 </style>

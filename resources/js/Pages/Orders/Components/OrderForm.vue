@@ -4,6 +4,7 @@ import InputNumber from "primevue/inputnumber";
 import Textarea from "primevue/textarea";
 import Calendar from "primevue/calendar";
 import Listbox from "primevue/listbox";
+import Dialog from "primevue/dialog";
 
 import InputError from "@/Components/InputError.vue";
 
@@ -11,6 +12,9 @@ import { computed, ref, watch } from "vue";
 
 import Swal from "sweetalert2";
 import moment from 'moment';
+
+const selectedProduct = ref(null);
+const openDialog = ref(false);
 
 const props = defineProps({
     form : Object,
@@ -94,6 +98,19 @@ const goBack = () => {
 
 </script>
 <template>
+    <Dialog
+        v-model:visible="openDialog"
+        modal
+        :header="`Immagine prodotto: ${selectedProduct?.name}`"
+        :style="{ width: '35vw', height: '35vh' }"
+    >
+        <div class="text-center">
+            <img :src="`/storage/app/public/${selectedProduct?.image}`" :alt="selectedProduct?.name" style="max-width: 100%; max-height: 50vh;" />
+        </div>
+        <template #footer>
+            <p class="mt-2 text-center w-100" v-text="selectedProduct?.description" />
+        </template>
+    </Dialog>
     <form @submit.prevent="emit('submit')" class="container-fluid">
         <div class="row pb-3" v-if="menus.length > 1">
             <div class="col-md-12">
@@ -155,8 +172,13 @@ const goBack = () => {
                                     >
                                         <template #option="slotProps">
                                             <!-- <img :alt="slotProps.option.name"  :src="slotProps.option.image" style="width: 18px" /> -->
-                                            <div>
-                                                {{ slotProps.option.name }} <br>
+                                            <div class="w-100">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    {{ slotProps.option.name }} <br>
+                                                    <button class="btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
+                                                        <i class="fa fa-camera"></i>
+                                                    </button>
+                                                </div>
                                                 <span class="text-muted" style="font-size: 12px" v-text="slotProps.option.description" />
                                             </div>
                                         </template>
@@ -175,8 +197,13 @@ const goBack = () => {
                                     >
                                         <template #option="slotProps">
                                             <!-- <img :alt="slotProps.option.name"  :src="slotProps.option.image" style="width: 18px" /> -->
-                                           <div>
-                                                {{ slotProps.option.name }} <br>
+                                           <div class="w-100">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    {{ slotProps.option.name }} <br>
+                                                    <button class="btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
+                                                        <i class="fa fa-camera"></i>
+                                                    </button>
+                                                </div>
                                                 <span class="text-muted" style="font-size: 12px" v-text="slotProps.option.description" />
                                             </div>
                                         </template>
@@ -194,8 +221,13 @@ const goBack = () => {
                                     >
                                         <template #option="slotProps">
                                             <!-- <img :alt="slotProps.option.name"  :src="slotProps.option.image" style="width: 18px" /> -->
-                                           <div>
-                                                {{ slotProps.option.name }} <br>
+                                           <div class="w-100">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    {{ slotProps.option.name }} <br>
+                                                    <button class="btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
+                                                        <i class="fa fa-camera"></i>
+                                                    </button>
+                                                </div>
                                                 <span class="text-muted" style="font-size: 12px" v-text="slotProps.option.description" />
                                             </div>
                                         </template>
@@ -221,8 +253,13 @@ const goBack = () => {
                                     >
                                         <template #option="slotProps">
                                             <!-- <img :alt="slotProps.option.name"  :src="slotProps.option.image" style="width: 18px" /> -->
-                                            <div>
-                                                {{ slotProps.option.name }} <br>
+                                            <div class="w-100">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    {{ slotProps.option.name }} <br>
+                                                    <button class="btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
+                                                        <i class="fa fa-camera"></i>
+                                                    </button>
+                                                </div>
                                                 <span class="text-muted" style="font-size: 12px" v-text="slotProps.option.description" />
                                             </div>
                                         </template>
@@ -244,8 +281,13 @@ const goBack = () => {
                                     >
                                         <template #option="slotProps">
                                             <!-- <img :alt="slotProps.option.name"  :src="slotProps.option.image" style="width: 18px" /> -->
-                                           <div>
-                                                {{ slotProps.option.name }} <br>
+                                           <div class="w-100">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    {{ slotProps.option.name }} <br>
+                                                    <button class="btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
+                                                        <i class="fa fa-camera"></i>
+                                                    </button>
+                                                </div>
                                                 <span class="text-muted" style="font-size: 12px" v-text="slotProps.option.description" />
                                             </div>
                                         </template>
@@ -266,8 +308,13 @@ const goBack = () => {
                                     >
                                         <template #option="slotProps">
                                             <!-- <img :alt="slotProps.option.name"  :src="slotProps.option.image" style="width: 18px" /> -->
-                                           <div>
-                                                {{ slotProps.option.name }} <br>
+                                           <div class="w-100">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    {{ slotProps.option.name }} <br>
+                                                    <button class="btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
+                                                        <i class="fa fa-camera"></i>
+                                                    </button>
+                                                </div>
                                                 <span class="text-muted" style="font-size: 12px" v-text="slotProps.option.description" />
                                             </div>
                                         </template>

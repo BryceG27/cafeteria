@@ -8,8 +8,11 @@ use Inertia\Inertia;
 use App\Models\Order;
 use App\Models\Credit;
 use App\Models\Payment;
+use PayPal\Rest\ApiContext;
 use Illuminate\Http\Request;
+use App\Models\PaymentMethod;
 use Illuminate\Support\Facades\Auth;
+use PayPal\Auth\OAuthTokenCredential;
 
 class OrderController extends Controller
 {
@@ -25,7 +28,7 @@ class OrderController extends Controller
                     $order->status_info = $order->get_status();
                     return $order;
                 }),
-                'order' => $order,
+                'order' => $order?->load('menu'),
             ]);
         } else {
             return Inertia::render('Orders/Index', [
@@ -183,15 +186,26 @@ class OrderController extends Controller
     }
 
     public function confirm(Order $order, Request $request) {
+        if($request->payment_method == 2) {
+
+            $transactionid = $this->set_paypal_payment($request);
+
+            if(!$transactionid)
+                return redirect()->route('orders.index')->withErrors('Si è verificato un errore durante l\'elaborazione del pagamento PayPal. Ordine non confermato.');
+        }
+
+        $payment_method = PaymentMethod::find($request->payment_method);
+
         Payment::create([
             'user_id' => $order->customer_id,
             'amount' => $order->total_amount,
             'payment_date' => \Carbon\Carbon::now()->format('Y-m-d'),
-            'notes' => 'Pagamento effettuato tramite Stripe',
+            'notes' => "Pagamento effettuato tramite {$payment_method->name}",
             'order_id' => $order->id,
             'status' => 1,
             'payment_method_id' => $request->payment_method,
             'stripe_session_id' => $request->session_id ?? null,
+            'transaction_id' => $request->payment_method == 2 ? $transactionid : null,
         ]);
 
         $order->update([
@@ -204,6 +218,30 @@ class OrderController extends Controller
 
     public function payment_not_completed(Order $order) {
         return redirect()->route('orders.index')->withErrors('Il pagamento non è stato completato. Ordine non confermato.');
+    }
+
+    public function set_paypal_payment(Request $request) {
+        $apiContext = new ApiContext(
+            new OAuthTokenCredential(
+                env('PAYPAL_CLIENT_ID'),
+                env('PAYPAL_CLIENT_SECRET')
+            )
+        );
+
+        $paymentId = $request->get('paymentId');
+        $payerId = $request->get('PayerID');
+
+        $paypalPayment = \PayPal\Api\Payment::get($paymentId, $apiContext);
+        $execution = new \PayPal\Api\PaymentExecution();
+        $execution->setPayerId($payerId);
+
+        try {
+            $result = $paypalPayment->execute($execution, $apiContext);
+            $transactionid = $result->getTransactions()[0]->getRelatedResources()[0]->getSale()->getId();
+            return $transactionid;
+        } catch (\Exception $ex) {
+            return false;
+        }
     }
 
 }
