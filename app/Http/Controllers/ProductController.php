@@ -40,10 +40,8 @@ class ProductController extends Controller
         $validate = Product::validate($request);
 
         if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $imageName = uniqid() . '_' . $image->getClientOriginalName();
-            $image->move(public_path('products'), $imageName);
-            $validate['image'] = 'products/' . $imageName;
+            $imagePath = $request->file('image')->store('products', 'public');
+            $validate['image'] = $imagePath;
         }
 
         Product::create($validate);
@@ -79,10 +77,8 @@ class ProductController extends Controller
         $validate = Product::validate($request);
 
         if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $imageName = uniqid() . '_' . $image->getClientOriginalName();
-            $image->move(public_path('products'), $imageName);
-            $validate['image'] = 'products/' . $imageName;
+            $imagePath = $request->file('image')->store('products', 'public');
+            $validate['image'] = $imagePath;
         }
 
         $product->update($validate);

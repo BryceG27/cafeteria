@@ -39,6 +39,7 @@ onMounted(() => {
         form.menu_id = props.menus[0].id;
         form.subtotal = props.menus[0].price;
         form.total = props.menus[0].price;
+        form.order_date = props.menus[0].validity_date;
     }
 })
 

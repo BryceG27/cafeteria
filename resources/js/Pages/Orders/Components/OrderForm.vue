@@ -6,12 +6,11 @@ import Calendar from "primevue/calendar";
 import Listbox from "primevue/listbox";
 
 import InputError from "@/Components/InputError.vue";
-import moment from "moment";
 
 import { computed, ref, watch } from "vue";
-import { Link } from "@inertiajs/vue3";
 
 import Swal from "sweetalert2";
+import moment from 'moment';
 
 const props = defineProps({
     form : Object,
@@ -64,6 +63,8 @@ watch(() => props.form, (newVal) => {
         if(!add_second_menu.value)
             props.form.first_dish_id = null;
     }
+
+    props.form.order_date = moment(newVal.validity_date).format('YYYY-MM-DD');
 }, { deep: true });
 
 watch(add_second_menu, (newVal) => {
@@ -329,7 +330,7 @@ const goBack = () => {
                     />
                 </div>
                 <div class="col-md-6 pt-2 pt-md-0" :class="{ 'pt-3' : auth.user.user_group_id == 1 }">
-                    <label for="order_date" class="form-label">Data validità ordine:</label>
+                    <label for="order_date" class="form-label">Ordine valido il:</label>
                     <Calendar 
                         v-model="form.order_date" 
                         inputId="order_date"
@@ -338,9 +339,7 @@ const goBack = () => {
                         inputClass="w-100"
                         dateFormat="dd/mm/yy"
                         placeholder="gg/mm/aaaa"
-                        :minDate="moment().toDate()"
-                        :maxDate="selectedMenu ? moment(selectedMenu.end_date).toDate() : null"
-
+                        readonly
                     />
                     <InputError class="mt-2" :message="errors.order_date" />
                 </div>
@@ -370,19 +369,10 @@ const goBack = () => {
         </div>
 
         <div class="row pb-3 justify-content-center">
-            <div class="col-md-4 col-sm-12 text-md-end text-center pb-3 pb-md-0">
-                <button
-                    class="btn btn-alt-primary btn-sm w-75"
-                    type="submit"
-                >
-                    <i class="fa fa-save me-1"></i>
-                    Conferma
-                </button>
-            </div>
             <div class="col-md-4 col-sm-12 text-center pb-3 pb-md-0">
                 <button 
                     class="btn btn-alt-info btn-sm w-75"
-                    type="button"
+                    type="submit"
                 >
                     <i class="fa fa-dollar-sign me-1"></i>
                     Conferma e paga

@@ -113,7 +113,7 @@ const props = defineProps({
                     <Column field="email" header="Email" />
                     <Column header="Totale pagato">
                         <template #body="{ data }">
-                            &euro;
+                            {{ data.payments.reduce((acc, payment) => acc + parseFloat(payment.amount) , 0).toFixed(2) }} &euro;
                         </template>
                     </Column>
                     <Column header="Totale ordinato">

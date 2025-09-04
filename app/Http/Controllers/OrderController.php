@@ -16,14 +16,16 @@ class OrderController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Order $order = null)
     {
         if(Auth::user()->user_group_id == 3) {
             return Inertia::render('Orders/CustomerIndex', [
+                'credits' => Auth::user()->credits,
                 'orders' => Order::where('customer_id', Auth::user()->id)->where('status', '<>', 2)->orderBy('created_at', 'desc')->with(['first_dish', 'second_dish', 'side_dish', 'menu'])->get()->map(function($order) {
                     $order->status_info = $order->get_status();
                     return $order;
                 }),
+                'order' => $order,
             ]);
         } else {
             return Inertia::render('Orders/Index', [
@@ -77,9 +79,9 @@ class OrderController extends Controller
 
         $validated['order_date'] = \Carbon\Carbon::create($request->order_date)->format('Y-m-d');
 
-        Order::create($validated);
+        $order = Order::create($validated);
 
-        return redirect()->route('orders.index')->with('success', 'Ordine creato con successo.');
+        return redirect()->route('orders.index', compact('order'))->with('success', 'Ordine creato con successo.');
     }
 
     /**

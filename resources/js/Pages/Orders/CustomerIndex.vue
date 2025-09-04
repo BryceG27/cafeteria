@@ -10,14 +10,19 @@ import Dialog from 'primevue/dialog';
 import Swal from 'sweetalert2';
 
 import moment from 'moment';
-import { ref } from "vue";
+import { ref, computed } from "vue";
 
 const props = defineProps({
+    credits : Array,
+    order : Object,
     orders: Array,
     auth: Object,
 });
 
-const showDialog = ref(false);
+const showDialog = ref(props.order);
+const credit_available = computed(() => {
+    return props.credits.reduce((acc, credit) => acc + parseFloat(credit.amount_available) , 0).toFixed(2);
+});
 
 const destroy = (id) => {
     const form = useForm({});
@@ -68,10 +73,10 @@ const destroy = (id) => {
                             </button>
                         </div>
                     </div>
-                    <div class="row pb-3">
+                    <div class="row pb-3" v-if="credit_available > 0">
                         <div class="col-md-8 offset-md-2">
                             <button class="btn btn-alt-success btn-lg w-100">
-                                Paga con credito residuo
+                                Paga con credito residuo: {{ credit_available }} &euro;
                             </button>
                         </div>
                     </div>
@@ -151,24 +156,70 @@ const destroy = (id) => {
                             </ul>
                         </template>
                     </Column>
-                    <Column header="Nome menù" field="menu.name" />
+                    <Column header="Giorno menù" field="menu.name">
+                        <template #body="{data}">
+                            <span v-text="`${data.menu.name} - ${moment(data.order_date).format('DD/MM')}`" />
+                        </template>
+                    </Column>
                     <Column header="Prodotti">
                         <template #body="{ data }">
                             <table class="table table-bordered rounded-2 h-100 align-middle">
                                 <tbody>
                                     <tr v-if="data.first_dish">
                                         <td class="p-2 align-middle">
-                                            <strong>Primo:</strong> <span v-text="data.first_dish.name" />
+                                            <div class="d-flex justify-content-between">
+                                                <span>
+                                                    <strong>Primp:</strong> <span v-text="data.first_dish.name" />
+                                                </span>
+                                                <button class="btn-link" v-if="data.first_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fa fa-camera"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li class="dropdown-item">
+                                                        <div style="width: 15rem; height: 15rem">
+                                                            <img :src="`/storage/app/public/${data.first_dish.image}`" :alt="data.first_dish.name">
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr v-if="data.second_dish">
                                         <td class="p-2 align-middle">
-                                            <strong>Secondo:</strong> <span v-text="data.second_dish.name" />
+                                            <div class="d-flex justify-content-between">
+                                                <span>
+                                                    <strong>Secondo:</strong> <span v-text="data.second_dish.name" />
+                                                </span>
+                                                <button class="btn-link" v-if="data.second_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fa fa-camera"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li class="dropdown-item">
+                                                        <div style="width: 15rem; height: 15rem">
+                                                            <img :src="`/storage/app/public/${data.second_dish.image}`" :alt="data.second_dish.name">
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr v-if="data.side_dish">
                                         <td class="p-2 align-middle">
-                                            <strong>Contorno:</strong> <span v-text="data.side_dish.name" />
+                                            <div class="d-flex justify-content-between">
+                                                <span>
+                                                    <strong>Contorno:</strong> <span v-text="data.side_dish.name" />
+                                                </span>
+                                                <button class="btn-link" v-if="data.side_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fa fa-camera"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li class="dropdown-item">
+                                                        <div style="width: 15rem; height: 15rem">
+                                                            <img :src="`/storage/app/public/${data.side_dish.image}`" :alt="data.side_dish.name">
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -178,11 +229,6 @@ const destroy = (id) => {
                     <Column header="Totale">
                         <template #body="{ data }">
                             <span v-text="parseFloat(data.total_amount).toFixed(2)" /> &euro;
-                        </template>
-                    </Column>
-                    <Column header="Valido il">
-                        <template #body="{ data }">
-                            <span v-text="moment(data.order_date).format('DD/MM/YYYY')" />
                         </template>
                     </Column>
                     <Column header="Stato" field="status">

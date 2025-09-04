@@ -2,15 +2,15 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
+import { useTemplateStore } from "@/stores/template";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dropdown from 'primevue/dropdown';
 import InputText from 'primevue/inputtext';
 import Calendar from "primevue/calendar";
-import { FilterMatchMode } from '@primevue/core/api';
 
-import { computed, ref } from 'vue';
+import { computed, reactive, onMounted } from 'vue';
 
 import moment from 'moment';
 
@@ -20,19 +20,27 @@ const props = defineProps({
     order_statuses: Array,
 });
 
-const selectedStatus = ref(1);
+const store = useTemplateStore();
 
-const filters = ref({
-    created_at : { value : null, matchMode: 'contains' },
-    child_name : { value : null, matchMode: 'contains' },
-    order_date : { value : null, matchMode: 'equals' },
-    'status_info.value' : { value : null, matchMode: 'contains' },
+onMounted(() => {
+    // store.sidebar({ mode: 'mini' })
+    store.sidebarMini({ mode: 'toggle' })
+})
+
+const filters = reactive({
+    child_name : null,
+    status : 1
 });
 
 const filteredOrders = computed(() => {
     return props.orders.filter(order => {
-        if (selectedStatus.value == undefined) return true;
-        return order.status_info.value === selectedStatus.value;
+        if (filters.status == undefined) return true;
+        return (order.status_info.value === filters.status);
+    }).filter(order => {
+        if (filters.child_name == undefined) return true;
+        const name = order.child_name.toLowerCase();
+        const searchTerm = filters.child_name.toLowerCase();
+        return name.includes(searchTerm) || (order.customer && (order.customer.name.toLowerCase().includes(searchTerm) || order.customer.surname.toLowerCase().includes(searchTerm)));
     })
 })
 
@@ -66,18 +74,30 @@ const updateOrderStatus = (event) => {
                 >
 
                     <template #header>
-                        <div class="d-flex align-items-center justify-content-end">
-                            Filtra per stato: 
-                            <Dropdown 
-                                class="ms-2" 
-                                :options="order_statuses" 
-                                v-model="selectedStatus"
-                                optionLabel="label" 
-                                optionValue="value" 
-                                placeholder="Seleziona stato" 
-                                showClear
-                                style="width: 200px"
-                            />
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <label class="form-label">Filtra per cliente:</label>
+                                <InputText 
+                                    v-model="filters.child_name" 
+                                    placeholder="Cerca per nome o cognome" 
+                                    class="ms-2"
+                                />
+                            </div>
+                            <div>
+                                <label class="form-label">
+                                    Filtra per stato: 
+                                </label>
+                                <Dropdown 
+                                    class="ms-2" 
+                                    :options="order_statuses" 
+                                    v-model="filters.status"
+                                    optionLabel="label" 
+                                    optionValue="value" 
+                                    placeholder="Seleziona stato" 
+                                    showClear
+                                    style="width: 200px"
+                                />
+                            </div>
                         </div>
                     </template>
                     <template #empty>
@@ -97,7 +117,7 @@ const updateOrderStatus = (event) => {
                             </Link>
                         </template>
                     </Column>
-                    <Column header="Cliente" field="child_name">
+                    <Column header="Cliente" field="child_name" :showFilterMenu="false">
                         <template #body="{ data }">
                             <div class="d-flex align-items-center">
                                 {{ data.child_name }}
@@ -110,6 +130,12 @@ const updateOrderStatus = (event) => {
                                     </li>
                                 </ul>
                             </div>
+                        </template>
+                        <template #filterclear="{ filterModel, filterCallback }">
+                            <button class="btn btn-sm btn-secondary" @click="filterModel.value = null; filterCallback();">
+                                <i class="fa fa-times"></i>
+                            </button        >
+
                         </template>
                         <template #filter="{ filterModel, filterCallback }">
                             <InputText 
@@ -141,17 +167,59 @@ const updateOrderStatus = (event) => {
                                         <tbody>
                                             <tr v-if="data.first_dish">
                                                 <td class="p-2 align-middle">
-                                                    <strong>Primo:</strong> <span v-text="data.first_dish.name" />
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>
+                                                            <strong>Primo:</strong> <span v-text="data.first_dish.name" />
+                                                        </span>
+                                                        <button class="btn-link" v-if="data.first_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            <i class="fa fa-camera"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li class="dropdown-item">
+                                                                <div style="width: 15rem; height: 15rem">
+                                                                    <img :src="`/storage/app/public/${data.first_dish.image}`" :alt="data.first_dish.name">
+                                                                </div>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             <tr v-if="data.second_dish">
                                                 <td class="p-2 align-middle">
-                                                    <strong>Secondo:</strong> <span v-text="data.second_dish.name" />
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>
+                                                            <strong>Secondo:</strong> <span v-text="data.second_dish.name" />
+                                                        </span>
+                                                        <button class="btn-link" v-if="data.second_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            <i class="fa fa-camera"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li class="dropdown-item">
+                                                                <div style="width: 15rem; height: 15rem">
+                                                                    <img :src="`/storage/app/public/${data.second_dish.image}`" :alt="data.second_dish.name">
+                                                                </div>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             <tr v-if="data.side_dish">
                                                 <td class="p-2 align-middle">
-                                                    <strong>Contorno:</strong> <span v-text="data.side_dish.name" />
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>
+                                                            <strong>Contorno:</strong> <span v-text="data.side_dish.name" />
+                                                        </span>
+                                                        <button class="btn-link" v-if="data.side_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            <i class="fa fa-camera"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li class="dropdown-item">
+                                                                <div style="width: 15rem; height: 15rem">
+                                                                    <img :src="`/storage/app/public/${data.side_dish.image}`" :alt="data.side_dish.name">
+                                                                </div>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -177,10 +245,16 @@ const updateOrderStatus = (event) => {
                             € {{ data.total_amount }}
                         </template>
                     </Column>
-                    <Column header="Creato il" field="created_at">
+                    <Column header="Creato il" field="created_at" :showFilterMenu="false">
                         <template #body="{ data }">
                             {{ moment(data.created_at).format('DD/MM/YYYY') }}
                         </template>
+                        <template #filterclear="{ filterModel, filterCallback }">
+                            <button class="btn btn-sm btn-secondary" @click="filterModel.value = null; filterCallback();">
+                                <i class="fa fa-times"></i>
+                            </button        >
+
+                        </template>
                         <template #filter="{ filterModel, filterCallback }">
                             <Calendar
                                 v-model="filterModel.value" 
@@ -192,10 +266,16 @@ const updateOrderStatus = (event) => {
                             />
                         </template>
                     </Column>
-                    <Column header="Valido il" field="order_date">
+                    <Column header="Per giorno" field="order_date" :showFilterMenu="false">
                         <template #body="{ data }">
                             {{ moment(data.order_date).format('DD/MM/YYYY') }}
                         </template>
+                        <template #filterclear="{ filterModel, filterCallback }">
+                            <button class="btn btn-sm btn-secondary" @click="filterModel.value = null; filterCallback();">
+                                <i class="fa fa-times"></i>
+                            </button        >
+
+                        </template>
                         <template #filter="{ filterModel, filterCallback }">
                             <Calendar
                                 v-model="filterModel.value" 
@@ -207,7 +287,7 @@ const updateOrderStatus = (event) => {
                             />
                         </template>
                     </Column>
-                    <Column header="Stato" field="status_info.value">
+                    <Column header="Stato" field="status_info.value" :showFilterMenu="false">
                         <template #body="{ data }">
                             <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
                         </template>
@@ -220,6 +300,12 @@ const updateOrderStatus = (event) => {
                                 class="w-100"
                                 placeholder="Seleziona stato"
                             />
+                        </template>
+                        <template #filterclear="{ filterModel, filterCallback }">
+                            <button class="btn btn-sm btn-secondary" @click="filterModel.value = null; filterCallback();">
+                                <i class="fa fa-times"></i>
+                            </button        >
+
                         </template>
                         <template #filter="{ filterModel, filterCallback }">
                             <Dropdown 
