@@ -42,10 +42,10 @@ class PaymentController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $validate['status'] = 1; // Completed
+        /* $validate['status'] = 1; // Completed
         $validate['order_id'] = null;
 
-        Payment::create($validate);
+        Payment::create($validate); */
 
         Credit::create([
             'amount_available' => $validate['amount'],
@@ -60,15 +60,15 @@ class PaymentController extends Controller
     public function checkout(Order $order, Request $request) {
         switch ($request->payment_method) {
             case 1:
-                $this->checkout_with_credit($order);
+                return $this->checkout_with_credit($order);
                 break;
 
             case 2:
-                $this->checkout_with_paypal($order);
+                return $this->checkout_with_paypal($order);
                 break;
 
             case 3:
-                $this->checkout_with_stripe($order);
+                return $this->checkout_with_stripe($order);
                 break;
 
             default:
@@ -86,7 +86,7 @@ class PaymentController extends Controller
                 'price_data' => [
                     'currency' => 'eur',
                     'product_data' => [
-                        'name' => "Pagamento menù: " . $order->menu->name . " " . Carbon::create($order->menu->validity_date)->format('d/m/Y')
+                        'name' => "Pagamento menù: " . $order->menu->name . " " . Carbon::create($order->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y')
                     ],
                     'unit_amount' => $order->to_be_paid * 100,
                 ],
@@ -101,7 +101,9 @@ class PaymentController extends Controller
             ]
         ]);
 
-        return response()->json(['id' => $session->id]);
+        return response()->json([
+            'id' => $session->id
+        ]);
     }
 
     public function checkout_with_credit(Order $order) {
@@ -172,7 +174,7 @@ class PaymentController extends Controller
 
         $transaction = new Transaction();
         $transaction->setAmount($amount)
-                    ->setDescription("Pagamento menù: ". $order->menu->name . " " . Carbon::create($order->menu->validity_date)->format('d/m/Y'));
+                    ->setDescription("Pagamento menù: ". $order->menu->name . " " . Carbon::create($order->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y'));
 
         $redirectUrls = new RedirectUrls();
         $redirectUrls->setReturnUrl(route('orders.confirm-order', ['order' => $order->id]) . '?payment_method=2')

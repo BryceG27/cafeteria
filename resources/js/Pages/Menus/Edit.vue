@@ -3,7 +3,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
 import MenuFrom from './Components/MenuForm.vue';
-import { onMounted } from "vue";
+import { onMounted, watch } from "vue";
 
 const props = defineProps({
     auth : Object,
@@ -32,6 +32,12 @@ const form = useForm({
     description : props.menu.description || '',
     products : props.menu.products,
 })
+
+watch(() => form.validity_date, (newVal) => {
+    console.log(newVal);
+    console.log(form.validity_date)
+    
+}, { deep: true })
 
 onMounted(() => {
     form.products.map(p => p.quantity = p.pivot.quantity)

@@ -119,7 +119,7 @@ const availableProducts = computed(() => {
             </div>
         </div>
         <div class="row mb-3">
-            <div class="col-md-4">
+            <!-- <div class="col-md-4">
                 <label class="form-label">Data inizio</label><br>
                 <Calendar 
                     v-model="form.start_date"
@@ -144,16 +144,15 @@ const availableProducts = computed(() => {
                     placeholder="gg/mm/aaaa"
                 />
                 <InputError class="mt-2" :message="errors.end_date" />
-            </div>
-            <div class="col-md-4">
+            </div> -->
+            <div class="col-md-6">
                 <label class="form-label">Valido il</label><br>
                 <Calendar 
                     v-model="form.validity_date"
                     inputId="end_date"
                     class="w-100"
                     inputClass="w-100"
-                    :minDate="moment(form.start_date).toDate()"
-                    :maxDate="moment(form.end_date).toDate()"
+                    :minDate="moment().toDate()"
                     dateFormat="dd/mm/yy"
                     placeholder="gg/mm/aaaa"
                 />

@@ -7,6 +7,7 @@ import { required, minLength } from "@vuelidate/validators";
 import FloatLabel from "primevue/floatlabel";
 import InputText from "primevue/inputtext";
 import InputError from "@/Components/InputError.vue";
+import Password from "primevue/password";
 
 const props = defineProps({
     errors: Object,
@@ -44,11 +45,14 @@ const registerForm = useForm({
     surname : '',
     email : '',
     child : '',
+    child_allergies : '',
     password : '',
     password_confirmation : '',
     is_active : 1,
     user_group_id : 3,
 })
+
+const has_allergies = ref(false);
 
 
 // On form submission
@@ -157,7 +161,7 @@ async function submitRegister() {
                                 <FloatLabel variant="on">
                                     <InputText
                                         type="text"
-                                        class="form-control form-control-lg form-control-alt py-3"
+                                        class="form-control form-control-lg  py-3"
                                         id="login-username"
                                         name="login-username"
                                         :class="{
@@ -171,15 +175,17 @@ async function submitRegister() {
                             </div>
                             <div class="mb-4">
                                 <FloatLabel variant="on">
-                                    <InputText
-                                        type="password"
-                                        class="form-control form-control-lg form-control-alt py-3"
+                                    <Password
+                                        class="w-100"
+                                        inputClass="w-100 form-control form-control-lg form-control-alt py-3"
                                         id="login-password"
                                         name="login-password"
                                         :class="{
                                             'is-invalid': errors.password,
                                         }"
                                         v-model="form.password"
+                                        :feedback="false"
+                                        toggleMask
                                     />
                                     <label for="login-password">Password</label>
                                 </FloatLabel>
@@ -295,14 +301,49 @@ async function submitRegister() {
                         </div>
                     </div>
 
+                    <div class="row g-0 justify-content-center align-items-center pt-4">
+                        <div class="col-xl-4 col-sm-8">
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    value="" 
+                                    id="has_allergies"
+                                    v-model="has_allergies"
+                                >
+                                <label class="form-check-label" for="has_allergies">
+                                    Allergie/Intolleranze da registrare?
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-xl-4 col-sm-8 offset-xl-1 offset-sm-0 mt-4 mt-sm-0">
+                            <FloatLabel variant="on">
+                                <InputText 
+                                    type="text"     
+                                    class="form-control form-control-lg form-control-alt py-3"
+                                    id="child_allergies"
+                                    name="child_allergies"
+                                    v-model="registerForm.child_allergies"
+                                    :disabled="!has_allergies"
+                                />
+                                <label for="child_allergies">Allergie/intolleranze</label>
+                            </FloatLabel>
+                            <InputError class="mt-2" :message="errors.child_allergies" />
+                        </div>
+                    </div>
+
                     <div class="row g-0 justify-content-center pt-4">
                         <div class="col-xl-4 col-sm-8">
                             <FloatLabel variant="on">
-                                <InputText 
-                                    type="password"     
-                                    class="form-control form-control-lg form-control-alt py-3"
+                                <Password
+                                    class="w-100"
+                                    inputClass="w-100 form-control form-control-lg form-control-alt py-3"
+                                    toggleMask
                                     id="password"
                                     name="password"
+                                    promptLabel="Scegli una password" 
+                                    weakLabel="Troppo debole" 
+                                    mediumLabel="Complessità nella media" strongLabel="Password complessa"
                                     v-model="registerForm.password"
                                 />
                                 <label for="password">Password</label>
@@ -311,11 +352,15 @@ async function submitRegister() {
                         </div>
                         <div class="col-xl-4 col-sm-8 offset-xl-1 offset-sm-0 mt-4 mt-sm-0">
                             <FloatLabel variant="on">
-                                <InputText 
-                                    type="password"     
-                                    class="form-control form-control-lg form-control-alt py-3"
+                                <Password 
+                                    class="w-100"
+                                    inputClass="form-control form-control-lg form-control-alt py-3 w-100"
+                                    toggleMask
                                     id="password_confirmation"
                                     name="password_confirmation"
+                                    promptLabel="Scegli una password" 
+                                    weakLabel="Troppo debole" 
+                                    mediumLabel="Complessità nella media" strongLabel="Password complessa"
                                     v-model="registerForm.password_confirmation"
                                 />
                                 <label for="password_confirmation">Conferma Password</label>

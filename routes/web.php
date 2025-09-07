@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CreditController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -56,6 +57,9 @@ Route::middleware(['auth' , 'verified'])->group(function () {
 
     Route::resource('payments', PaymentController::class)->middleware(['auth', 'verified'])->except(['show', 'edit', 'update', 'destroy']);
     Route::post('/payments/store/by-admin', [PaymentController::class, 'store_by_admin'])->middleware(['auth', 'verified'])->name('payments.store-by-admin');
+
+    Route::patch('/credits/{credit}/update', [CreditController::class, 'update'])->middleware(['auth', 'verified'])->name('credits.update');
+    Route::delete('/credits/{credit}/destroy', [CreditController::class, 'destroy'])->middleware(['auth', 'verified'])->name('credits.destroy');
 
     Route::post('/payments/{order}/checkout', [PaymentController::class, 'checkout'])->middleware(['auth', 'verified'])->name('payments.checkout');
 });

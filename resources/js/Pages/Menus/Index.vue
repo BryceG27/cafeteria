@@ -6,9 +6,8 @@ import { ref, reactive } from "vue";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Calendar from 'primevue/calendar';
-import InputGroup from 'primevue/inputgroup';
-import Button from 'primevue/button';
+import InputText from 'primevue/inputtext';
+import { FilterMatchMode } from '@primevue/core/api';
 
 import moment from 'moment';
 import Swal from 'sweetalert2';
@@ -17,6 +16,12 @@ const props = defineProps({
     menus: Array,
     auth: Object,
 });
+
+const filters = ref({
+    name : { value: null, matchMode: FilterMatchMode.CONTAINS },
+    start_date : { value: null, matchMode: FilterMatchMode.DATE_AFTER_EQUALS },
+    validity_date: { value: null, matchMode: FilterMatchMode.EQUALS },
+})
 
 const expandedRows = ref(null);
 const dateFilter = reactive({ 
@@ -43,21 +48,6 @@ const deleteMenu = (id) => {
     })
 }
 
-const changeDateFilter = (e) => {
-    console.log(e);
-    
-    if (e.value && e.value.length === 2) {
-        dateFilter.start = moment(e[0]).toDate().format('YYYY-MM-DD');
-        dateFilter.end = moment(e[1]).toDate().format('YYYY-MM-DD');
-    } else {
-        dateFilter.start = null;
-        dateFilter.end = null;
-    }
-
-    console.log(dateFilter);
-    
-}
-
 </script>
 <template>
     <Head title="Menu" />
@@ -80,47 +70,13 @@ const changeDateFilter = (e) => {
                 </template>
                 <DataTable
                     stripedRows
-                    :value="menus"
                     paginator
                     v-model:expandedRows="expandedRows"
+                    :value="menus"
                     :rows="10"
+                    v-model:filters="filters"
+                    filterDisplay="row"
                 >
-                    <template #header v-if="false">
-                        <div class="row align-items-center justify-content-end">
-                            <div class="col-md-2 text-end">
-                                Filtra per range:
-                            </div>
-                            <div class="col-md-3 d-flex align-items-center">
-                                <InputGroup>
-                                    <Link 
-                                        class="btn btn-alt-danger rounded-end-0"
-                                        method="get"
-                                        as="button"
-                                        :href="route('menus.index')"
-                                    >
-                                        <i class="fa fa-x"></i>
-                                    </Link>
-                                    <Calendar 
-                                        selectionMode="range" 
-                                        dateFormat="dd/mm/yy" 
-                                        @change="changeDateFilter"
-                                        paginator 
-                                        :rows="5" 
-                                        :rowsPerPageOptions="[5, 10, 20, 50]"
-                                    />
-                                    
-                                    <Link 
-                                        class="btn btn-alt-success rounded-start-0"
-                                        method="get"
-                                        as="button"
-                                        :href="route('menus.index', { dateFilter : dateFilter})"
-                                    >
-                                        <i class="fa fa-search"></i>
-                                    </Link>
-                                </InputGroup>
-                            </div>
-                        </div>
-                    </template>
                     <template #empty>
                         <div class="p-4 text-center">
                             <i class="fa fa-exclamation-triangle fa-2x"></i>
@@ -191,7 +147,17 @@ const changeDateFilter = (e) => {
                             </div>
                         </template>
                     </Column>
-                    <Column style="width: 15%" field="name" header="Nome" />
+                    <Column style="width: 15%" field="name" header="Nome" :showFilterMenu="false">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <InputText
+                                class="w-100"
+                                input-class="w-100"
+                                placeholder="Cerca per nome" 
+                                v-model="filterModel.value" 
+                                @input="filterCallback" 
+                            />
+                        </template>
+                    </Column>
                     <Column style="width: 14%" field="price" header="Prezzo">
                         <template #body="{ data }">
                             {{ parseFloat(data.price).toFixed(2) }} €
@@ -201,11 +167,27 @@ const changeDateFilter = (e) => {
                         <template #body="{ data }">
                             {{ moment(data.start_date).format('DD/MM') }} - {{ moment(data.end_date).format('DD/MM') }}
                         </template>
+                        <!-- <template #filter="{ filterModel, filterCallback }">
+                            <input 
+                                type="date" 
+                                class="form-control" 
+                                v-model="filterModel.value" 
+                                @change="filterCallback()" 
+                            />
+                        </template> -->
                     </Column>
-                    <Column style="width: 10%" field="end_date" header="Valido il">
+                    <Column style="width: 10%" field="validity_date" header="Valido il" :showFilterMenu="false">
                         <template #body="{ data }">
                             <span v-if="data.validity_date" v-text="moment(data.validity_date).format('DD/MM')" />
                             <span v-else>-</span>
+                        </template>
+                        <template #filter="{ filterModel, filterCallback }">
+                            <input 
+                                type="date" 
+                                class="form-control" 
+                                v-model="filterModel.value" 
+                                @change="filterCallback()" 
+                            />
                         </template>
                     </Column>
                 </DataTable>

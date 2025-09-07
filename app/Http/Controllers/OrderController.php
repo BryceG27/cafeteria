@@ -49,16 +49,16 @@ class OrderController extends Controller
      */
     public function create()
     {
-        $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
-        $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
+        $startDate = Carbon::now()->startOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
+        $endDate = Carbon::now()->endOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
 
         if(in_array(Carbon::now()->locale('it_IT')->dayName, ['sabato', 'domenica'])) {
-            $startDate = Carbon::now()->addWeek()->startOfWeek()->format('Y-m-d');
-            $endDate = Carbon::now()->addWeek()->endOfWeek()->format('Y-m-d');
+            $startDate = Carbon::now()->addWeek()->startOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
+            $endDate = Carbon::now()->addWeek()->endOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
         }
 
         return Inertia::render('Orders/Create', [
-            'menus' => Menu::where('is_active', true)->whereDate('start_date', '>=',  $startDate)->whereDate('end_date', '<=', $endDate)->with('products')->get(),
+            'menus' => Menu::where('is_active', true)->whereDate('start_date', '>=',  $startDate)->whereDate('end_date', '<=', $endDate)->orderBy('validity_date')->with('products')->get(),
             'order' => new Order(),
             'statuses' => Order::get_statuses(),
         ]);
@@ -82,7 +82,7 @@ class OrderController extends Controller
             $validated['to_be_paid'] += $menu->second_price;
         }
 
-        $validated['order_date'] = \Carbon\Carbon::create($request->order_date)->format('Y-m-d');
+        $validated['order_date'] = \Carbon\Carbon::create($request->order_date)->setTimezone('Europe/Rome')->format('Y-m-d');
 
         $order = Order::create($validated);
 
@@ -102,8 +102,16 @@ class OrderController extends Controller
      */
     public function edit(Order $order)
     {
+        $startDate = Carbon::now()->startOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
+        $endDate = Carbon::now()->endOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
+
+        if(in_array(Carbon::now()->locale('it_IT')->dayName, ['sabato', 'domenica'])) {
+            $startDate = Carbon::now()->addWeek()->startOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
+            $endDate = Carbon::now()->addWeek()->endOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
+        }
+
         return Inertia::render('Orders/Edit', [
-            'menus' => Menu::where('is_active', true)->whereDate('start_date', '<=', \Carbon\Carbon::now()->format('Y-m-d'))->whereDate('end_date', '>=', \Carbon\Carbon::now()->format('Y-m-d'))->with('products')->get(),
+            'menus' => Menu::where('is_active', true)->whereDate('start_date', '>=',  $startDate)->whereDate('end_date', '<=', $endDate)->orderBy('validity_date')->with('products')->get(),
             'order' => $order->load('customer'),
             'order_statuses' => Order::get_statuses(),
         ]);
@@ -119,7 +127,7 @@ class OrderController extends Controller
         $validated['total_amount'] = (Float)$order->subtotal_amount - ($request->discount ?? 0);
         $validated['to_be_paid'] = (Float)$order->subtotal_amount - ($request->discount ?? 0);
 
-        $validated['order_date'] = \Carbon\Carbon::create($request->order_date)->format('Y-m-d');
+        $validated['order_date'] = \Carbon\Carbon::create($request->order_date)->setTimezone('Europe/Rome')->format('Y-m-d');
 
         $order->update($validated);
 
@@ -162,7 +170,7 @@ class OrderController extends Controller
             Payment::create([
                 'user_id' => $order->customer_id,
                 'amount' => $order->total_amount,
-                'payment_date' => \Carbon\Carbon::now()->format('Y-m-d'),
+                'payment_date' => \Carbon\Carbon::now()->setTimezone('Europe/Rome')->format('Y-m-d'),
                 'notes' => 'Inserimento manuale pagamento dell\'ordine #' . $order->id,
                 'order_id' => $order->id,
                 'status' => 1,
@@ -199,7 +207,7 @@ class OrderController extends Controller
         Payment::create([
             'user_id' => $order->customer_id,
             'amount' => $order->total_amount,
-            'payment_date' => \Carbon\Carbon::now()->format('Y-m-d'),
+            'payment_date' => \Carbon\Carbon::now()->setTimezone('Europe/Rome')->format('Y-m-d'),
             'notes' => "Pagamento effettuato tramite {$payment_method->name}",
             'order_id' => $order->id,
             'status' => 1,

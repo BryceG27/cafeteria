@@ -9,9 +9,9 @@ import Dialog from "primevue/dialog";
 import InputError from "@/Components/InputError.vue";
 
 import { computed, ref, watch } from "vue";
+import { Link } from "@inertiajs/vue3";
 
 import Swal from "sweetalert2";
-import moment from 'moment';
 
 const selectedProduct = ref(null);
 const openDialog = ref(false);
@@ -29,7 +29,7 @@ const emit = defineEmits(['submit']);
 
 const add_second_menu = ref(props.form.first_dish_id != null && props.form.second_dish_id != null);
 
-const selectedMenu = computed(() => {
+const selectedMenu = computed(() => {    
     return props.menus.find(m => m.id === props.form.menu_id) || null;
 });
 
@@ -67,8 +67,8 @@ watch(() => props.form, (newVal) => {
         if(!add_second_menu.value)
             props.form.first_dish_id = null;
     }
-
-    props.form.order_date = moment(newVal.validity_date).format('YYYY-MM-DD');
+    
+    // props.form.order_date = moment(newVal.validity_date).format('YYYY-MM-DD');
 }, { deep: true });
 
 watch(add_second_menu, (newVal) => {
@@ -118,7 +118,7 @@ const goBack = () => {
                 <Dropdown 
                     inputId="menu_id"
                     optionValue="id"
-                    optionLabel="description"
+                    optionLabel="name"
                     :options="props.menus"
                     class="w-100"
                     inputClass="w-100"
@@ -416,7 +416,7 @@ const goBack = () => {
         </div>
 
         <div class="row pb-3 justify-content-center">
-            <div class="col-md-4 col-sm-12 text-center pb-3 pb-md-0">
+            <div class="col-md-4 col-sm-12 text-center pb-3 pb-md-0" v-if="form.id == undefined">
                 <button 
                     class="btn btn-alt-info btn-sm w-75"
                     type="submit"
@@ -426,10 +426,20 @@ const goBack = () => {
                 </button>
             </div>
             <div class="col-md-4 col-sm-12 text-md-start text-center pb-3 pb-md-0">
+                <Link 
+                    class="btn btn-alt-warning btn-sm w-75" 
+                    type="button" 
+                    v-if="form.id != undefined" 
+                    :href="route('orders.index')"
+                >
+                    <i class="fa fa-arrow-left me-1"></i>
+                    Indietro
+                </Link>
                 <button
                     class="btn btn-alt-danger btn-sm w-75"
                     type="button"
                     @click="goBack"
+                    v-else
                 >
                     <i class="fa fa-x me-1"></i>
                     Annulla

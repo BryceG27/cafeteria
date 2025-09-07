@@ -1,9 +1,9 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link, useForm } from "@inertiajs/vue3";
+import { Head, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
 import OrderForm from './Components/OrderForm.vue';
-import { onMounted } from "vue";
+import { onMounted, watch } from "vue";
 
 const props = defineProps({
     menus : Array,
@@ -33,6 +33,20 @@ const form = useForm({
     second_dish_id : null,
     side_dish_id : null,
 })
+
+watch(() => form.menu_id, (newMenuId) => {
+    const selectedMenu = props.menus.find(menu => menu.id === newMenuId);
+
+    if (selectedMenu) {
+        form.subtotal_amount = selectedMenu.price;
+        form.total_amount = selectedMenu.price - (selectedMenu.price * (form.discount / 100));
+        form.order_date = selectedMenu.validity_date;
+    } else {
+        form.subtotal_amount = 0;
+        form.total_amount = 0;
+        form.order_date = null;
+    }
+});
 
 onMounted(() => {
     if(props.menus.length == 1) {
@@ -66,7 +80,6 @@ onMounted(() => {
                         Annulla
                     </Link>
                 </template> -->
-
                 <OrderForm 
                     :form="form" 
                     :menus="menus" 

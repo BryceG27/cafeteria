@@ -46,6 +46,11 @@ class LoginRequest extends FormRequest
     {
         return [
             'email.prohibited' => trans('auth.inactive'),
+            'email.required' => 'Il campo email è obbligatorio.',
+            'email.email' => 'Il campo email deve essere un indirizzo email valido.',
+            'email.exists' => 'Le credenziali non sono corrette.',
+            'password.required' => 'Il campo password è obbligatorio.',
+            'password.string' => 'Il campo password deve essere una stringa.',
         ];
     }
 

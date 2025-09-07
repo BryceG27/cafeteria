@@ -36,9 +36,9 @@ class Menu extends Model
         return $request->validate([
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'start_date' => 'required|date',
+            'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'validity_date' => 'nullable|date|after_or_equal:start_date,before_or_equal:validity_date',
+            'validity_date' => 'required|date|after_or_equal:start_date,before_or_equal:validity_date',
             'is_active' => 'boolean',
             'price' => 'nullable|numeric|min:0',
             'second_price' => 'nullable|numeric|min:0',

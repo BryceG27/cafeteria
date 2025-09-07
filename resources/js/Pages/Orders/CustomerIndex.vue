@@ -16,11 +16,13 @@ import axios from "axios";
 import "https://js.stripe.com/v3";
 
 const props = defineProps({
+    variables : Object,
     credits : Array,
     order : Object,
     orders: Array,
     auth: Object,
 });
+
 
 const selectedOrder = ref(null)
 const showDialog = ref(false);
@@ -57,6 +59,10 @@ const destroy = (id) => {
 const payWithStripe = () => {
     axios.post(route('payments.checkout', { order : selectedOrder.value.id, payment_method: 3 }))
         .then(response => {
+            console.log(props.variables.stripe_key);
+            console.log(response);
+            
+            
             const stripe = Stripe(props.variables.stripe_key);
             stripe.redirectToCheckout({ sessionId: response.data.id });
         })
@@ -97,7 +103,6 @@ const payWithPayPal = () => {
                 modal
                 :header="`Pagamento menù: ${selectedOrder?.menu?.name} - ${moment(selectedOrder?.date).format('DD/MM')}`"
                 :style="{ width: '50vw', height: '46vh' }"
-                :closable="false"
             >
                 <div class="container">
                     <div class="row">
@@ -137,12 +142,12 @@ const payWithPayPal = () => {
                                     Paga con carta
                                 </button>
                             </div>
-                            <div class="col-md-4" :class="{ 'col-md-6' : credit_available <= 0, 'col-md-4' : credit_available > 0 }" @click.prevent="payWithCreditAvailable">
+                            <div class="col-md-4" :class="{ 'col-md-6' : credit_available <= 0, 'col-md-4' : credit_available > 0 }" @click.prevent="payWithPayPal">
                                 <button class="btn btn-paypal btn-lg w-100 text-black d-flex align-items-center justify-content-center gap-2">
                                     Paga con <img src="/assets/media/various/paypal.png" style="height: 1.5rem" />
                                 </button>
                             </div>
-                            <div class="col-md-4" v-if="credit_available > 0" @click.prevent="payWithPayPal">
+                            <div class="col-md-4" v-if="credit_available > 0" @click.prevent="payWithCreditAvailable">
                                 <button class="btn btn-cash btn-lg w-100">
                                     Paga con credito residuo
                                 </button>
@@ -238,7 +243,7 @@ const payWithPayPal = () => {
                                         <td class="p-2 align-middle">
                                             <div class="d-flex justify-content-between">
                                                 <span>
-                                                    <strong>Primp:</strong> <span v-text="data.first_dish.name" />
+                                                    <strong>Primo:</strong> <span v-text="data.first_dish.name" />
                                                 </span>
                                                 <button class="btn-link" v-if="data.first_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
                                                     <i class="fa fa-camera"></i>

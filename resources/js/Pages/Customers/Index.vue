@@ -2,13 +2,23 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
+import { computed, ref } from "vue";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import ToggleSwitch from 'primevue/toggleswitch';
 
 const props = defineProps({
     customers: Array,
     auth: Object,
+});
+
+const showOnlyActive = ref(true);
+const filteredCustomers = computed(() => {
+    if (showOnlyActive.value) {
+        return props.customers.filter(customer => customer.is_active);
+    }
+    return props.customers;
 });
 
 </script>
@@ -23,8 +33,17 @@ const props = defineProps({
             <BaseBlock title="Clienti" contentClass="pb-3">
                 <DataTable
                     stripedRows
-                    :value="customers"
+                    :value="filteredCustomers"
                 >
+                    <template #header>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Elenco clienti</h5>
+                            <div class="d-flex align-items-center gap-2">
+                                <span>Mostra solo attivi</span>
+                                <ToggleSwitch v-model="showOnlyActive" />
+                            </div>
+                        </div>
+                    </template>
                     <template #empty>
                         <div class="p-4 text-center">
                             <i class="fa fa-exclamation-triangle fa-2x"></i>
