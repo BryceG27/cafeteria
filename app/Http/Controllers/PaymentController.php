@@ -31,6 +31,10 @@ class PaymentController extends Controller
                 return $payment;
             }),
             'credits' => Credit::where('user_id', auth()->id())->get(),
+            'orders' => Order::where('customer_id', auth()->id())->where('status', '!=', 2)->get()->map(function($order) {
+                $order->status_info = $order->get_status();
+                return $order;
+            }),
         ]);
     }
 
@@ -108,12 +112,13 @@ class PaymentController extends Controller
 
     public function checkout_with_credit(Order $order) {
         $credit_available = Credit::where('user_id', auth()->id())->where('amount_available', '>', 0)->get();
+        $to_be_paid = $order->to_be_paid;
         $total = 0;
 
         foreach ($credit_available as $credit) {
             if($credit->amount_available >= $order->to_be_paid) {
                 // The available credit is enough to cover the order total
-                $total += $order->to_be_paid;
+                $to_be_paid = 0;
 
                 // Deduct the used amount from the credit
                 $credit->amount_available -= $order->to_be_paid;
@@ -126,18 +131,16 @@ class PaymentController extends Controller
 
                 break;
             } else {
-                // The available credit is not enough, use it all and continue to the next credit
-                $total += $credit->amount_available;
-            
                 // Deduct the used amount from the credit (which will be zero now)
                 $order->to_be_paid = $order->to_be_paid - $credit->amount_available;
+                $to_be_paid = $order->to_be_paid;
                 $credit->amount_available = 0;
                 $credit->save();
                 $order->save();
             }
         }
 
-        $notes = $total < $order->to_be_paid ? "Pagamento parziale effettuato con credito residuo." : "Pagamento effettuato con credito residuo.";
+        $notes = $to_be_paid > 0 ? "Pagamento parziale effettuato con credito residuo." : "Pagamento effettuato con credito residuo.";
 
         Payment::create([
             'user_id' => auth()->id(),
@@ -149,10 +152,9 @@ class PaymentController extends Controller
             'payment_method_id' => 1,
         ]);
 
-
-        if($total < $order->to_be_paid) {
-            $to_be_paid = number_format($order->to_be_paid, 2, ',', '.');
-            return redirect()->back()->withErrors("Scarico da credito effettuato. Restante da pagare: {$to_be_paid} €.");
+        if($to_be_paid > 0) {
+            $to_be_paid = number_format($to_be_paid, 2, ',', '.');
+            return redirect()->route('orders.index', compact('order'))->withErrors("Scarico da credito effettuato. Restante da pagare: {$to_be_paid} €.");
         }
 
         return redirect()->route('orders.index')->with('message', 'Pagamento effettuato con successo utilizzando il credito residuo.');

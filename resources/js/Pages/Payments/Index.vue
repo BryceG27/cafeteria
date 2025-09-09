@@ -13,24 +13,23 @@ import { computed } from 'vue'
 
 const props = defineProps({
     payments: Array,
+    orders : Array,
     credits : Array,
     auth : Object,
 })
 
 const total_paid = computed(() => {
-    return props.payments.reduce((total, payment) => {
-        return total + parseFloat(payment.amount);
-    }, 0);
+    return props.payments.reduce((sum, payment) => sum + (payment.status == 1 && payment.order?.status != 2 ? parseFloat(payment.amount) : 0), 0);
+});
+
+const total_due = computed(() => {
+    return props.orders.filter(order => order.status != 2).reduce((sum, order) => sum + parseFloat(order.to_be_paid), 0);
 });
 
 const total_credit = computed(() => {
     return props.credits.reduce((total, credit) => {
         return total + parseFloat(credit.amount_available);
     }, 0);
-});
-
-const total_due = computed(() => {
-    return 0
 });
 
 </script>
@@ -114,6 +113,9 @@ const total_due = computed(() => {
                     <Column field="status" style="width: 20%" header="Stato">
                         <template #body="{ data }">
                             <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
+                            <span class="badge text-bg-danger ms-2" v-if="data.order && data.order.status == 2">
+                                Ordine annullato
+                            </span>
                         </template>
                     </Column>
                 </DataTable>

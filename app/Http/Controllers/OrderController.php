@@ -187,6 +187,8 @@ class OrderController extends Controller
                 'amount_available' => $order->total_amount,
                 'description' => 'Creato generato per ordine #' . $order->id,
             ]);
+
+            $order->to_be_paid = $order->total_amount;
         }
 
         $order->update([

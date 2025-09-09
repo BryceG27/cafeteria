@@ -14,15 +14,17 @@ const props = defineProps({
 });
 
 const total_paid = computed(() => {
-    return props.customer.payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+    return props.customer.payments.reduce((sum, payment) => sum + (payment.status == 1 && payment.order?.status != 2 ? parseFloat(payment.amount) : 0), 0);
 });
 
 const total_due = computed(() => {
-    return props.customer.orders.filter(order => order.status == 0).reduce((sum, order) => sum + parseFloat(order.total_amount), 0);
+    return props.customer.orders.filter(order => order.status != 2).reduce((sum, order) => sum + parseFloat(order.to_be_paid), 0);
 });
 
 const total_credit = computed(() => {
-    return props.customer.credits.reduce((sum, order) => sum + parseFloat(order.amount_available), 0);
+    return props.customer.credits.reduce((total, credit) => {
+        return total + parseFloat(credit.amount_available);
+    }, 0);
 });
 
 </script>
@@ -34,6 +36,9 @@ const total_credit = computed(() => {
                     :value="customer.payments"
                     stripedRows
                     style="max-height: 50rem; overflow-y: auto"
+                    paginator
+                    :rows="15"
+                    :rowsPerPageOptions="[15,25,50]"
                 >
                     <template #empty>
                         <div class="p-4 text-center">
@@ -109,6 +114,9 @@ const total_credit = computed(() => {
                     <Column field="status" style="width: 20%" header="Stato">
                         <template #body="{ data }">
                             <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
+                            <span class="badge text-bg-danger ms-2" v-if="data.order && data.order.status == 2">
+                                Ordine annullato
+                            </span>
                         </template>
                     </Column>
                 </DataTable>

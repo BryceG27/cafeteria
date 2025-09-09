@@ -26,6 +26,9 @@ const emit = defineEmits(['on-status-change']);
                     style="max-height: 50rem; overflow-y: auto"
                     editMode="cell" 
                     @cell-edit-complete="emit('on-status-change', $event)"
+                    paginator
+                    :rows="5"
+                    :rowsPerPageOptions="[5,10,25,50]"
                 >
                     <template #empty>
                         <div class="p-4 text-center">

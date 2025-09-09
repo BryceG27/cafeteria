@@ -35,7 +35,7 @@ class CustomerController extends Controller
             return $order;
         });
 
-        $customer->payments = $customer->payments()->with('method')->orderBy('created_at', 'desc')->get()->map(function($payment) {
+        $customer->payments = $customer->payments()->with('method', 'order')->orderBy('created_at', 'desc')->get()->map(function($payment) {
             $payment->status_info = $payment->get_status();
             return $payment;
         });

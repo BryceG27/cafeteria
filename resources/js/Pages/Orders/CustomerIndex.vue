@@ -26,6 +26,7 @@ const props = defineProps({
 
 const selectedOrder = ref(null)
 const showDialog = ref(false);
+const disablePayButton = ref(false);
 const credit_available = computed(() => {
     return props.credits.reduce((acc, credit) => acc + parseFloat(credit.amount_available) , 0).toFixed(2);
 });
@@ -59,10 +60,6 @@ const destroy = (id) => {
 const payWithStripe = () => {
     axios.post(route('payments.checkout', { order : selectedOrder.value.id, payment_method: 3 }))
         .then(response => {
-            console.log(props.variables.stripe_key);
-            console.log(response);
-            
-            
             const stripe = Stripe(props.variables.stripe_key);
             stripe.redirectToCheckout({ sessionId: response.data.id });
         })
@@ -73,10 +70,17 @@ const payWithStripe = () => {
 
 const payWithCreditAvailable = () => {
     const form = useForm({});
+    disablePayButton.value = true;
 
     form.post(route('payments.checkout', { order : selectedOrder.value.id, payment_method : 1 }), {
         onSuccess: () => {
             showDialog.value = false;
+            disablePayButton.value = false;
+        },
+        onError: () => {
+            if(props.order)
+                selectedOrder.value = props.order;
+            disablePayButton.value = false;
         }
     });
 }
@@ -96,15 +100,18 @@ const payWithPayPal = () => {
     <AuthenticatedLayout>
         <div class="content">
             <SuccessMessage />
-            <ErrorMessage />
+            <ErrorMessage v-if="!showDialog" />
 
             <Dialog
                 v-model:visible="showDialog"
                 modal
                 :header="`Pagamento menù: ${selectedOrder?.menu?.name} - ${moment(selectedOrder?.date).format('DD/MM')}`"
-                :style="{ width: '50vw', height: '46vh' }"
+                :style="{ width: '50vw', minHeight: '46vh', maxHeight: '52vh' }"
             >
                 <div class="container">
+                    <div class="row py-1" v-if="Object.keys($page.props.errors).length">
+                        <p class="text-warning" v-for="error in $page.props.errors" v-text="error" />
+                    </div>
                     <div class="row">
                         <div class="col-md-12">
                             <table class="table">
@@ -147,7 +154,7 @@ const payWithPayPal = () => {
                                     Paga con <img src="/assets/media/various/paypal.png" style="height: 1.5rem" />
                                 </button>
                             </div> -->
-                            <div class="col-md-4" v-if="credit_available > 0" @click.prevent="payWithCreditAvailable">
+                            <div class="col-md-4" v-if="credit_available > 0" @click.prevent="payWithCreditAvailable" :disabled="disablePayButton">
                                 <button class="btn btn-cash btn-lg w-100">
                                     Paga con credito residuo
                                 </button>
@@ -178,9 +185,9 @@ const payWithPayPal = () => {
                         <template #body="{ data }">
                             <Link
                                 :href="route('orders.edit', data.id)"
-                                class="btn btn-alt-warning btn-sm d-none d-xl-inline"
+                                class="btn btn-alt-info btn-sm d-none d-xl-inline"
                             >
-                                <i class="fa fa-pencil-alt"></i>
+                                <i class="fa fa-eye"></i>
                             </Link>
 
                             <button class="btn btn-alt-secondary btn-sm ms-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" v-if="data.status != 3 && (moment(data.created_at).format('YYYY-MM-DD') <= moment().format('YYYY-MM-DD'))">
@@ -303,6 +310,11 @@ const payWithPayPal = () => {
                     <Column header="Totale">
                         <template #body="{ data }">
                             <span v-text="parseFloat(data.total_amount).toFixed(2)" /> &euro;
+                        </template>
+                    </Column>
+                    <Column header="Da pagare">
+                        <template #body="{ data }">
+                            <span v-text="parseFloat(data.to_be_paid).toFixed(2)" /> &euro;
                         </template>
                     </Column>
                     <Column header="Stato" field="status">
