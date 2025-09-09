@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Inertia\Inertia;
+use App\Models\Order;
 use Inertia\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,18 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 class ProfileController extends Controller
 {
+    public function dashboard() {
+        $orders = Order::where('status', '<>', 2)->with(['customer', 'first_dish', 'second_dish', 'side_dish', 'menu'])->orderBy('created_at', 'desc')->get()->map(function($order) {
+                    $order->status_info = $order->get_status();
+                    $order->child_name = $order->customer->child . " ";
+
+                    $order->child_name .= count(explode(' ', $order->customer->child)) == 1 ? $order->customer->surname : '';
+                    return $order;
+                });
+
+        $customers = User::where('user_group_id', 3)->where('is_active', true)->with('user_group', 'orders', 'payments')->get();
+        return Inertia::render('Dashboard', compact('orders', 'customers'));
+    }
     /**
      * Display the user's profile form.
      */

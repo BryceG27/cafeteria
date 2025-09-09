@@ -15,10 +15,6 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
 Route::get('/update', function() {
     Artisan::call('migrate');
 
@@ -71,6 +67,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
         else
             return redirect(route('dashboard'));
     })->name('home');
+
+    Route::get('/dashboard', [ProfileController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
     
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 

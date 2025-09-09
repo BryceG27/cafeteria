@@ -74,6 +74,7 @@ const updateOrderStatus = (event) => {
                                     v-model="filters.child_name" 
                                     placeholder="Cerca per nome o cognome" 
                                     class="ms-2"
+                                    style="width: 250px"
                                 />
                             </div>
                             <div>
@@ -88,7 +89,7 @@ const updateOrderStatus = (event) => {
                                     optionValue="value" 
                                     placeholder="Seleziona stato" 
                                     showClear
-                                    style="width: 200px"
+                                    style="width: 250px"
                                 />
                             </div>
                         </div>
@@ -189,7 +190,7 @@ const updateOrderStatus = (event) => {
                                                         <ul class="dropdown-menu">
                                                             <li class="dropdown-item">
                                                                 <div style="width: 15rem; height: 10rem">
-                                                                    <img :src="`/storage/app/public/${data.second.image}`" :alt="data.second.name" class="img-fluid">
+                                                                    <img :src="`/storage/app/public/${data.second_dish.image}`" :alt="data.second_dish.name" class="img-fluid">
                                                                 </div>
                                                             </li>
                                                         </ul>
@@ -208,7 +209,7 @@ const updateOrderStatus = (event) => {
                                                         <ul class="dropdown-menu">
                                                             <li class="dropdown-item">
                                                                 <div style="width: 15rem; height: 10rem">
-                                                                    <img :src="`/storage/app/public/${data.side.image}`" :alt="data.side.name" class="img-fluid">
+                                                                    <img :src="`/storage/app/public/${data.side_dish.image}`" :alt="data.side_dish.name" class="img-fluid">
                                                                 </div>
                                                             </li>
                                                         </ul>

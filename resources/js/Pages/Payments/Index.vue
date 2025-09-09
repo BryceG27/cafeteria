@@ -25,7 +25,7 @@ const total_paid = computed(() => {
 
 const total_credit = computed(() => {
     return props.credits.reduce((total, credit) => {
-        return total + parseFloat(credit.amount);
+        return total + parseFloat(credit.amount_available);
     }, 0);
 });
 

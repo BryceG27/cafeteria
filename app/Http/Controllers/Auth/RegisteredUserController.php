@@ -35,9 +35,15 @@ class RegisteredUserController extends Controller
             'surname' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'child' => 'required|string|max:255',
-            'child_allergies' => 'nullable|string|max:255',
+            'has_allergies' => 'nullable|boolean',
+            'child_allergies' => 'nullable|required_if:has_allergies,true|string|max:255',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'child_allergies.required_if' => 'Il campo allergie/intolleranze è obbligatorio',
+            'email.lowercase' => 'L\'email deve essere in minuscolo.',
         ]);
+
+        dd($validated);
 
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_active'] = true;

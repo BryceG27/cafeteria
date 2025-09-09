@@ -8,6 +8,7 @@ import FloatLabel from "primevue/floatlabel";
 import InputText from "primevue/inputtext";
 import InputError from "@/Components/InputError.vue";
 import Password from "primevue/password";
+import ToggleSwitch from 'primevue/toggleswitch';
 
 const props = defineProps({
     errors: Object,
@@ -46,14 +47,12 @@ const registerForm = useForm({
     email : '',
     child : '',
     child_allergies : '',
+    has_allergies : false,
     password : '',
     password_confirmation : '',
     is_active : 1,
     user_group_id : 3,
 })
-
-const has_allergies = ref(false);
-
 
 // On form submission
 async function onSubmit() {
@@ -302,19 +301,23 @@ async function submitRegister() {
                     </div>
 
                     <div class="row g-0 justify-content-center align-items-center pt-4">
-                        <div class="col-xl-4 col-sm-8">
-                            <div class="form-check">
-                                <input 
+                        <div class="col-xl-4 col-sm-8 d-flex align-items-center gap-2">
+                                <!-- <input 
                                     class="form-check-input" 
                                     type="checkbox" 
                                     value="" 
                                     id="has_allergies"
-                                    v-model="has_allergies"
-                                >
+                                    v-model="form.has_allergies"
+                                > -->
+
+                                <ToggleSwitch 
+                                    v-model="registerForm.has_allergies" 
+                                    inputId="has_allergies" 
+                                />
+
                                 <label class="form-check-label" for="has_allergies">
                                     Allergie/Intolleranze da registrare?
                                 </label>
-                            </div>
                         </div>
                         <div class="col-xl-4 col-sm-8 offset-xl-1 offset-sm-0 mt-4 mt-sm-0">
                             <FloatLabel variant="on">
@@ -324,7 +327,7 @@ async function submitRegister() {
                                     id="child_allergies"
                                     name="child_allergies"
                                     v-model="registerForm.child_allergies"
-                                    :disabled="!has_allergies"
+                                    :disabled="!form.has_allergies"
                                 />
                                 <label for="child_allergies">Allergie/intolleranze</label>
                             </FloatLabel>

@@ -2,13 +2,25 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
+import { reactive, computed } from "vue";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import InputText from 'primevue/inputtext';
 
 const props = defineProps({
     products: Array,
     auth: Object,
+});
+
+const filters = reactive({
+    name: '',
+});
+
+const filteredProducts = computed(() => {
+    return props.products.filter(product => {
+        return filters.name != '' ? product.name.toLowerCase().includes(filters.name.toLowerCase()) : true;
+    });
 });
 
 </script>
@@ -34,7 +46,7 @@ const props = defineProps({
 
                 <DataTable
                     stripedRows
-                    :value="products"
+                    :value="filteredProducts"
                     paginator
                     :rows="10"
                     :rowsPerPageOptions="[10,25,50]"
@@ -43,6 +55,16 @@ const props = defineProps({
                         <div class="p-4 text-center">
                             <i class="fa fa-exclamation-triangle fa-2x"></i>
                             <p class="mt-2">Nessun prodotto inserito</p>
+                        </div>
+                    </template>
+                    <template #header>
+                        <div class="d-flex align-items-center justify-content-end">
+                            <label class="form-label">Filtra per nome:</label>
+                            <InputText 
+                                v-model="filters.name" 
+                                placeholder="Cerca per nome" 
+                                class="ms-2"
+                            />
                         </div>
                     </template>
                     <Column class="text-center">

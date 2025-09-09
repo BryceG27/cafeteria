@@ -142,11 +142,11 @@ const payWithPayPal = () => {
                                     Paga con carta
                                 </button>
                             </div>
-                            <div class="col-md-4" :class="{ 'col-md-6' : credit_available <= 0, 'col-md-4' : credit_available > 0 }" @click.prevent="payWithPayPal">
+                            <!-- <div class="col-md-4" :class="{ 'col-md-6' : credit_available <= 0, 'col-md-4' : credit_available > 0 }" @click.prevent="payWithPayPal">
                                 <button class="btn btn-paypal btn-lg w-100 text-black d-flex align-items-center justify-content-center gap-2">
                                     Paga con <img src="/assets/media/various/paypal.png" style="height: 1.5rem" />
                                 </button>
-                            </div>
+                            </div> -->
                             <div class="col-md-4" v-if="credit_available > 0" @click.prevent="payWithCreditAvailable">
                                 <button class="btn btn-cash btn-lg w-100">
                                     Paga con credito residuo

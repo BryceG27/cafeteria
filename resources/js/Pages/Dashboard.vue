@@ -1,11 +1,30 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import { reactive, ref } from "vue";
+import { reactive, ref, computed } from "vue";
 
 // vue-chartjs, for more info and examples you can check out https://vue-chartjs.org/ and http://www.chartjs.org/docs/ -->
 import { Line, Bar } from "vue-chartjs";
 import { Chart, registerables } from "chart.js";
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+
+import moment from 'moment';
+
+const props = defineProps({
+    auth: Object,
+    customers : Array,
+    orders : Array,
+    errors: Object,
+});
+
+const todayOrders = computed(() => {
+    return props.orders.filter(order => moment(order.order_date).isSame(moment(), 'day') && order.status == 1);
+})
+
+const amountOrders = computed(() => {
+    return props.orders.reduce((acc, order) => {
+        return acc + (order.status == 1 ? order.total_amount - order.to_be_paid : 0);
+    }, 0);
+})
 
 Chart.register(...registerables);
 
@@ -96,24 +115,24 @@ const earningsOptions = reactive({
 // Chart Total Orders data
 const totalOrdersData = reactive({
     labels: [
-        "MON",
-        "TUE",
-        "WED",
-        "THU",
-        "FRI",
-        "SAT",
-        "SUN",
-        "MON",
-        "TUE",
-        "WED",
-        "THU",
-        "FRI",
-        "SAT",
-        "SUN",
+        "LUN",
+        "MAR",
+        "MER",
+        "GIO",
+        "VEN",
+        "SAB",
+        "DOM",
+        "LUN",
+        "MAR",
+        "MER",
+        "GIO",
+        "VEN",
+        "SAB",
+        "DOM",
     ],
     datasets: [
         {
-            label: "Total Orders",
+            label: "Totale ordini",
             fill: true,
             backgroundColor: "rgba(220, 38, 38, .15)",
             borderColor: "transparent",
@@ -158,20 +177,20 @@ const totalOrdersOptions = reactive({
 // Chart Total Earnings data
 const totalEarningsData = reactive({
     labels: [
-        "MON",
-        "TUE",
-        "WED",
-        "THU",
-        "FRI",
-        "SAT",
-        "SUN",
-        "MON",
-        "TUE",
-        "WED",
-        "THU",
-        "FRI",
-        "SAT",
-        "SUN",
+        "LUN",
+        "MAR",
+        "MER",
+        "GIO",
+        "VEN",
+        "SAB",
+        "DOM",
+        "LUN",
+        "MAR",
+        "MER",
+        "GIO",
+        "VEN",
+        "SAB",
+        "DOM",
     ],
     datasets: [
         {
@@ -294,9 +313,10 @@ const newCustomersOptions = reactive({
                 <div class="flex-grow-1 mb-1 mb-md-0">
                     <h1 class="h3 fw-bold mb-2">Dashboard</h1>
                     <h2 class="h6 fw-medium fw-medium text-muted mb-0">
-                        Welcome
-                        {{ $page.props.auth.user.username }}
-                        everything looks great.
+                        Ciao
+                        <em>
+                            {{ $page.props.auth.user.name }}
+                        </em>
                     </h2>
                 </div>
                 <div class="mt-3 mt-md-0 ms-md-3 space-x-1">
@@ -343,21 +363,23 @@ const newCustomersOptions = reactive({
                             <div
                                 class="block-content block-content-full flex-grow-1 d-flex justify-content-between align-items-center">
                                 <dl class="mb-0">
-                                    <dt class="fs-3 fw-bold">32</dt>
+                                    <dt class="fs-3 fw-bold" v-text="todayOrders.length" />
                                     <dd class="fs-sm fw-medium fs-sm fw-medium text-muted mb-0">
-                                        Pending Orders
+                                        Ordini di oggi pagati
                                     </dd>
                                 </dl>
                                 <div class="item item-rounded-lg bg-body-light">
-                                    <i class="far fa-gem fs-3 text-primary"></i>
+                                    <i class="fa fa-shopping-cart fs-3 text-primary"></i>
                                 </div>
                             </div>
                             <div class="bg-body-light rounded-bottom">
-                                <a class="block-content block-content-full block-content-sm fs-sm fw-medium d-flex align-items-center justify-content-between"
-                                    href="javascript:void(0)">
-                                    <span>View all orders</span>
+                                <Link 
+                                    class="block-content block-content-full block-content-sm fs-sm fw-medium d-flex align-items-center justify-content-between"
+                                    :href="route('orders.index')"
+                                >
+                                    <span>Visualizza tutti gli ordini</span>
                                     <i class="fa fa-arrow-alt-circle-right ms-1 opacity-25 fs-base"></i>
-                                </a>
+                                </Link>
                             </div>
                         </template>
                     </BaseBlock>
@@ -370,9 +392,9 @@ const newCustomersOptions = reactive({
                             <div
                                 class="block-content block-content-full flex-grow-1 d-flex justify-content-between align-items-center">
                                 <dl class="mb-0">
-                                    <dt class="fs-3 fw-bold">124</dt>
+                                    <dt class="fs-3 fw-bold" v-text="customers.length" />
                                     <dd class="fs-sm fw-medium fs-sm fw-medium text-muted mb-0">
-                                        New Customers
+                                        Clienti attivi
                                     </dd>
                                 </dl>
                                 <div class="item item-rounded-lg bg-body-light">
@@ -380,11 +402,11 @@ const newCustomersOptions = reactive({
                                 </div>
                             </div>
                             <div class="bg-body-light rounded-bottom">
-                                <a class="block-content block-content-full block-content-sm fs-sm fw-medium d-flex align-items-center justify-content-between"
-                                    href="javascript:void(0)">
-                                    <span>View all customers</span>
+                                <Link class="block-content block-content-full block-content-sm fs-sm fw-medium d-flex align-items-center justify-content-between"
+                                    :href="route('customers.index')">
+                                    <span>Visualizza tutti i clienti</span>
                                     <i class="fa fa-arrow-alt-circle-right ms-1 opacity-25 fs-base"></i>
-                                </a>
+                                </Link>
                             </div>
                         </template>
                     </BaseBlock>
@@ -509,9 +531,9 @@ const newCustomersOptions = reactive({
                                 <template #content>
                                     <div class="block-content flex-grow-1 d-flex justify-content-between">
                                         <dl class="mb-0">
-                                            <dt class="fs-3 fw-bold">570</dt>
+                                            <dt class="fs-3 fw-bold" v-text="orders.length" />
                                             <dd class="fs-sm fw-medium text-muted mb-0">
-                                                Total Orders
+                                                Totale ordini
                                             </dd>
                                         </dl>
                                         <div>
@@ -534,9 +556,9 @@ const newCustomersOptions = reactive({
                                 <template #content>
                                     <div class="block-content flex-grow-1 d-flex justify-content-between">
                                         <dl class="mb-0">
-                                            <dt class="fs-3 fw-bold">$5,234.21</dt>
+                                            <dt class="fs-3 fw-bold">{{ parseFloat(amountOrders).toFixed(2) }} &euro;</dt>
                                             <dd class="fs-sm fw-medium text-muted mb-0">
-                                                Total Earnings
+                                                Guadagno totale
                                             </dd>
                                         </dl>
                                         <div>
@@ -587,7 +609,7 @@ const newCustomersOptions = reactive({
             <!-- END Statistics -->
 
             <!-- Recent Orders -->
-            <BaseBlock title="Recent Orders">
+            <BaseBlock title="Ordini recenti">
                 <template #options>
                     <div class="space-x-1">
                         <button type="button" class="btn btn-sm btn-alt-secondary" @click="

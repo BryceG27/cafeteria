@@ -7,6 +7,9 @@ import { ref, reactive } from "vue";
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
+import DatePicker from 'primevue/datepicker';
+import InputGroup from 'primevue/inputgroup';
+import InputGroupAddon from 'primevue/inputgroupaddon';
 import { FilterMatchMode } from '@primevue/core/api';
 
 import moment from 'moment';
@@ -19,7 +22,7 @@ const props = defineProps({
 
 const filters = ref({
     name : { value: null, matchMode: FilterMatchMode.CONTAINS },
-    start_date : { value: null, matchMode: FilterMatchMode.DATE_AFTER_EQUALS },
+    start_date : { value: null, matchMode: FilterMatchMode.BETWEEN },
     validity_date: { value: null, matchMode: FilterMatchMode.EQUALS },
 })
 
@@ -149,16 +152,23 @@ const deleteMenu = (id) => {
                     </Column>
                     <Column style="width: 15%" field="name" header="Nome" :showFilterMenu="false">
                         <template #filter="{ filterModel, filterCallback }">
-                            <InputText
-                                class="w-100"
-                                input-class="w-100"
-                                placeholder="Cerca per nome" 
-                                v-model="filterModel.value" 
-                                @input="filterCallback" 
-                            />
+                            <InputGroup>
+                                <InputText
+                                    class="w-100"
+                                    input-class="w-100"
+                                    placeholder="Cerca per nome" 
+                                    v-model="filterModel.value" 
+                                    @input="filterCallback" 
+                                />
+                                <InputGroupAddon>
+                                    <button class="btn-link link-danger" @click.prevent="filterModel.value = null; filterCallback()">
+                                        <i class="fa fa-x"></i>
+                                    </button>
+                                </InputGroupAddon>
+                            </InputGroup>
                         </template>
                     </Column>
-                    <Column style="width: 14%" field="price" header="Prezzo">
+                    <Column style="width: 10%" field="price" header="Prezzo">
                         <template #body="{ data }">
                             {{ parseFloat(data.price).toFixed(2) }} €
                         </template>
@@ -168,26 +178,43 @@ const deleteMenu = (id) => {
                             {{ moment(data.start_date).format('DD/MM') }} - {{ moment(data.end_date).format('DD/MM') }}
                         </template>
                         <!-- <template #filter="{ filterModel, filterCallback }">
-                            <input 
-                                type="date" 
-                                class="form-control" 
-                                v-model="filterModel.value" 
-                                @change="filterCallback()" 
-                            />
+                            <InputGroup>
+                                <DatePicker 
+                                    dateFormat="dd/mm/yy"
+                                    v-model="filterModel.value" 
+                                    @date-select="filterModel.value = moment($event).format('YYYY-MM-DD'); filterCallback()"
+                                    class="w-100" 
+                                    inputClass="w-100"
+                                    range
+                                />
+                                <InputGroupAddon>
+                                    <button class="btn-link link-danger" @click.prevent="filterModel.value = null; filterCallback()">
+                                        <i class="fa fa-x"></i>
+                                    </button>
+                                </InputGroupAddon>
+                            </InputGroup>
                         </template> -->
                     </Column>
-                    <Column style="width: 10%" field="validity_date" header="Valido il" :showFilterMenu="false">
+                    <Column style="width: 14%" field="validity_date" header="Valido il" :showFilterMenu="false">
                         <template #body="{ data }">
                             <span v-if="data.validity_date" v-text="moment(data.validity_date).format('DD/MM')" />
                             <span v-else>-</span>
                         </template>
                         <template #filter="{ filterModel, filterCallback }">
-                            <input 
-                                type="date" 
-                                class="form-control" 
-                                v-model="filterModel.value" 
-                                @change="filterCallback()" 
-                            />
+                            <InputGroup>
+                                <DatePicker 
+                                    dateFormat="dd/mm/yy"
+                                    v-model="filterModel.value" 
+                                    @date-select="filterModel.value = moment($event).format('YYYY-MM-DD'); filterCallback()"
+                                    class="w-100" 
+                                    inputClass="w-100"
+                                />
+                                <InputGroupAddon>
+                                    <button class="btn-link link-danger" @click.prevent="filterModel.value = null; filterCallback()">
+                                        <i class="fa fa-x"></i>
+                                    </button>
+                                </InputGroupAddon>
+                            </InputGroup>
                         </template>
                     </Column>
                 </DataTable>

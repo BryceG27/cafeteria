@@ -120,6 +120,7 @@ class PaymentController extends Controller
                 $credit->save();
 
                 // Update the order status to Paid
+                $order->to_be_paid = 0;
                 $order->status = 1;
                 $order->save();
 
@@ -129,7 +130,7 @@ class PaymentController extends Controller
                 $total += $credit->amount_available;
             
                 // Deduct the used amount from the credit (which will be zero now)
-                $order->to_be_paid -= $credit->amount_available;
+                $order->to_be_paid = $order->to_be_paid - $credit->amount_available;
                 $credit->amount_available = 0;
                 $credit->save();
                 $order->save();

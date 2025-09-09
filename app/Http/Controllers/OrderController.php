@@ -57,8 +57,10 @@ class OrderController extends Controller
             $endDate = Carbon::now()->addWeek()->endOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
         }
 
+        $equal_or_after = Carbon::now()->setTimezone('Europe/Rome')->format('H:i') >= '10:00' ? '>' : '>=';
+
         return Inertia::render('Orders/Create', [
-            'menus' => Menu::where('is_active', true)->whereDate('start_date', '>=',  $startDate)->whereDate('end_date', '<=', $endDate)->orderBy('validity_date')->with('products')->get(),
+            'menus' => Menu::where('is_active', true)->whereDate('start_date', $equal_or_after,  $startDate)->whereDate('end_date', '<=', $endDate)->orderBy('validity_date')->with('products')->get(),
             'order' => new Order(),
             'statuses' => Order::get_statuses(),
         ]);
@@ -140,7 +142,8 @@ class OrderController extends Controller
     public function destroy(Order $order)
     {
         $message = 'Ordine eliminato con successo.';
-        if($order->has('payments')->count() > 0) {
+
+        if($order->payments->count() > 0) {
             if(Carbon::now()->format('Y-m-d H:i') < Carbon::create($order->order_date . '10:00:00')->format('Y-m-d H:i')) {
                 Credit::create([
                     'user_id' => $order->customer_id,
