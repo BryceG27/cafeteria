@@ -64,8 +64,8 @@ const updateOrderStatus = (event) => {
                     :rowsPerPageOptions="[5, 10, 20, 50]"
                     editMode="cell" 
                     @cell-edit-complete="updateOrderStatus"
+                    tableStyle="min-width: 60rem"
                 >
-
                     <template #header>
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
@@ -128,8 +128,7 @@ const updateOrderStatus = (event) => {
                         <template #filterclear="{ filterModel, filterCallback }">
                             <button class="btn btn-sm btn-secondary" @click="filterModel.value = null; filterCallback();">
                                 <i class="fa fa-times"></i>
-                            </button        >
-
+                            </button>
                         </template>
                         <template #filter="{ filterModel, filterCallback }">
                             <InputText 
@@ -246,7 +245,7 @@ const updateOrderStatus = (event) => {
                         <template #filterclear="{ filterModel, filterCallback }">
                             <button class="btn btn-sm btn-secondary" @click="filterModel.value = null; filterCallback();">
                                 <i class="fa fa-times"></i>
-                            </button        >
+                            </button>
 
                         </template>
                         <template #filter="{ filterModel, filterCallback }">
@@ -267,8 +266,7 @@ const updateOrderStatus = (event) => {
                         <template #filterclear="{ filterModel, filterCallback }">
                             <button class="btn btn-sm btn-secondary" @click="filterModel.value = null; filterCallback();">
                                 <i class="fa fa-times"></i>
-                            </button        >
-
+                            </button>
                         </template>
                         <template #filter="{ filterModel, filterCallback }">
                             <Calendar
@@ -298,8 +296,7 @@ const updateOrderStatus = (event) => {
                         <template #filterclear="{ filterModel, filterCallback }">
                             <button class="btn btn-sm btn-secondary" @click="filterModel.value = null; filterCallback();">
                                 <i class="fa fa-times"></i>
-                            </button        >
-
+                            </button>
                         </template>
                         <template #filter="{ filterModel, filterCallback }">
                             <Dropdown 

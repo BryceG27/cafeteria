@@ -2,18 +2,22 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
-import { ref, reactive } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
-import DatePicker from 'primevue/datepicker';
 import InputGroup from 'primevue/inputgroup';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import { FilterMatchMode } from '@primevue/core/api';
 
 import moment from 'moment';
 import Swal from 'sweetalert2';
+
+onMounted(() => {
+    moment.locale('it');
+    moment().isoWeekday(1);
+})
 
 const props = defineProps({
     menus: Array,
@@ -23,13 +27,30 @@ const props = defineProps({
 const filters = ref({
     name : { value: null, matchMode: FilterMatchMode.CONTAINS },
     start_date : { value: null, matchMode: FilterMatchMode.BETWEEN },
-    validity_date: { value: null, matchMode: FilterMatchMode.EQUALS },
 })
 
 const expandedRows = ref(null);
+
 const dateFilter = reactive({ 
-    start: moment().startOf('week').toDate(), 
-    end: moment().endOf('week').toDate() 
+    start: moment().isoWeekday(1).startOf('week').toDate(), 
+    end: moment().isoWeekday(1).endOf('week').toDate(),
+    validity_date : null,
+    week : null,
+});
+
+const filteredMenus = computed(() => {
+    return props.menus.filter(menu => {
+        if(dateFilter.week) {
+            const [year, week] = dateFilter.week.split('-W');
+            
+            const startOfWeek = moment().isoWeekday(1).year(year).week(week).startOf('week').format('YYYY-MM-DD');
+            const endOfWeek = moment().year(year).week(week).endOf('week').add(1, 'days').format('YYYY-MM-DD');
+            
+            return startOfWeek <= menu.start_date && menu.end_date <= endOfWeek;
+        }
+        
+       return dateFilter.validity_date == null ? menu.validity_date >= moment(dateFilter.start).format('YYYY-MM-DD') && menu.validity_date <= moment(dateFilter.end).format('YYYY-MM-DD') : menu.validity_date == moment(dateFilter.validity_date).format('YYYY-MM-DD');
+    });
 });
 
 
@@ -75,7 +96,7 @@ const deleteMenu = (id) => {
                     stripedRows
                     paginator
                     v-model:expandedRows="expandedRows"
-                    :value="menus"
+                    :value="filteredMenus"
                     :rows="10"
                     v-model:filters="filters"
                     filterDisplay="row"
@@ -173,27 +194,27 @@ const deleteMenu = (id) => {
                             {{ parseFloat(data.price).toFixed(2) }} €
                         </template>
                     </Column>
-                    <Column style="width: 10%" field="start_date" header="Settimana validità">
+                    <Column style="width: 10%" field="start_date" header="Settimana validità" :showFilterMenu="false">
                         <template #body="{ data }">
                             {{ moment(data.start_date).format('DD/MM') }} - {{ moment(data.end_date).format('DD/MM') }}
                         </template>
-                        <!-- <template #filter="{ filterModel, filterCallback }">
+                        <template #filter>
                             <InputGroup>
-                                <DatePicker 
+                                <!-- <DatePicker 
                                     dateFormat="dd/mm/yy"
-                                    v-model="filterModel.value" 
-                                    @date-select="filterModel.value = moment($event).format('YYYY-MM-DD'); filterCallback()"
+                                    v-model="dates" 
                                     class="w-100" 
                                     inputClass="w-100"
-                                    range
-                                />
+                                    selectionMode="range"
+                                /> -->
+                                <input type="week" class="form-control" v-model="dateFilter.week" />
                                 <InputGroupAddon>
-                                    <button class="btn-link link-danger" @click.prevent="filterModel.value = null; filterCallback()">
+                                    <button class="btn-link link-danger" @click.prevent="dates = []">
                                         <i class="fa fa-x"></i>
                                     </button>
                                 </InputGroupAddon>
                             </InputGroup>
-                        </template> -->
+                        </template>
                     </Column>
                     <Column style="width: 14%" field="validity_date" header="Valido il" :showFilterMenu="false">
                         <template #body="{ data }">
@@ -202,15 +223,16 @@ const deleteMenu = (id) => {
                         </template>
                         <template #filter="{ filterModel, filterCallback }">
                             <InputGroup>
-                                <DatePicker 
+                                <!-- <DatePicker 
                                     dateFormat="dd/mm/yy"
-                                    v-model="filterModel.value" 
-                                    @date-select="filterModel.value = moment($event).format('YYYY-MM-DD'); filterCallback()"
+                                    v-model="dateFilter.validity_date" 
                                     class="w-100" 
                                     inputClass="w-100"
-                                />
+                                /> -->
+                                <input type="date" class="form-control" v-model="dateFilter.validity_date" />
+
                                 <InputGroupAddon>
-                                    <button class="btn-link link-danger" @click.prevent="filterModel.value = null; filterCallback()">
+                                    <button class="btn-link link-danger" @click.prevent="dateFilter.validity_date = null; filterCallback()">
                                         <i class="fa fa-x"></i>
                                     </button>
                                 </InputGroupAddon>

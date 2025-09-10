@@ -7,12 +7,23 @@ import { Line, Bar } from "vue-chartjs";
 import { Chart, registerables } from "chart.js";
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import InputText from 'primevue/inputtext';
+import InputGroup from 'primevue/inputgroup';
+import InputGroupAddon from 'primevue/inputgroupaddon';
+import DatePicker from 'primevue/datepicker';
+import Dropdown from 'primevue/dropdown';
+
+import { FilterMatchMode } from '@primevue/core/api';
+
 import moment from 'moment';
 
 const props = defineProps({
     auth: Object,
     customers : Array,
     orders : Array,
+    ordered_food : Array,
     errors: Object,
 });
 
@@ -25,6 +36,13 @@ const amountOrders = computed(() => {
         return acc + (order.status == 1 ? order.total_amount - order.to_be_paid : 0);
     }, 0);
 })
+
+const mostOrderedDish = computed(() => {
+    if (props.ordered_food.length > 0) {
+        return props.ordered_food.reduce((max, item) => item.count > max.count ? item : max, props.ordered_food[0]);
+    }
+    return 'Nessun dato disponibile';
+});
 
 Chart.register(...registerables);
 
@@ -41,14 +59,47 @@ Chart.defaults.plugins.tooltip.radius = 3;
 Chart.defaults.plugins.legend.labels.boxWidth = 10;
 
 // Helper variables
-const orderSearch = ref(false);
+const ordersViews = ref([
+    { label : 'Ordini recenti', id : 1 },
+    { label : 'Ordini di oggi', id : 2 }
+]);
+
+const currentView = ref(1);
+
+const filteredOrders = computed(() => {
+    return props.orders.filter(order => currentView.value == 1 ? true : order.order_date == moment().format('YYYY-MM-DD'))
+})
+
+const expandedRows = ref([]);
+const filters = ref({
+    child_name : { value : null, matchMode : FilterMatchMode.CONTAINS },
+    'menu.name' : { value : null, matchMode : FilterMatchMode.CONTAINS },
+    order_date : { value : null, matchMode : FilterMatchMode.DATE_IS},
+    'status_info.id' : { value : null, matchMode : FilterMatchMode.EQUALS}
+})
+
+const get_order_data_by_week = (starting_day) => {
+    let data = [];
+
+    const startOfWeek = moment(starting_day).isoWeekday(1).startOf('week').format('YYYY-MM-DD');
+    const endOfWeek = moment(starting_day).endOf('week').add(1, 'days').format('YYYY-MM-DD');
+
+    for (let day = 0; day < 7; day++) {
+        const currentDay = moment(startOfWeek).add(day, 'days').format('YYYY-MM-DD');
+        const dayOrders = props.orders.filter(order => moment(order.order_date).isSame(currentDay, 'day') && order.status == 1);
+        const dayTotal = dayOrders.reduce((acc, order) => acc + (order.total_amount - order.to_be_paid), 0);
+        data.push(dayTotal);
+    }
+
+    return data;
+}
 
 // Chart Earnings data
 const earningsData = reactive({
-    labels: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
+    labels: ["LUN", "MAR", "MER", "GIO", "VEN", "SAB", "DOM"],
     datasets: [
         {
-            label: "This Week",
+            label: "Settimana corrente",
             fill: true,
             backgroundColor: "rgba(100, 116, 139, .7)",
             borderColor: "transparent",
@@ -56,10 +107,10 @@ const earningsData = reactive({
             pointBorderColor: "#fff",
             pointHoverBackgroundColor: "#fff",
             pointHoverBorderColor: "rgba(100, 116, 139, 1)",
-            data: [716, 628, 1056, 560, 956, 890, 790],
+            data: get_order_data_by_week(moment().format('YYYY-MM-DD')),
         },
         {
-            label: "Last Week",
+            label: "Settimana passata",
             fill: true,
             backgroundColor: "rgba(100, 116, 139, .15)",
             borderColor: "transparent",
@@ -67,7 +118,7 @@ const earningsData = reactive({
             pointBorderColor: "#fff",
             pointHoverBackgroundColor: "#fff",
             pointHoverBorderColor: "rgba(100, 116, 139, 1)",
-            data: [1160, 923, 1052, 1300, 880, 926, 963],
+            data: get_order_data_by_week(moment().subtract(1, 'weeks').format('YYYY-MM-DD')),
         },
     ],
 });
@@ -140,7 +191,7 @@ const totalOrdersData = reactive({
             pointBorderColor: "#fff",
             pointHoverBackgroundColor: "#fff",
             pointHoverBorderColor: "rgba(220, 38, 38, 1)",
-            data: [33, 29, 32, 37, 38, 30, 34, 28, 43, 45, 26, 45, 49, 39],
+            data: [...new Set([get_order_data_by_week(moment().format('YYYY-MM-DD')), get_order_data_by_week(moment().subtract(1, 'weeks').format('YYYY-MM-DD'))].flat())],
         },
     ],
 });
@@ -311,7 +362,7 @@ const newCustomersOptions = reactive({
             <div
                 class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center py-2 text-center text-md-start">
                 <div class="flex-grow-1 mb-1 mb-md-0">
-                    <h1 class="h3 fw-bold mb-2">Dashboard</h1>
+                    <h1 class="h3 fw-bold mb-2">Statistiche</h1>
                     <h2 class="h6 fw-medium fw-medium text-muted mb-0">
                         Ciao
                         <em>
@@ -419,21 +470,22 @@ const newCustomersOptions = reactive({
                             <div
                                 class="block-content block-content-full flex-grow-1 d-flex justify-content-between align-items-center">
                                 <dl class="mb-0">
-                                    <dt class="fs-3 fw-bold">45</dt>
+                                    <dt class="fs-3 fw-bold" v-text="`${mostOrderedDish.name} (${mostOrderedDish.count})`" />
                                     <dd class="fs-sm fw-medium fs-sm fw-medium text-muted mb-0">
-                                        Messages
+                                        Prodotto più ordinato del mese
                                     </dd>
                                 </dl>
                                 <div class="item item-rounded-lg bg-body-light">
-                                    <i class="far fa-paper-plane fs-3 text-primary"></i>
+                                    <!-- <i class="far fa-paper-plane fs-3 text-primary"></i> -->
+                                    <i class="fa fa-plate-wheat fs-3 text-primary"></i>
                                 </div>
                             </div>
                             <div class="bg-body-light rounded-bottom">
-                                <a class="block-content block-content-full block-content-sm fs-sm fw-medium d-flex align-items-center justify-content-between"
-                                    href="javascript:void(0)">
-                                    <span>View all messages</span>
+                                <Link class="block-content block-content-full block-content-sm fs-sm fw-medium d-flex align-items-center justify-content-between"
+                                    :href="route('products.index')">
+                                    <span>Visualizza tutti i prodotti</span>
                                     <i class="fa fa-arrow-alt-circle-right ms-1 opacity-25 fs-base"></i>
-                                </a>
+                                </Link>
                             </div>
                         </template>
                     </BaseBlock>
@@ -473,7 +525,7 @@ const newCustomersOptions = reactive({
             <div class="row">
                 <div class="col-xl-8 col-xxl-9 d-flex flex-column">
                     <!-- Earnings Summary -->
-                    <BaseBlock title="Earnings Summary" class="flex-grow-1 d-flex flex-column">
+                    <BaseBlock title="Riassunto guadagni" class="flex-grow-1 d-flex flex-column">
                         <template #options>
                             <button type="button" class="btn-block-option">
                                 <i class="si si-settings"></i>
@@ -609,325 +661,166 @@ const newCustomersOptions = reactive({
             <!-- END Statistics -->
 
             <!-- Recent Orders -->
-            <BaseBlock title="Ordini recenti">
+            <BaseBlock :title="ordersViews.find(view => view.id == currentView).label">
                 <template #options>
-                    <div class="space-x-1">
-                        <button type="button" class="btn btn-sm btn-alt-secondary" @click="
-                            () => {
-                                orderSearch = !orderSearch;
-                            }
-                        ">
-                            <i class="fa fa-search"></i>
+                    <div class="d-flex justify-content-center">
+                        <button class="btn btn-link" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="si si-settings"></i>
                         </button>
-                        <div class="dropdown d-inline-block">
-                            <button type="button" class="btn btn-sm btn-alt-secondary" id="dropdown-recent-orders-filters"
-                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fa fa-fw fa-flask"></i>
-                                Filters
-                                <i class="fa fa-angle-down ms-1"></i>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-md dropdown-menu-end fs-sm"
-                                aria-labelledby="dropdown-recent-orders-filters">
-                                <a class="dropdown-item fw-medium d-flex align-items-center justify-content-between"
-                                    href="javascript:void(0)">
-                                    Pending
-                                    <span class="badge bg-primary rounded-pill">20</span>
-                                </a>
-                                <a class="dropdown-item fw-medium d-flex align-items-center justify-content-between"
-                                    href="javascript:void(0)">
-                                    Active
-                                    <span class="badge bg-primary rounded-pill">72</span>
-                                </a>
-                                <a class="dropdown-item fw-medium d-flex align-items-center justify-content-between"
-                                    href="javascript:void(0)">
-                                    Completed
-                                    <span class="badge bg-primary rounded-pill">890</span>
-                                </a>
-                                <a class="dropdown-item fw-medium d-flex align-items-center justify-content-between"
-                                    href="javascript:void(0)">
-                                    All
-                                    <span class="badge bg-primary rounded-pill">997</span>
-                                </a>
-                            </div>
-                        </div>
+                        <ul class="dropdown-menu">
+                            <template v-for="view in ordersViews" :key="view.id">
+                                <button class="dropdown-item clickable" @click="currentView = view.id">
+                                    {{ view.label }}
+                                </button>
+                                <li class="dropdown-divider" v-if="view.id % 2 != 0" />
+                            </template>
+                        </ul>
                     </div>
                 </template>
-
-                <template #content>
-                    <div v-if="orderSearch" id="one-dashboard-search-orders" class="block-content border-bottom">
-                        <!-- Search Form -->
-                        <form @submit.prevent>
-                            <div class="push">
-                                <div class="input-group">
-                                    <input type="text" class="form-control form-control-alt" id="one-ecom-orders-search"
-                                        name="one-ecom-orders-search" placeholder="Search all orders.." />
-                                    <span class="input-group-text bg-body border-0">
-                                        <i class="fa fa-search"></i>
-                                    </span>
+                <div class="content">
+                    <DataTable
+                        paginator
+                        :rows="5"
+                        :value="filteredOrders"
+                        v-model:expandedRows="expandedRows"
+                        v-model:filters="filters"
+                        filterDisplay="row"
+                    >
+                        <template #empty>
+                            <div class="p-4 text-center">
+                                <i class="fa fa-exclamation-triangle fa-2x"></i>
+                                <p class="mt-2">Nessun ordine trovato</p>
+                            </div>
+                        </template>
+                        <template #expansion="{ data }">
+                            <div class="p-4">
+                                <h5>Prodotti nel menu</h5>
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Primo piatto</th>
+                                            <th>Secondo piatto</th>
+                                            <th>Contorno</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <span v-if="data.first_dish" v-text="data.first_dish.name" />
+                                                <span v-else>---</span>
+                                            </td>
+                                            <td>
+                                                <span v-if="data.second_dish" v-text="data.second_dish.name" />
+                                                <span v-else>---</span>
+                                            </td>
+                                            <td>
+                                                <span v-if="data.side_dish" v-text="data.side_dish.name" />
+                                                <span v-else>---</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
+                        <Column style="width: 5%" expander />
+                        <Column style="width: 30%" header="Cliente" field="child_name" :showFilterMenu="false">
+                            <template #body="{ data }">
+                                <div class="d-flex align-items-center">
+                                    {{ data.child_name }}
+                                    <a class="link-info ms-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fa fa-info"></i>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li class="dropdown-item">
+                                            <strong>Genitore: </strong><em v-text="`${data.customer.name} ${data.customer.surname}`" />
+                                        </li>
+                                    </ul>
                                 </div>
-                            </div>
-                        </form>
-                        <!-- END Search Form -->
-                    </div>
-                    <div class="block-content block-content-full">
-                        <!-- Recent Orders Table -->
-                        <div class="table-responsive">
-                            <table class="table table-hover table-vcenter">
-                                <thead>
-                                    <tr>
-                                        <th>Order ID</th>
-                                        <th class="d-none d-xl-table-cell">Customer</th>
-                                        <th>Status</th>
-                                        <th class="d-none d-sm-table-cell text-center">Profit</th>
-                                        <th class="d-none d-sm-table-cell text-end">Created</th>
-                                        <th class="d-none d-sm-table-cell text-end">Value</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="fs-sm">
-                                    <tr>
-                                        <td>
-                                            <a class="fw-semibold" href="javascript:void(0)">
-                                                ORD.00925
-                                            </a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">Premium</p>
-                                        </td>
-                                        <td class="d-none d-xl-table-cell">
-                                            <a class="fw-semibold" href="javascript:void(0)">Marie Duncan</a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">Photographer</p>
-                                        </td>
-                                        <td>
-                                            <span
-                                                class="fs-xs fw-semibold d-inline-block py-1 px-3 rounded-pill bg-success-light text-success">Completed</span>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell">
-                                            <div class="progress mb-1" style="height: 5px">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 8%"
-                                                    aria-valuenow="8" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                            <p class="fs-xs fw-semibold mb-0">8%</p>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell fw-semibold text-muted text-end">
-                                            7 min ago
-                                        </td>
-                                        <td class="d-none d-sm-table-cell text-end">
-                                            <strong>$786,81</strong>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <a class="fw-semibold" href="javascript:void(0)">
-                                                ORD.00924
-                                            </a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">Premium</p>
-                                        </td>
-                                        <td class="d-none d-xl-table-cell">
-                                            <a class="fw-semibold" href="javascript:void(0)">Jack Estrada</a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">Photographer</p>
-                                        </td>
-                                        <td>
-                                            <span
-                                                class="fs-xs fw-semibold d-inline-block py-1 px-3 rounded-pill bg-info-light text-info">Active</span>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell">
-                                            <div class="progress mb-1" style="height: 5px">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 6%"
-                                                    aria-valuenow="6" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                            <p class="fs-xs fw-semibold mb-0">6%</p>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell fw-semibold text-muted text-end">
-                                            26 min ago
-                                        </td>
-                                        <td class="d-none d-sm-table-cell text-end">
-                                            <strong>$1184,20</strong>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <a class="fw-semibold" href="javascript:void(0)">
-                                                ORD.00923
-                                            </a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">Premium</p>
-                                        </td>
-                                        <td class="d-none d-xl-table-cell">
-                                            <a class="fw-semibold" href="javascript:void(0)">Megan Fuller</a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">Web developer</p>
-                                        </td>
-                                        <td>
-                                            <span
-                                                class="fs-xs fw-semibold d-inline-block py-1 px-3 rounded-pill bg-success-light text-success">Completed</span>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell">
-                                            <div class="progress mb-1" style="height: 5px">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 25%"
-                                                    aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                            <p class="fs-xs fw-semibold mb-0">25%</p>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell fw-semibold text-muted text-end">
-                                            19 min ago
-                                        </td>
-                                        <td class="d-none d-sm-table-cell text-end">
-                                            <strong>$2379,44</strong>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <a class="fw-semibold" href="javascript:void(0)">
-                                                ORD.00922
-                                            </a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">Premium</p>
-                                        </td>
-                                        <td class="d-none d-xl-table-cell">
-                                            <a class="fw-semibold" href="javascript:void(0)">Lisa Jenkins</a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">
-                                                Application Manager
-                                            </p>
-                                        </td>
-                                        <td>
-                                            <span
-                                                class="fs-xs fw-semibold d-inline-block py-1 px-3 rounded-pill bg-warning-light text-warning">Pending</span>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell">
-                                            <div class="progress mb-1" style="height: 5px">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 18%"
-                                                    aria-valuenow="18" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                            <p class="fs-xs fw-semibold mb-0">18%</p>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell fw-semibold text-muted text-end">
-                                            13 min ago
-                                        </td>
-                                        <td class="d-none d-sm-table-cell text-end">
-                                            <strong>$458,52</strong>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <a class="fw-semibold" href="javascript:void(0)">
-                                                ORD.00921
-                                            </a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">Premium</p>
-                                        </td>
-                                        <td class="d-none d-xl-table-cell">
-                                            <a class="fw-semibold" href="javascript:void(0)">Brian Stevens</a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">Photographer</p>
-                                        </td>
-                                        <td>
-                                            <span
-                                                class="fs-xs fw-semibold d-inline-block py-1 px-3 rounded-pill bg-success-light text-success">Completed</span>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell">
-                                            <div class="progress mb-1" style="height: 5px">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 10%"
-                                                    aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                            <p class="fs-xs fw-semibold mb-0">10%</p>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell fw-semibold text-muted text-end">
-                                            4 min ago
-                                        </td>
-                                        <td class="d-none d-sm-table-cell text-end">
-                                            <strong>$476,82</strong>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <a class="fw-semibold" href="javascript:void(0)">
-                                                ORD.00920
-                                            </a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">Premium</p>
-                                        </td>
-                                        <td class="d-none d-xl-table-cell">
-                                            <a class="fw-semibold" href="javascript:void(0)">Jesse Fisher</a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">Digital Nomad</p>
-                                        </td>
-                                        <td>
-                                            <span
-                                                class="fs-xs fw-semibold d-inline-block py-1 px-3 rounded-pill bg-warning-light text-warning">Pending</span>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell">
-                                            <div class="progress mb-1" style="height: 5px">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 23%"
-                                                    aria-valuenow="23" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                            <p class="fs-xs fw-semibold mb-0">23%</p>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell fw-semibold text-muted text-end">
-                                            23 min ago
-                                        </td>
-                                        <td class="d-none d-sm-table-cell text-end">
-                                            <strong>$1939,58</strong>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <a class="fw-semibold" href="javascript:void(0)">
-                                                ORD.00919
-                                            </a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">Premium</p>
-                                        </td>
-                                        <td class="d-none d-xl-table-cell">
-                                            <a class="fw-semibold" href="javascript:void(0)">Carol Ray</a>
-                                            <p class="fs-sm fw-medium text-muted mb-0">Web developer</p>
-                                        </td>
-                                        <td>
-                                            <span
-                                                class="fs-xs fw-semibold d-inline-block py-1 px-3 rounded-pill bg-info-light text-info">Active</span>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell">
-                                            <div class="progress mb-1" style="height: 5px">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 14%"
-                                                    aria-valuenow="14" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                            <p class="fs-xs fw-semibold mb-0">14%</p>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell fw-semibold text-muted text-end">
-                                            15 min ago
-                                        </td>
-                                        <td class="d-none d-sm-table-cell text-end">
-                                            <strong>$2200,10</strong>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <!-- END Recent Orders Table -->
-                    </div>
-                    <div class="block-content block-content-full bg-body-light">
-                        <!-- Pagination -->
-                        <nav aria-label="Photos Search Navigation">
-                            <ul class="pagination pagination-sm justify-content-end mb-0">
-                                <li class="page-item">
-                                    <a class="page-link" href="javascript:void(0)" tabindex="-1" aria-label="Previous">
-                                        Prev
-                                    </a>
-                                </li>
-                                <li class="page-item active">
-                                    <a class="page-link" href="javascript:void(0)">1</a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link" href="javascript:void(0)">2</a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link" href="javascript:void(0)">3</a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link" href="javascript:void(0)">4</a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link" href="javascript:void(0)" aria-label="Next">
-                                        Next
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                        <!-- END Pagination -->
-                    </div>
-                </template>
+                            </template>
+                            <template #filter="{ filterModel, filterCallback }">
+                                <InputGroup>
+                                    <InputText 
+                                        class="w-100"
+                                        inputClass="w-100"
+                                        v-model="filterModel.value"
+                                        placeholder="Nome cliente"
+                                        @input="filterCallback"
+                                    />
+                                    <InputGroupAddon>
+                                        <button class="btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
+                                            <i class="fa fa-x"></i>
+                                        </button>
+                                    </InputGroupAddon>
+                                </InputGroup>
+                            </template>
+                        </Column>
+                        <Column style="width: 25%" header="Nome" field="menu.name" :showFilterMenu="false">
+                            <template #filter="{ filterModel, filterCallback }">
+                                <InputGroup>
+                                    <InputText 
+                                        class="w-100"
+                                        inputClass="w-100"
+                                        v-model="filterModel.value"
+                                        placeholder="Nome menù"
+                                        @input="filterCallback"
+                                    />
+                                    <InputGroupAddon>
+                                        <button class="btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
+                                            <i class="fa fa-x"></i>
+                                        </button>
+                                    </InputGroupAddon>
+                                </InputGroup>
+                            </template>
+                        </Column>
+                        <Column style="width: 20%" header="Giorno" field="order_date" :showFilterMenu="false">
+                            <template #body="{ data }">
+                                {{ moment(data.order_date).format('DD/MM/YYYY') }}
+                            </template>
+                            <template #filter="{ filterModel, filterCallback }">
+                                <InputGroup>
+                                    <DatePicker 
+                                        inputClass="w-100"
+                                        class="w-100"
+                                        @date-change="console.log($event)"
+                                        placeholder="Cerca per data"
+                                    />
+                                    <InputGroupAddon>
+                                        <button class="btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
+                                            <i class="fa fa-x"></i>
+                                        </button>
+                                    </InputGroupAddon>
+                                </InputGroup>
+                            </template>
+                        </Column>
+                        <Column style="width: 20%" header="Stato" field="status_info.id" :showFilterMenu="false">
+                            <template #body="{ data }">
+                                <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
+                            </template>
+                            <template #filter="{ filterModel, filterCallback }">
+                                <InputGroup>
+                                    <Dropdown 
+                                        class="w-100"
+                                        inputClass="w-100"
+                                        placeholder="Cerca per stato"
+                                    />
+                                    <InputGroupAddon>
+                                        <button class="btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
+                                            <i class="fa fa-x"></i>
+                                        </button>
+                                    </InputGroupAddon>
+                                </InputGroup>
+                            </template>
+                        </Column>
+                    </DataTable>
+                </div>
             </BaseBlock>
             <!-- END Recent Orders -->
         </div>
         <!-- END Page Content -->
     </AuthenticatedLayout>
 </template>
+<style scoped>
+    .clickable {
+        cursor: pointer;
+    }
+</style>

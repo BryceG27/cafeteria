@@ -49,18 +49,20 @@ class OrderController extends Controller
      */
     public function create()
     {
-        $startDate = Carbon::now()->startOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
-        $endDate = Carbon::now()->endOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
+        $startDate = Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+        $endDate = Carbon::now()->endOfWeek(CARBON::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
 
         if(in_array(Carbon::now()->locale('it_IT')->dayName, ['sabato', 'domenica'])) {
-            $startDate = Carbon::now()->addWeek()->startOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
-            $endDate = Carbon::now()->addWeek()->endOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
+            $startDate = Carbon::now()->addWeek()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+            $endDate = Carbon::now()->addWeek()->endOfWeek(CARBON::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
         }
 
         $equal_or_after = Carbon::now()->setTimezone('Europe/Rome')->format('H:i') >= '10:00' ? '>' : '>=';
 
+        $menus = Menu::where('is_active', true)->whereDate('start_date', '>=', $startDate)->whereDate('end_date', '<=', $endDate)->whereDate('validity_date', $equal_or_after, Carbon::now()->format('Y-m-d'))->orderBy('validity_date')->with('products')->get();
+
         return Inertia::render('Orders/Create', [
-            'menus' => Menu::where('is_active', true)->whereDate('start_date', $equal_or_after,  $startDate)->whereDate('end_date', '<=', $endDate)->orderBy('validity_date')->with('products')->get(),
+            'menus' => $menus,
             'order' => new Order(),
             'statuses' => Order::get_statuses(),
         ]);
@@ -104,16 +106,20 @@ class OrderController extends Controller
      */
     public function edit(Order $order)
     {
-        $startDate = Carbon::now()->startOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
-        $endDate = Carbon::now()->endOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
+       $startDate = Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+        $endDate = Carbon::now()->endOfWeek(CARBON::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
 
         if(in_array(Carbon::now()->locale('it_IT')->dayName, ['sabato', 'domenica'])) {
-            $startDate = Carbon::now()->addWeek()->startOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
-            $endDate = Carbon::now()->addWeek()->endOfWeek()->setTimezone('Europe/Rome')->format('Y-m-d');
+            $startDate = Carbon::now()->addWeek()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+            $endDate = Carbon::now()->addWeek()->endOfWeek(CARBON::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
         }
 
+        $equal_or_after = Carbon::now()->setTimezone('Europe/Rome')->format('H:i') >= '10:00' ? '>' : '>=';
+
+        $menus = Menu::where('is_active', true)->whereDate('start_date', '>=', $startDate)->whereDate('end_date', '<=', $endDate)->whereDate('validity_date', $equal_or_after, Carbon::now()->format('Y-m-d'))->orderBy('validity_date')->with('products')->get();
+
         return Inertia::render('Orders/Edit', [
-            'menus' => Menu::where('is_active', true)->whereDate('start_date', '>=',  $startDate)->whereDate('end_date', '<=', $endDate)->orderBy('validity_date')->with('products')->get(),
+            'menus' => $menus,
             'order' => $order->load('customer'),
             'order_statuses' => Order::get_statuses(),
         ]);

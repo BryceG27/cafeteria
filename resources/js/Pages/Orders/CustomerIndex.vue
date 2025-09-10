@@ -163,16 +163,22 @@ const payWithPayPal = () => {
                     </div>
                 </template>
             </Dialog>
+            
+            <div class="w-100 d-md-none">
+                <Link 
+                    :href="route('orders.create')" 
+                    class="btn btn-alt-primary w-100 py-2 mb-3"
+                >
+                    <i class="fa fa-plus me-1"></i>
+                    Nuovo ordine
+                </Link>
+            </div>
 
-            <BaseBlock title="Ordini" contentClass="pb-3">
-                <template #options>
-                    <Link :href="route('orders.create')" class="btn btn-alt-primary btn-sm">
-                        <i class="fa fa-plus me-1"></i> Nuovo ordine
-                    </Link>
-                </template>
+            <BaseBlock contentClass="pb-3">
                 <DataTable
                     striped-rows
                     :value="orders"
+                    table-style="min-width: 50rem"
                 >
                     <template #empty>
                         <div class="p-4 text-center">
@@ -181,7 +187,22 @@ const payWithPayPal = () => {
                         </div>
                     </template>
 
-                    <Column class="text-center">
+                    <template #header>
+                        <div class="row">
+                            <div class="col-md-4 offset-md-4">
+                                <div class="fw-bold text-center">
+                                    <h3>Ordini</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end d-none d-md-block">
+                                <Link :href="route('orders.create')" class="btn btn-alt-primary btn-sm">
+                                    <i class="fa fa-plus me-1"></i> Nuovo ordine
+                                </Link>
+                            </div>
+                        </div>
+                    </template>
+
+                    <Column style="width: 10%" class="text-center">
                         <template #body="{ data }">
                             <Link
                                 :href="route('orders.edit', data.id)"
@@ -190,7 +211,7 @@ const payWithPayPal = () => {
                                 <i class="fa fa-eye"></i>
                             </Link>
 
-                            <button class="btn btn-alt-secondary btn-sm ms-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" v-if="data.status != 3 && (moment(data.created_at).format('YYYY-MM-DD') <= moment().format('YYYY-MM-DD'))">
+                            <button class="btn btn-alt-secondary btn-sm ms-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" v-if="data.status != 3 && (moment(data.created_at).format('YYYY-MM-DD') <= moment().format('YYYY-MM-DD'))">
                                 ...
                             </button>
                             <ul class="dropdown-menu">
@@ -200,8 +221,8 @@ const payWithPayPal = () => {
                                         class="d-xl-none dropdown-item d-flex gap-2 align-items-center clickable" 
                                         style="font-size: 13px"
                                     >
-                                        <button class="btn btn-alt-warning btn-sm">
-                                            <i class="fa fa-pencil-alt"></i>
+                                        <button class="btn btn-alt-info btn-sm">
+                                            <i class="fa fa-eye"></i>
                                         </button>
                                         Modifica
                                     </Link>
@@ -237,12 +258,12 @@ const payWithPayPal = () => {
                             </ul>
                         </template>
                     </Column>
-                    <Column header="Giorno menù" field="menu.name">
+                    <Column style="width: 20%" header="Giorno menù" field="menu.name">
                         <template #body="{data}">
                             <span v-text="`${data.menu.name} - ${moment(data.order_date).format('DD/MM')}`" />
                         </template>
                     </Column>
-                    <Column header="Prodotti">
+                    <Column style="width: 30%" header="Prodotti">
                         <template #body="{ data }">
                             <table class="table table-bordered rounded-2 h-100 align-middle">
                                 <tbody>
@@ -307,17 +328,17 @@ const payWithPayPal = () => {
                             </table>
                         </template>
                     </Column>
-                    <Column header="Totale">
+                    <Column style="width: 15%" header="Totale">
                         <template #body="{ data }">
                             <span v-text="parseFloat(data.total_amount).toFixed(2)" /> &euro;
                         </template>
                     </Column>
-                    <Column header="Da pagare">
+                    <Column style="width: 15%" header="Da pagare">
                         <template #body="{ data }">
                             <span v-text="parseFloat(data.to_be_paid).toFixed(2)" /> &euro;
                         </template>
                     </Column>
-                    <Column header="Stato" field="status">
+                    <Column style="width: 10%" header="Stato" field="status">
                         <template #body="{ data }">
                             <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
                         </template>

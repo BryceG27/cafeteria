@@ -38,11 +38,12 @@ const total_credit = computed(() => {
 
     <AuthenticatedLayout>
         <div class="content">
-            <BaseBlock title="Pagamenti" content-class="pb-3">
+            <BaseBlock content-class="pb-3">
                 <DataTable
                     :value="payments"
                     stripedRows
                     style="max-height: 50rem; overflow-y: auto"
+                    table-style="min-width: 50rem"
                 >
                     <template #empty>
                         <div class="p-4 text-center">
@@ -51,45 +52,57 @@ const total_credit = computed(() => {
                         </div>
                     </template>
                     <template #header>
-                        <div class="row">
-                            <div class="col-md-4 d-flex align-items-center justify-content-center">
-                                <FloatLabel variant="on">
-                                    <InputNumber
-                                        v-model="total_paid" 
-                                        inputId="total_paid"
-                                        mode="currency"
-                                        currency="EUR"
-                                        locale="it-IT"
-                                        readonly
-                                    />
-                                    <label for="total_paid">Totale pagato</label>
-                                </FloatLabel>
-                            </div>
-                            <div class="col-md-4 d-flex align-items-center justify-content-center">
-                                <FloatLabel variant="on">
-                                    <InputNumber
-                                        v-model="total_due" 
-                                        inputId="total_due"
-                                        mode="currency"
-                                        currency="EUR"
-                                        locale="it-IT"
-                                        readonly
-                                    />
-                                    <label for="total_due">Totale da pagare</label>
-                                </FloatLabel>
-                            </div>
-                            <div class="col-md-4 d-flex align-items-center justify-content-center">
-                                <FloatLabel variant="on">
-                                    <InputNumber
-                                        v-model="total_credit" 
-                                        inputId="total_credit"
-                                        mode="currency"
-                                        currency="EUR"
-                                        locale="it-IT"
-                                        readonly
-                                    />
-                                    <label for="total_credit">Credito</label>
-                                </FloatLabel>
+                        <div class="fw-bold text-center mb-3">
+                            <h3>Pagamenti</h3>
+                        </div>
+                        <div class="container-fluid">
+
+                            <div class="row">
+                                <div class="col-md-4 col-12 d-flex align-items-center justify-content-center my-2">
+                                    <FloatLabel variant="on">
+                                        <InputNumber
+                                            v-model="total_paid" 
+                                            inputId="total_paid"
+                                            mode="currency"
+                                            currency="EUR"
+                                            locale="it-IT"
+                                            class="w-100"
+                                            inputClass="w-100"
+                                            readonly
+                                        />
+                                        <label for="total_paid">Totale pagato</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col-md-4 col-12 d-flex align-items-center justify-content-center my-2">
+                                    <FloatLabel variant="on">
+                                        <InputNumber
+                                            v-model="total_due" 
+                                            inputId="total_due"
+                                            mode="currency"
+                                            currency="EUR"
+                                            locale="it-IT"
+                                            class="w-100"
+                                            inputClass="w-100"
+                                            readonly
+                                        />
+                                        <label for="total_due">Totale da pagare</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col-md-4 col-12 d-flex align-items-center justify-content-center my-2">
+                                    <FloatLabel variant="on">
+                                        <InputNumber
+                                            v-model="total_credit" 
+                                            inputId="total_credit"
+                                            mode="currency"
+                                            currency="EUR"
+                                            locale="it-IT"
+                                            class="w-100"
+                                            inputClass="w-100"
+                                            readonly
+                                        />
+                                        <label for="total_credit">Credito</label>
+                                    </FloatLabel>
+                                </div>
                             </div>
                         </div>
                     </template>
