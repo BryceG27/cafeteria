@@ -51,13 +51,13 @@ class OrderController extends Controller
     {
         $startDate = Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
         $endDate = Carbon::now()->endOfWeek(CARBON::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+        $equal_or_after = Carbon::now()->setTimezone('Europe/Rome')->format('H:i') >= '10:00' ? '>' : '>=';
 
         if(in_array(Carbon::now()->locale('it_IT')->dayName, ['sabato', 'domenica'])) {
             $startDate = Carbon::now()->addWeek()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
             $endDate = Carbon::now()->addWeek()->endOfWeek(CARBON::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+            // $equal_or_after = '<>';
         }
-
-        $equal_or_after = Carbon::now()->setTimezone('Europe/Rome')->format('H:i') >= '10:00' ? '>' : '>=';
 
         $menus = Menu::where('is_active', true)->whereDate('start_date', '>=', $startDate)->whereDate('end_date', '<=', $endDate)->whereDate('validity_date', $equal_or_after, Carbon::now()->format('Y-m-d'))->orderBy('validity_date')->with('products')->get();
 

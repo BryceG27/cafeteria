@@ -33,7 +33,24 @@ class Product extends Model
     }
 
     public function menus() : belongsToMany {
+        dd($this);
         return $this->belongsToMany(Menu::class, 'menu_product')->withPivot('quantity');
+    }
+
+    public function orders() {
+        switch($this->product_type_id) {
+            case 2:
+                return $this->belongsTo(Order::class, 'first_dish');
+                break;
+
+            case 3:
+                return $this->belongsTo(Order::class, 'second_dish');
+                break;
+
+            case 4:
+                return $this->belongsTo(Order::class, 'side_dish');
+                break;
+        }
     }
 
     public static function validate(Request $request) {

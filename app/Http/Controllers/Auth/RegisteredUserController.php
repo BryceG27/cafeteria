@@ -43,8 +43,6 @@ class RegisteredUserController extends Controller
             'email.lowercase' => 'L\'email deve essere in minuscolo.',
         ]);
 
-        dd($validated);
-
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_active'] = true;
         $validated['user_group_id'] = 3;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Inertia\Inertia;
 use App\Models\Product;
 use App\Models\Category;
@@ -102,5 +103,63 @@ class ProductController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Stato prodotto aggiornato con successo.');
+    }
+
+    public function filter(Request $request) {
+        $carbon = Carbon::create($request->selectedDate)->setTimezone('Europe/Rome');
+
+        $products = [];
+
+        $orders = \App\Models\Order::whereNotIn('status', [0, 2])->where(function($query) use ($request, $carbon) {
+            switch ((Int)$request->filterType) {
+                case 0:
+                    $date = $carbon->format('Y-m-d');
+
+                    return $query->whereDate('order_date', $date);
+                    break;
+
+                case 1:
+                    $dateFrom = $carbon->startOfWeek()->format('Y-m-d');
+                    $dateTo = $carbon->endOfWeek()->format('Y-m-d');
+
+                    return $query->whereDateBetween('order_date', [$dateFrom, $dateTo]);
+                    break;
+
+                case 2:
+                    $dateFrom = $carbon->startOfMonth()->format('Y-m-d');
+                    $dateTo = $carbon->endOfMonth()->format('Y-m-d');
+
+                    return $query->whereDateBetween('order_date', [$dateFrom, $dateTo]);
+                    break;
+                
+                default:
+                    # code...
+                    break;
+            }
+        })->with(['first_dish', 'second_dish', 'side_dish'])->get()->map(function($order) use (&$products) {
+            if($order->first_dish) {
+                $products[] = $order->first_dish->load('type');
+            }
+
+            if($order->second_dish) {
+                $products[] = $order->second_dish->load('type');
+            }
+
+            if($order->side_dish) {
+                $products[] = $order->side_dish->load('type');
+            }
+        });
+
+        $products = collect($products)->groupBy('id')->map(function($item) {
+            return [
+                'id' => $item[0]->id,
+                'name' => $item[0]->name,
+                'type' => $item[0]->type->name,
+                'image' => $item[0]->image,
+                'times_ordered' => count($item)
+            ];
+        })->sortByDesc('times_ordered')->values();
+        
+        return response()->json($products);
     }
 }

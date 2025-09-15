@@ -43,10 +43,12 @@ const filteredMenus = computed(() => {
         if(dateFilter.week) {
             const [year, week] = dateFilter.week.split('-W');
             
-            const startOfWeek = moment().isoWeekday(1).year(year).week(week).startOf('week').format('YYYY-MM-DD');
+            const startOfWeek = moment().year(year).week(week).startOf('week').add(1, 'days').format('YYYY-MM-DD');
             const endOfWeek = moment().year(year).week(week).endOf('week').add(1, 'days').format('YYYY-MM-DD');
-            
-            return startOfWeek <= menu.start_date && menu.end_date <= endOfWeek;
+
+            console.log(menu.name, startOfWeek, menu.start_date, endOfWeek, menu.end_date, menu.start_date >= startOfWeek && menu.end_date <= endOfWeek);
+
+            return menu.start_date >= startOfWeek && menu.end_date <= endOfWeek;
         }
         
        return dateFilter.validity_date == null ? menu.validity_date >= moment(dateFilter.start).format('YYYY-MM-DD') && menu.validity_date <= moment(dateFilter.end).format('YYYY-MM-DD') : menu.validity_date == moment(dateFilter.validity_date).format('YYYY-MM-DD');

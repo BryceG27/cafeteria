@@ -131,4 +131,8 @@ class MenuController extends Controller
 
         return redirect()->route('menus.index');
     }
+
+    public function get_test() {
+        dd(Menu::all());
+    }
 }

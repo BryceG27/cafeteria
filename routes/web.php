@@ -81,6 +81,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     /* Products */
     Route::resource('products', ProductController::class)->middleware(['auth', 'verified'])->except(['update']);
+    Route::get('/products/filter/by-date', [ProductController::class, 'filter'])->name('products.filter-by-date');
     Route::post('/products/{product}', [ProductController::class, 'update'])->middleware(['auth', 'verified'])->name('products.update');
     Route::put('/products/{product}/toggle-active', [ProductController::class, 'toggle_active'])->middleware(['auth', 'verified'])->name('products.toggle-active');
 
@@ -91,6 +92,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     /* Menus */
     Route::resource('menus', MenuController::class)->middleware(['auth', 'verified'])->except(['show']);
     Route::put('/menus/{menu}/toggle-active', [MenuController::class, 'toggle_active'])->middleware(['auth', 'verified'])->name('menus.toggle-active');
+    Route::get('/menus/get/test', [MenuController::class, 'get_test'])->name('menus.get-test');
 
     Route::put('/orders/{order}/update-status', [OrderController::class, 'change_status'])->middleware(['auth', 'verified'])->name('orders.update-status');
 

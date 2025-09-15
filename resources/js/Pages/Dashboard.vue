@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import { reactive, ref, computed } from "vue";
+import axios from 'axios';
 
 // vue-chartjs, for more info and examples you can check out https://vue-chartjs.org/ and http://www.chartjs.org/docs/ -->
 import { Line, Bar } from "vue-chartjs";
@@ -26,6 +27,37 @@ const props = defineProps({
     ordered_food : Array,
     errors: Object,
 });
+
+const productFilters = reactive({
+    name : '',
+    selectOptions : [
+        { label : 'Giorno', value : 0, placeholder : 'Seleziona un giorno'},
+        { label : 'Settimana', value : 1, placeholder : 'Seleziona un giorno della settimana'},
+        { label : 'Mese', value : 2, placeholder : 'Seleziona un giorno del mese'},
+    ],
+    filterType : 0,
+    selectedDate : null
+})
+
+const productsFiltered = ref([]);
+
+const ordersViews = ref([
+    { label : 'Ordini recenti', id : 1 },
+    { label : 'Ordini di oggi', id : 2 },
+    { label : 'Prodotti venduti', id: 3}
+]);
+
+const currentView = ref(1);
+
+const filteredOrders = computed(() => {
+    return props.orders.filter(order => currentView.value == 1 ? true : order.order_date == moment().format('YYYY-MM-DD'))
+})
+
+const selectedDateType = computed(() => {
+    if(productFilters.filterType)
+        return productFilters.selectOptions.find(option => productFilters.filterType == option.value).placeholder
+    return "Seleziona un giorno"
+})
 
 const todayOrders = computed(() => {
     return props.orders.filter(order => moment(order.order_date).isSame(moment(), 'day') && order.status == 1);
@@ -59,16 +91,6 @@ Chart.defaults.plugins.tooltip.radius = 3;
 Chart.defaults.plugins.legend.labels.boxWidth = 10;
 
 // Helper variables
-const ordersViews = ref([
-    { label : 'Ordini recenti', id : 1 },
-    { label : 'Ordini di oggi', id : 2 }
-]);
-
-const currentView = ref(1);
-
-const filteredOrders = computed(() => {
-    return props.orders.filter(order => currentView.value == 1 ? true : order.order_date == moment().format('YYYY-MM-DD'))
-})
 
 const expandedRows = ref([]);
 const filters = ref({
@@ -351,6 +373,14 @@ const newCustomersOptions = reactive({
         },
     },
 });
+
+const filter_products_by_date = () => {
+    axios.get(route('products.filter-by-date', {
+        filterType : productFilters.filterType, selectedDate : productFilters.selectedDate
+    })).then(response => {
+        productsFiltered.value = response.data
+    });
+}
 </script>
 
 <template>
@@ -470,7 +500,8 @@ const newCustomersOptions = reactive({
                             <div
                                 class="block-content block-content-full flex-grow-1 d-flex justify-content-between align-items-center">
                                 <dl class="mb-0">
-                                    <dt class="fs-3 fw-bold" v-text="`${mostOrderedDish.name} (${mostOrderedDish.count})`" />
+                                    <dt class="fs-3 fw-bold" v-if="ordered_food.length" v-text="`${mostOrderedDish.name} (${mostOrderedDish.count})`" />
+                                    <dt class="fs-3 fw-bold" v-else>Nessun dato disponibile</dt>
                                     <dd class="fs-sm fw-medium fs-sm fw-medium text-muted mb-0">
                                         Prodotto più ordinato del mese
                                     </dd>
@@ -491,7 +522,7 @@ const newCustomersOptions = reactive({
                     </BaseBlock>
                     <!-- END Messages -->
                 </div>
-                <div class="col-sm-6 col-xxl-3">
+                <div class="col-sm-6 col-xxl-3" v-show="false">
                     <!-- Conversion Rate -->
                     <BaseBlock class="d-flex flex-column h-100 mb-0">
                         <template #content>
@@ -672,7 +703,7 @@ const newCustomersOptions = reactive({
                                 <button class="dropdown-item clickable" @click="currentView = view.id">
                                     {{ view.label }}
                                 </button>
-                                <li class="dropdown-divider" v-if="view.id % 2 != 0" />
+                                <!-- <li class="dropdown-divider" v-if="view.id % 2 != 0" /> -->
                             </template>
                         </ul>
                     </div>
@@ -685,6 +716,7 @@ const newCustomersOptions = reactive({
                         v-model:expandedRows="expandedRows"
                         v-model:filters="filters"
                         filterDisplay="row"
+                        v-show="[1,2].includes(currentView)"
                     >
                         <template #empty>
                             <div class="p-4 text-center">
@@ -811,6 +843,76 @@ const newCustomersOptions = reactive({
                                 </InputGroup>
                             </template>
                         </Column>
+                    </DataTable>
+                    <DataTable
+                        paginator
+                        :rows="5"
+                        v-if="currentView === 3"
+                        :value="productsFiltered"
+                    >
+                        <template #header>
+                            <div class="row align-items-center justify-content-end">
+                                <div class="col-md-5" v-show="false">
+                                    <div class="d-flex align-items-center">
+                                        <label for="product-name" class="form-label w-75">Filtra per nome prodotto:</label>
+                                        <InputText
+                                            class="w-100"
+                                            inputClass="w-100"
+                                            id="product-name"
+                                            v-model="productFilters.productName"
+                                            placeholder="Nome prodotto"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="d-flex align-items-center">
+                                        <label for="filter-for" class="form-label w-25">Filtra per:</label>
+                                        <Dropdown
+                                            class="w-100"
+                                            inputClass="w-100"
+                                            :options="productFilters.selectOptions"
+                                            optionLabel="label"
+                                            optionValue="value"
+                                            v-model="productFilters.filterType"
+                                        />
+                                        <InputGroup>
+                                            <DatePicker 
+                                                class="w-100 ms-2"
+                                                inputClass="w-100"
+                                                date-format="dd/mm/yy"
+                                                v-model="productFilters.selectedDate"
+                                                :placeholder="selectedDateType"
+                                            />
+                                            <button 
+                                                class="btn btn-alt-success rounded-start-0" 
+                                                @click.prevent="filter_products_by_date"
+                                                :disabled="!productFilters.selectedDate"
+                                            >
+                                                <i class="fa fa-search"></i>
+                                            </button>
+                                        </InputGroup>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <template #empty>
+                            <div class="p-4 text-center">
+                                <i class="fa fa-exclamation-triangle fa-2x"></i>
+                                <p class="mt-2">Nessun prodotto trovato</p>
+                            </div>
+                        </template>
+                        <Column style="width: 50%" header="Nome" field="name">
+                            <template #body="{ data }">
+                                <Link
+                                    :href="route('products.show', data.id)"
+                                    class="text-decoration-none"
+                                    target="_blank"
+                                    v-text="data.name"
+                                />
+                            </template>
+                        </Column>
+                        <Column style="width: 25%" header="Tipologia" field="type" />
+                        <Column style="width: 25%" header="Quantità" field="times_ordered" />
                     </DataTable>
                 </div>
             </BaseBlock>
