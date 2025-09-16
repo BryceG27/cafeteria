@@ -29,7 +29,7 @@ const form = useForm({
     price : props.menu.price || 0,
     second_price : props.menu.second_price || 6.00,
     is_active : props.menu.is_active || 1, // Default to active
-    description : props.menu.description || 'Ogni menù include un\' acqua naturale e la frutta di stagione.',
+    description : props.menu.description || 'Ogni menù include un\'acqua naturale e la frutta di stagione.',
     products : props.menu.products ? props.menu.products.map(p => p.id) : [],
 })
 

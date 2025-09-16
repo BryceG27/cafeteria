@@ -23,8 +23,8 @@ const submit = () => {
 const form = useForm({
     id : props.menu.id || null,
     name : props.menu.name || '',
-    start_date : props.menu.start_date || '',
-    end_date : props.menu.end_date || '',
+    start_date : null,
+    end_date : null,
     validity_date : props.menu.validity_date || '',
     price : parseFloat(props.menu.price || 0),
     second_price : parseFloat(props.menu.second_price || 0),

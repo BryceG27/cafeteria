@@ -143,19 +143,16 @@ const payWithPayPal = () => {
                 </div>
                 <template #footer>
                     <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-md-4" :class="{ 'col-md-6' : credit_available <= 0, 'col-md-4' : credit_available > 0 }" @click.prevent="payWithStripe">
+                        <div class="row g-2" :class="{'justify-content-center' : credit_available == 0}">
+                            <div class="col-md-6" @click.prevent="payWithStripe">
                                 <button class="btn btn-card btn-lg w-100 gap-2">
-                                    Paga con carta
+                                    <i class="fa fa-credit-card me-1"></i>
+                                    Paga con metodo elettronico
                                 </button>
                             </div>
-                            <!-- <div class="col-md-4" :class="{ 'col-md-6' : credit_available <= 0, 'col-md-4' : credit_available > 0 }" @click.prevent="payWithPayPal">
-                                <button class="btn btn-paypal btn-lg w-100 text-black d-flex align-items-center justify-content-center gap-2">
-                                    Paga con <img src="/assets/media/various/paypal.png" style="height: 1.5rem" />
-                                </button>
-                            </div> -->
-                            <div class="col-md-4" v-if="credit_available > 0" @click.prevent="payWithCreditAvailable" :disabled="disablePayButton">
+                            <div class="col-md-6" v-if="credit_available > 0" @click.prevent="payWithCreditAvailable" :disabled="disablePayButton">
                                 <button class="btn btn-cash btn-lg w-100">
+                                    <i class="fa fa-euro-sign me-1"></i>
                                     Paga con credito residuo
                                 </button>
                             </div>

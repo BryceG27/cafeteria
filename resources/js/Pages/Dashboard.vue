@@ -15,6 +15,8 @@ import InputGroup from 'primevue/inputgroup';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import DatePicker from 'primevue/datepicker';
 import Dropdown from 'primevue/dropdown';
+import FloatLabel from 'primevue/floatlabel'
+import InputNumber from 'primevue/inputnumber'
 
 import { FilterMatchMode } from '@primevue/core/api';
 
@@ -39,10 +41,42 @@ const productFilters = reactive({
     selectedDate : null
 })
 
+const total_paid = computed(() => {
+    return props.orders.reduce((sum, order) => sum + (order.status == 1 ? parseFloat(order.total_amount - order.to_be_paid) : 0), 0);
+})
+
+const paid_with_credit = computed(() => {
+    return props.orders.reduce((sum, order) => sum + (order.status == 1 && order.payment_method == 1 ? parseFloat(order.total_amount - order.to_be_paid) : 0), 0);
+})
+
+const paid_with_stripe = computed(() => {
+    return props.orders.reduce((sum, order) => sum + (order.status == 1 && order.payment_method == 3 ? parseFloat(order.total_amount - order.to_be_paid) : 0), 0);
+})
+
+const calculate_week_difference = computed(() => {
+    const currentWeek = moment().isoWeek();
+    const lastWeek = moment().subtract(1, 'weeks').isoWeek();
+
+    const currentWeekTotal = props.orders.reduce((sum, order) => {
+        return sum + (moment(order.order_date).isoWeek() === currentWeek && order.status == 1 ? parseFloat(order.total_amount - order.to_be_paid) : 0);
+    }, 0);
+
+    const lastWeekTotal = props.orders.reduce((sum, order) => {
+        return sum + (moment(order.order_date).isoWeek() === lastWeek && order.status == 1 ? parseFloat(order.total_amount - order.to_be_paid) : 0);
+    }, 0);
+
+    if (lastWeekTotal === 0) {
+        return currentWeekTotal === 0 ? 0 : 100; // If last week was 0 and this week is not, return 100% increase
+    }
+
+    const difference = ((currentWeekTotal - lastWeekTotal) / lastWeekTotal) * 100;
+    return difference.toFixed(2);
+});
+
 const productsFiltered = ref([]);
 
 const ordersViews = ref([
-    { label : 'Ordini recenti', id : 1 },
+    { label : 'Ordini del mese', id : 1 },
     { label : 'Ordini di oggi', id : 2 },
     { label : 'Prodotti venduti', id: 3}
 ]);
@@ -194,18 +228,11 @@ const totalOrdersData = reactive({
         "GIO",
         "VEN",
         "SAB",
-        "DOM",
-        "LUN",
-        "MAR",
-        "MER",
-        "GIO",
-        "VEN",
-        "SAB",
-        "DOM",
+        "DOM"
     ],
     datasets: [
         {
-            label: "Totale ordini",
+            label: `Settimana ${moment().isoWeek()}`,
             fill: true,
             backgroundColor: "rgba(220, 38, 38, .15)",
             borderColor: "transparent",
@@ -213,8 +240,30 @@ const totalOrdersData = reactive({
             pointBorderColor: "#fff",
             pointHoverBackgroundColor: "#fff",
             pointHoverBorderColor: "rgba(220, 38, 38, 1)",
-            data: [...new Set([get_order_data_by_week(moment().format('YYYY-MM-DD')), get_order_data_by_week(moment().subtract(1, 'weeks').format('YYYY-MM-DD'))].flat())],
+            data: get_order_data_by_week(moment().format('YYYY-MM-DD')),
         },
+        /* {
+            label: `Settimana ${moment().subtract(1, 'weeks').isoWeek()}`,
+            fill: true,
+            backgroundColor: "rgba(120, 38, 38, .15)",
+            borderColor: "transparent",
+            pointBackgroundColor: "rgba(0, 38, 38, 1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(220, 38, 38, 1)",
+            data: get_order_data_by_week(moment().subtract(1, 'weeks').format('YYYY-MM-DD')),
+        },
+        {
+            label: `Settimana ${moment().subtract(1, 'weeks').isoWeek()}`,
+            fill: true,
+            backgroundColor: "rgba(220, 38, 38, .15)",
+            borderColor: "transparent",
+            pointBackgroundColor: "rgba(220, 38, 38, 1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(220, 38, 38, 1)",
+            data: get_order_data_by_week(moment().subtract(2, 'weeks').format('YYYY-MM-DD')),
+        }, */
     ],
 });
 
@@ -240,7 +289,9 @@ const totalOrdersOptions = reactive({
         tooltip: {
             callbacks: {
                 label: function (context) {
-                    return " " + context.parsed.y + " Orders";
+                    console.log(context);
+                    
+                    return " " + context.parsed.y + " € venduto";
                 },
             },
         },
@@ -621,9 +672,9 @@ const filter_products_by_date = () => {
                                         </dl>
                                         <div>
                                             <div
-                                                class="d-inline-block px-2 py-1 rounded-3 fs-xs fw-semibold text-danger bg-danger-light">
-                                                <i class="fa fa-caret-down me-1"></i>
-                                                2.2%
+                                                class="d-inline-block px-2 py-1 rounded-3 fs-xs fw-semibold" :class="{ 'text-danger bg-danger-light' : calculate_week_difference < 0, 'text-success bg-success-light' : calculate_week_difference > 0, 'text-warning bg-warning-light' : calculate_week_difference == 0}">
+                                                <i class="fa me-1" :class="{ 'fa-caret-down' : calculate_week_difference < 0, 'fa-caret-up' : calculate_week_difference > 0, 'fa-minus' : calculate_week_difference == 0}"></i>
+                                                {{ calculate_week_difference }} %
                                             </div>
                                         </div>
                                     </div>
@@ -708,7 +759,7 @@ const filter_products_by_date = () => {
                         </ul>
                     </div>
                 </template>
-                <div class="content">
+                <div class="content pt-0">
                     <DataTable
                         paginator
                         :rows="5"
@@ -752,6 +803,55 @@ const filter_products_by_date = () => {
                                         </tr>
                                     </tbody>
                                 </table>
+                            </div>
+                        </template>
+                        <template #header>
+                            <div class="row align-items-center justify-content-around pb-2">
+                                <div class="col-md-3">
+                                    <FloatLabel variant="on">
+                                        <InputNumber 
+                                            v-model="total_paid"
+                                            inputId="total_paid"
+                                            mode="currency"
+                                            currency="EUR"
+                                            locale="it-IT"
+                                            class="w-100"
+                                            inputClass="w-100"
+                                            readonly
+                                        />
+                                        <label for="total_paid">Totale pagato</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col-md-3">
+                                    <FloatLabel variant="on">
+                                        <InputNumber 
+                                            v-model="paid_with_credit"
+                                            inputId="total_paid"
+                                            mode="currency"
+                                            currency="EUR"
+                                            locale="it-IT"
+                                            class="w-100"
+                                            inputClass="w-100"
+                                            readonly
+                                        />
+                                        <label for="total_paid">Pagato con credito</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col-md-3">
+                                    <FloatLabel variant="on">
+                                        <InputNumber 
+                                            v-model="paid_with_stripe"
+                                            inputId="total_paid"
+                                            mode="currency"
+                                            currency="EUR"
+                                            locale="it-IT"
+                                            class="w-100"
+                                            inputClass="w-100"
+                                            readonly
+                                        />
+                                        <label for="total_paid">Pagato con metodo elettronico</label>
+                                    </FloatLabel>
+                                </div>
                             </div>
                         </template>
                         <Column style="width: 5%" expander />
