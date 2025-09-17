@@ -7,6 +7,7 @@ use App\Models\User;
 use Inertia\Inertia;
 use App\Models\Order;
 use Inertia\Response;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
@@ -40,11 +41,15 @@ class ProfileController extends Controller
                     return $order;
                 });
 
+        $orders_month_ago = Order::where('status', '<>', 2)->whereBetween('order_date', [Carbon::now()->subMonth()->startOfMonth()->format('Y-m-d'), Carbon::now()->subMonth()->endOfMonth()->format('Y-m-d')])->orderBy('created_at', 'desc')->get();
+
         arsort($ordered_food);
         $ordered_food = array_slice($ordered_food, 0, 5);
 
+        $payments = Payment::where('status', 1)->get();
+
         $customers = User::where('user_group_id', 3)->where('is_active', true)->with('user_group', 'orders', 'payments')->get();
-        return Inertia::render('Dashboard', compact('orders', 'customers', 'ordered_food'));
+        return Inertia::render('Dashboard', compact('orders', 'customers', 'ordered_food', 'orders_month_ago', 'payments'));
     }
     /**
      * Display the user's profile form.

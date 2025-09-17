@@ -26,7 +26,9 @@ const props = defineProps({
     auth: Object,
     customers : Array,
     orders : Array,
+    orders_month_ago : Array,
     ordered_food : Array,
+    payments : Array,
     errors: Object,
 });
 
@@ -73,6 +75,32 @@ const calculate_week_difference = computed(() => {
     return difference.toFixed(2);
 });
 
+const calculate_month_difference = computed(() => {
+    const currentMonth = moment().month();
+    const lastMonth = moment().subtract(1, 'months').month();
+
+    const currentMonthTotal = props.orders.reduce((sum, order) => {
+        return sum + (moment(order.order_date).month() === currentMonth && order.status == 1 ? parseFloat(order.total_amount - order.to_be_paid) : 0);
+    }, 0);
+
+    const lastMonthTotal = props.orders_month_ago.reduce((sum, order) => {
+        return sum + (moment(order.order_date).month() === lastMonth && order.status == 1 ? parseFloat(order.total_amount - order.to_be_paid) : 0);
+    }, 0);
+
+    if (lastMonthTotal === 0) {
+        return currentMonthTotal === 0 ? 0 : 100; // If last month was 0 and this month is not, return 100% increase
+    }
+
+    const difference = ((currentMonthTotal - lastMonthTotal) / lastMonthTotal) * 100;
+    return difference.toFixed(2);
+})
+
+const total_payments = (method = null) => {
+    if(method)
+        return props.payments.reduce((sum, payment) => sum + (payment.status == 1 && payment.payment_method_id == method ? parseFloat(payment.amount) : 0), 0);
+    return props.payments.reduce((sum, payment) => sum + (payment.status == 1 ? parseFloat(payment.amount) : 0), 0);
+}
+
 const productsFiltered = ref([]);
 
 const ordersViews = ref([
@@ -109,6 +137,33 @@ const mostOrderedDish = computed(() => {
     }
     return 'Nessun dato disponibile';
 });
+
+const currentMonthEarningsData = computed(() => {
+    const daysInMonth = moment().daysInMonth();
+    let earningsData = Array(daysInMonth).fill(0);
+
+    props.orders.forEach(order => {
+        if (moment(order.order_date).month() === moment().month() && order.status == 1) {
+            const day = moment(order.order_date).date() - 1; // -1 because array is 0-indexed
+            earningsData[day] += (order.total_amount - order.to_be_paid);
+        }
+    });
+    console.log(earningsData);
+    
+    return earningsData;
+})
+
+const currentMonthDays = computed(() => {
+    const daysInMonth = moment().daysInMonth();
+    let days = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+        days.push(`${day} ${moment().format('MMM')}`);
+    }
+
+    console.log(days);
+    
+    return days;
+})
 
 Chart.register(...registerables);
 
@@ -148,6 +203,31 @@ const get_order_data_by_week = (starting_day) => {
     }
 
     return data;
+}
+
+const get_colors = (data) => {
+    if(data == 0) {
+        return {
+            backgroundColor: "rgba(255, 193, 7, 0.15)",
+            borderColor: "rgba(255, 193, 7, 0.15)",
+            pointBackgroundColor: "rgba(255, 193, 7, 1)",
+            hover: "rgba(255, 193, 7, 1)"
+        }
+    } else if(data > 0) {
+        return {
+            backgroundColor: "rgba(34, 197, 94, .15)",
+            borderColor: "rgba(34, 197, 94, .15)",
+            pointBackgroundColor: "rgba(34, 197, 94, 1)",
+            hover : "rgba(34, 197, 94, 1)"
+        }
+    } else {
+        return {
+            backgroundColor: "rgba(220, 38, 38, .15)",
+            borderColor: "rgba(220, 38, 38, .15)",
+            pointBackgroundColor: "rgba(220, 38, 38, 1)",
+            hover : "rgba(220, 38, 38, 1)"
+        }
+    }
 }
 
 // Chart Earnings data
@@ -234,36 +314,14 @@ const totalOrdersData = reactive({
         {
             label: `Settimana ${moment().isoWeek()}`,
             fill: true,
-            backgroundColor: "rgba(220, 38, 38, .15)",
-            borderColor: "transparent",
-            pointBackgroundColor: "rgba(220, 38, 38, 1)",
-            pointBorderColor: "#fff",
-            pointHoverBackgroundColor: "#fff",
-            pointHoverBorderColor: "rgba(220, 38, 38, 1)",
+            backgroundColor: get_colors(calculate_week_difference.value).backgroundColor,
+            borderColor: get_colors(calculate_week_difference.value).borderColor,
+            pointBackgroundColor: get_colors(calculate_week_difference.value).hover,
+            pointBorderColor: get_colors(calculate_week_difference.value).pointBackgroundColor,
+            pointHoverBackgroundColor: get_colors(calculate_week_difference.value).pointBackgroundColor,
+            pointHoverBorderColor: get_colors(calculate_week_difference.value).hover,
             data: get_order_data_by_week(moment().format('YYYY-MM-DD')),
         },
-        /* {
-            label: `Settimana ${moment().subtract(1, 'weeks').isoWeek()}`,
-            fill: true,
-            backgroundColor: "rgba(120, 38, 38, .15)",
-            borderColor: "transparent",
-            pointBackgroundColor: "rgba(0, 38, 38, 1)",
-            pointBorderColor: "#fff",
-            pointHoverBackgroundColor: "#fff",
-            pointHoverBorderColor: "rgba(220, 38, 38, 1)",
-            data: get_order_data_by_week(moment().subtract(1, 'weeks').format('YYYY-MM-DD')),
-        },
-        {
-            label: `Settimana ${moment().subtract(1, 'weeks').isoWeek()}`,
-            fill: true,
-            backgroundColor: "rgba(220, 38, 38, .15)",
-            borderColor: "transparent",
-            pointBackgroundColor: "rgba(220, 38, 38, 1)",
-            pointBorderColor: "#fff",
-            pointHoverBackgroundColor: "#fff",
-            pointHoverBorderColor: "rgba(220, 38, 38, 1)",
-            data: get_order_data_by_week(moment().subtract(2, 'weeks').format('YYYY-MM-DD')),
-        }, */
     ],
 });
 
@@ -289,9 +347,7 @@ const totalOrdersOptions = reactive({
         tooltip: {
             callbacks: {
                 label: function (context) {
-                    console.log(context);
-                    
-                    return " " + context.parsed.y + " € venduto";
+                    return `${context.parsed.y} € venduto`;
                 },
             },
         },
@@ -300,36 +356,18 @@ const totalOrdersOptions = reactive({
 
 // Chart Total Earnings data
 const totalEarningsData = reactive({
-    labels: [
-        "LUN",
-        "MAR",
-        "MER",
-        "GIO",
-        "VEN",
-        "SAB",
-        "DOM",
-        "LUN",
-        "MAR",
-        "MER",
-        "GIO",
-        "VEN",
-        "SAB",
-        "DOM",
-    ],
+    labels: currentMonthDays,
     datasets: [
         {
             label: "Total Earnings",
             fill: true,
-            backgroundColor: "rgba(101, 163, 13, .15)",
-            borderColor: "transparent",
-            pointBackgroundColor: "rgba(101, 163, 13, 1)",
-            pointBorderColor: "#fff",
-            pointHoverBackgroundColor: "#fff",
-            pointHoverBorderColor: "rgba(101, 163, 13, 1)",
-            data: [
-                716, 1185, 750, 1365, 956, 890, 1200, 968, 1158, 1025, 920, 1190, 720,
-                1352,
-            ],
+            backgroundColor: get_colors(calculate_month_difference.value).backgroundColor,
+            borderColor: get_colors(calculate_month_difference.value).borderColor,
+            pointBackgroundColor: get_colors(calculate_month_difference.value).hover,
+            pointBorderColor: get_colors(calculate_month_difference.value).pointBackgroundColor,
+            pointHoverBackgroundColor: get_colors(calculate_month_difference.value).pointBackgroundColor,
+            pointHoverBorderColor: get_colors(calculate_month_difference.value).hover,
+            data: currentMonthEarningsData,
         },
     ],
 });
@@ -356,7 +394,7 @@ const totalEarningsOptions = reactive({
         tooltip: {
             callbacks: {
                 label: function (context) {
-                    return " $" + context.parsed.y;
+                    return `${context.parsed.y} €`;
                 },
             },
         },
@@ -451,7 +489,7 @@ const filter_products_by_date = () => {
                         </em>
                     </h2>
                 </div>
-                <div class="mt-3 mt-md-0 ms-md-3 space-x-1">
+                <div class="mt-3 mt-md-0 ms-md-3 space-x-1 d-none">
                     <a href="javascript:void(0)" class="btn btn-sm btn-alt-secondary space-x-1">
                         <i class="fa fa-cogs opacity-50"></i>
                         <span>Settings</span>
@@ -623,31 +661,33 @@ const filter_products_by_date = () => {
                                     <div class="col-sm-4">
                                         <dl class="mb-0">
                                             <dt class="fs-3 fw-bold d-inline-flex align-items-center space-x-2">
-                                                <i class="fa fa-caret-up fs-base text-success"></i>
-                                                <span>2.5%</span>
+                                                <!-- <i class="fa fa-caret-up fs-base text-success"></i> -->
+                                                <span v-text="total_payments().toFixed(2) + ' €'" />
                                             </dt>
                                             <dd class="fs-sm fw-medium text-muted mb-0">
-                                                Customer Growth
+                                                Totale assoluto pagato
                                             </dd>
                                         </dl>
                                     </div>
                                     <div class="col-sm-4">
                                         <dl class="mb-0">
                                             <dt class="fs-3 fw-bold d-inline-flex align-items-center space-x-2">
-                                                <i class="fa fa-caret-up fs-base text-success"></i>
-                                                <span>3.8%</span>
+                                                <!-- <i class="fa fa-caret-up fs-base text-success"></i> -->
+                                                <span v-text="total_payments(1).toFixed(2) + ' €'" />
                                             </dt>
-                                            <dd class="fs-sm fw-medium text-muted mb-0">Page Views</dd>
+                                            <dd class="fs-sm fw-medium text-muted mb-0">
+                                                Totale assoluto con credito
+                                            </dd>
                                         </dl>
                                     </div>
                                     <div class="col-sm-4">
                                         <dl class="mb-0">
                                             <dt class="fs-3 fw-bold d-inline-flex align-items-center space-x-2">
-                                                <i class="fa fa-caret-down fs-base text-danger"></i>
-                                                <span>1.7%</span>
+                                                <!-- <i class="fa fa-caret-down fs-base text-danger"></i> -->
+                                                <span v-text="total_payments(3).toFixed(2) + ' €'" />
                                             </dt>
                                             <dd class="fs-sm fw-medium text-muted mb-0">
-                                                New Products
+                                                Totale assoluto con Stripe
                                             </dd>
                                         </dl>
                                     </div>
@@ -667,12 +707,12 @@ const filter_products_by_date = () => {
                                         <dl class="mb-0">
                                             <dt class="fs-3 fw-bold" v-text="orders.length" />
                                             <dd class="fs-sm fw-medium text-muted mb-0">
-                                                Totale ordini
+                                                Totale ordini della settimana
                                             </dd>
                                         </dl>
                                         <div>
                                             <div
-                                                class="d-inline-block px-2 py-1 rounded-3 fs-xs fw-semibold" :class="{ 'text-danger bg-danger-light' : calculate_week_difference < 0, 'text-success bg-success-light' : calculate_week_difference > 0, 'text-warning bg-warning-light' : calculate_week_difference == 0}">
+                                                class="d-inline-block px-2 py-1 rounded-3 fs-xs fw-semibold" v-tooltip.top="'Percentuale rispetto la settimana passata'" :class="{ 'text-danger bg-danger-light' : calculate_week_difference < 0, 'text-success bg-success-light' : calculate_week_difference > 0, 'text-warning bg-warning-light' : calculate_week_difference == 0}">
                                                 <i class="fa me-1" :class="{ 'fa-caret-down' : calculate_week_difference < 0, 'fa-caret-up' : calculate_week_difference > 0, 'fa-minus' : calculate_week_difference == 0}"></i>
                                                 {{ calculate_week_difference }} %
                                             </div>
@@ -692,14 +732,14 @@ const filter_products_by_date = () => {
                                         <dl class="mb-0">
                                             <dt class="fs-3 fw-bold">{{ parseFloat(amountOrders).toFixed(2) }} &euro;</dt>
                                             <dd class="fs-sm fw-medium text-muted mb-0">
-                                                Guadagno totale
+                                                Guadagno totale del mese
                                             </dd>
                                         </dl>
                                         <div>
                                             <div
-                                                class="d-inline-block px-2 py-1 rounded-3 fs-xs fw-semibold text-success bg-success-light">
-                                                <i class="fa fa-caret-up me-1"></i>
-                                                4.2%
+                                                class="d-inline-block px-2 py-1 rounded-3 fs-xs fw-semibold" v-tooltip.top="'Percentuale rispetto il mese passato'" :class="{ 'text-danger bg-danger-light' : calculate_month_difference < 0, 'text-success bg-success-light' : calculate_month_difference > 0, 'text-warning bg-warning-light' : calculate_month_difference == 0}">
+                                                <i class="fa me-1" :class="{ 'fa-caret-down' : calculate_month_difference < 0, 'fa-caret-up' : calculate_month_difference > 0, 'fa-minus' : calculate_month_difference == 0}"></i>
+                                                {{ calculate_month_difference }} %
                                             </div>
                                         </div>
                                     </div>
@@ -710,7 +750,7 @@ const filter_products_by_date = () => {
                                 </template>
                             </BaseBlock>
                         </div>
-                        <div class="col-xl-12">
+                        <div class="col-xl-12" style="visibility: hidden;">
                             <BaseBlock class="d-flex flex-column h-100 mb-0">
                                 <template #content>
                                     <div class="block-content flex-grow-1 d-flex justify-content-between">
@@ -819,7 +859,7 @@ const filter_products_by_date = () => {
                                             inputClass="w-100"
                                             readonly
                                         />
-                                        <label for="total_paid">Totale pagato</label>
+                                        <label for="total_paid">Totale ordini pagati</label>
                                     </FloatLabel>
                                 </div>
                                 <div class="col-md-3">
@@ -834,7 +874,7 @@ const filter_products_by_date = () => {
                                             inputClass="w-100"
                                             readonly
                                         />
-                                        <label for="total_paid">Pagato con credito</label>
+                                        <label for="total_paid">Ordini pagati con credito</label>
                                     </FloatLabel>
                                 </div>
                                 <div class="col-md-3">
@@ -849,7 +889,7 @@ const filter_products_by_date = () => {
                                             inputClass="w-100"
                                             readonly
                                         />
-                                        <label for="total_paid">Pagato con metodo elettronico</label>
+                                        <label for="total_paid">Ordini pagti con Stripe</label>
                                     </FloatLabel>
                                 </div>
                             </div>
@@ -1024,5 +1064,13 @@ const filter_products_by_date = () => {
 <style scoped>
     .clickable {
         cursor: pointer;
+    }
+
+    .text-warning {
+        color: #ffc107 !important;
+    }
+
+    .bg-warning-light {
+        background-color: rgba(255, 193, 7, 0.15) !important;
     }
 </style>
