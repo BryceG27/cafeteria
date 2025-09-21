@@ -30,12 +30,21 @@ class ProfileController extends Controller
                         if (! array_key_exists($order->first_dish->id, $ordered_food))
                             $ordered_food[$order->first_dish->id] = ['name' => $order->first_dish->name, 'count' => 0];
                         $ordered_food[$order->first_dish->id]['count']++;
+                        $ordered_food[$order->first_dish->id]['ordered_by'][] = $order->customer->child;
                     }
 
                     if ($order->second_dish) {
                         if (! array_key_exists($order->second_dish->id, $ordered_food))
                             $ordered_food[$order->second_dish->id] = ['name' => $order->second_dish->name, 'count' => 0];
                         $ordered_food[$order->second_dish->id]['count']++;
+                        $ordered_food[$order->second_dish->id]['ordered_by'][] = $order->customer->child;
+                    }
+
+                    if ($order->side_dish) {
+                        if (! array_key_exists($order->side_dish->id, $ordered_food))
+                            $ordered_food[$order->side_dish->id] = ['name' => $order->side_dish->name, 'count' => 0];
+                        $ordered_food[$order->side_dish->id]['count']++;
+                        $ordered_food[$order->side_dish->id]['ordered_by'][] = $order->customer->child;
                     }
 
                     return $order;

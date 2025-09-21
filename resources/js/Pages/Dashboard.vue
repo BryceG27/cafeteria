@@ -44,15 +44,15 @@ const productFilters = reactive({
 })
 
 const total_paid = computed(() => {
-    return props.orders.reduce((sum, order) => sum + (order.status == 1 ? parseFloat(order.total_amount - order.to_be_paid) : 0), 0);
+    return props.orders.reduce((sum, order) => sum + ((order.status == 1 || order.status == 3) ? parseFloat(order.total_amount - order.to_be_paid) : 0), 0);
 })
 
 const paid_with_credit = computed(() => {
-    return props.orders.reduce((sum, order) => sum + (order.status == 1 && order.payment_method == 1 ? parseFloat(order.total_amount - order.to_be_paid) : 0), 0);
+    return props.orders.reduce((sum, order) => sum + ((order.status == 1 || order.status == 3) && order.payment_method == 1 ? parseFloat(order.total_amount - order.to_be_paid) : 0), 0);
 })
 
 const paid_with_stripe = computed(() => {
-    return props.orders.reduce((sum, order) => sum + (order.status == 1 && order.payment_method == 3 ? parseFloat(order.total_amount - order.to_be_paid) : 0), 0);
+    return props.orders.reduce((sum, order) => sum + ((order.status == 1 || order.status == 3) && order.payment_method == 3 ? parseFloat(order.total_amount - order.to_be_paid) : 0), 0);
 })
 
 const calculate_week_difference = computed(() => {
@@ -112,7 +112,7 @@ const ordersViews = ref([
 const currentView = ref(1);
 
 const filteredOrders = computed(() => {
-    return props.orders.filter(order => currentView.value == 1 ? true : order.order_date == moment().format('YYYY-MM-DD'))
+    return props.orders.filter(order => currentView.value == 1 ? true : order.order_date == moment().format('YYYY-MM-DD')).filter(order => order_date_filter.value == null ? true : moment(order_date_filter.value).format('YYYY-MM-DD') == order.order_date)
 })
 
 const selectedDateType = computed(() => {
@@ -148,7 +148,6 @@ const currentMonthEarningsData = computed(() => {
             earningsData[day] += (order.total_amount - order.to_be_paid);
         }
     });
-    console.log(earningsData);
     
     return earningsData;
 })
@@ -159,8 +158,6 @@ const currentMonthDays = computed(() => {
     for (let day = 1; day <= daysInMonth; day++) {
         days.push(`${day} ${moment().format('MMM')}`);
     }
-
-    console.log(days);
     
     return days;
 })
@@ -181,13 +178,16 @@ Chart.defaults.plugins.legend.labels.boxWidth = 10;
 
 // Helper variables
 
-const expandedRows = ref([]);
+const expandedRows          = ref([]);
+const productsExpandedRows  = ref([]);
 const filters = ref({
     child_name : { value : null, matchMode : FilterMatchMode.CONTAINS },
     'menu.name' : { value : null, matchMode : FilterMatchMode.CONTAINS },
-    order_date : { value : null, matchMode : FilterMatchMode.DATE_IS},
+    order_date : { value : null, matchMode: FilterMatchMode.DATE_IS},
     'status_info.id' : { value : null, matchMode : FilterMatchMode.EQUALS}
 })
+
+const order_date_filter = ref(null)
 
 const get_order_data_by_week = (starting_day) => {
     let data = [];
@@ -802,7 +802,7 @@ const filter_products_by_date = () => {
                 <div class="content pt-0">
                     <DataTable
                         paginator
-                        :rows="5"
+                        :rows="10"
                         :value="filteredOrders"
                         v-model:expandedRows="expandedRows"
                         v-model:filters="filters"
@@ -948,16 +948,17 @@ const filter_products_by_date = () => {
                             <template #body="{ data }">
                                 {{ moment(data.order_date).format('DD/MM/YYYY') }}
                             </template>
-                            <template #filter="{ filterModel, filterCallback }">
+                            <template #filter v-if="currentView == 1">
                                 <InputGroup>
                                     <DatePicker 
                                         inputClass="w-100"
                                         class="w-100"
-                                        @date-change="console.log($event)"
                                         placeholder="Cerca per data"
+                                        date-format="dd/mm/yy"
+                                        v-model="order_date_filter"
                                     />
                                     <InputGroupAddon>
-                                        <button class="btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
+                                        <button class="btn-link link-danger" type="button" @click.prevent="order_date_filter = null">
                                             <i class="fa fa-x"></i>
                                         </button>
                                     </InputGroupAddon>
@@ -986,10 +987,32 @@ const filter_products_by_date = () => {
                     </DataTable>
                     <DataTable
                         paginator
-                        :rows="5"
+                        :rows="10"
                         v-if="currentView === 3"
                         :value="productsFiltered"
+                        v-model:expandedRows="productsExpandedRows"
                     >
+                        <template #expansion="{ data }">
+                            <div style="overflow-y: auto; max-height: 20rem;">
+                                <table class="table table-info rounded-2">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40%">Cliente</th>
+                                            <th style="width: 35%">Note</th>
+                                            <th style="width: 25%">Data</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(detail, index) in data.detail" :key="index">
+                                            <td v-text="detail.customer.child" />
+                                            <td v-text="detail.notes ? detail.notes : '---'" />
+                                            <td>{{ moment(detail.order_date).format('DD/MM/YYYY') }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                                
+                        </template>
                         <template #header>
                             <div class="row align-items-center justify-content-end">
                                 <div class="col-md-5" v-show="false">
@@ -1041,7 +1064,8 @@ const filter_products_by_date = () => {
                                 <p class="mt-2">Nessun prodotto trovato</p>
                             </div>
                         </template>
-                        <Column style="width: 50%" header="Nome" field="name">
+                        <Column style="width: 10%" expander />
+                        <Column style="width: 45%" header="Nome" field="name">
                             <template #body="{ data }">
                                 <Link
                                     :href="route('products.show', data.id)"
@@ -1052,7 +1076,7 @@ const filter_products_by_date = () => {
                             </template>
                         </Column>
                         <Column style="width: 25%" header="Tipologia" field="type" />
-                        <Column style="width: 25%" header="Quantità" field="times_ordered" />
+                        <Column style="width: 20%" header="Quantità" field="times_ordered" />
                     </DataTable>
                 </div>
             </BaseBlock>

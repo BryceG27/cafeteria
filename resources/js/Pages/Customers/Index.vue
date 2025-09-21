@@ -7,6 +7,7 @@ import { computed, ref } from "vue";
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import ToggleSwitch from 'primevue/toggleswitch';
+import InputText from 'primevue/inputtext';
 
 const props = defineProps({
     customers: Array,
@@ -14,9 +15,12 @@ const props = defineProps({
 });
 
 const showOnlyActive = ref(true);
+const customersFilter = ref('');
 const filteredCustomers = computed(() => {
     if (showOnlyActive.value) {
-        return props.customers.filter(customer => customer.is_active);
+        return props.customers.filter(customer => customer.is_active).filter(customer => {
+            return `${customer.name} ${customer.surname}`.toLowerCase().includes(customersFilter.value.toLowerCase());
+        });
     }
     return props.customers;
 });
@@ -34,14 +38,11 @@ const filteredCustomers = computed(() => {
                 <DataTable
                     stripedRows
                     :value="filteredCustomers"
+                    filterDisplay="row"
                 >
                     <template #header>
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">Elenco clienti</h5>
-                            <div class="d-flex align-items-center gap-2">
-                                <span>Mostra solo attivi</span>
-                                <ToggleSwitch v-model="showOnlyActive" />
-                            </div>
                         </div>
                     </template>
                     <template #empty>
@@ -115,7 +116,7 @@ const filteredCustomers = computed(() => {
                             </div>
                         </template>
                     </Column>
-                    <Column header="Cliente">
+                    <Column header="Cliente" :showFilterMenu="false">
                         <template #body="{ data }">
                             <Link
                                 :href="route('users.edit', data.id)"
@@ -125,6 +126,13 @@ const filteredCustomers = computed(() => {
                             <span 
                                 v-else
                                 v-text="`${data.name} ${data.surname}`"
+                            />
+                        </template>
+                        <template #filter>
+                            <InputText 
+                                v-model="customersFilter" 
+                                placeholder="Cerca cliente..." 
+                                class="w-100" 
                             />
                         </template>
                     </Column>
@@ -140,10 +148,16 @@ const filteredCustomers = computed(() => {
                             {{ data.orders.reduce((acc, order) => acc + parseFloat(order.total_amount) , 0).toFixed(2) }} &euro;
                         </template>
                     </Column>
-                    <Column field="is_active" header="Stato">
+                    <Column field="is_active" header="Stato" :showFilterMenu="false" class="text-center">
                         <template #body="{ data }">
                             <span v-if="data.is_active" class="badge bg-success">Attivo</span>
                             <span v-else class="badge bg-danger">Inattivo</span>
+                        </template>
+                        <template #filter>
+                            <div class="d-flex align-items-center gap-2">
+                                <span>Mostra solo attivi</span>
+                                <ToggleSwitch v-model="showOnlyActive" />
+                            </div>
                         </template>
                     </Column>
                 </DataTable>

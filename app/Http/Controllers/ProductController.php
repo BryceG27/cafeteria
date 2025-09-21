@@ -122,33 +122,41 @@ class ProductController extends Controller
                     $dateFrom = $carbon->startOfWeek()->format('Y-m-d');
                     $dateTo = $carbon->endOfWeek()->format('Y-m-d');
 
-                    return $query->whereDateBetween('order_date', [$dateFrom, $dateTo]);
+                    return $query->whereBetween('order_date', [$dateFrom, $dateTo]);
                     break;
 
                 case 2:
                     $dateFrom = $carbon->startOfMonth()->format('Y-m-d');
                     $dateTo = $carbon->endOfMonth()->format('Y-m-d');
 
-                    return $query->whereDateBetween('order_date', [$dateFrom, $dateTo]);
+                    return $query->whereBetween('order_date', [$dateFrom, $dateTo]);
                     break;
                 
                 default:
                     # code...
                     break;
             }
-        })->with(['first_dish', 'second_dish', 'side_dish'])->get()->map(function($order) use (&$products) {
+        })->with(['first_dish', 'second_dish', 'side_dish', 'customer'])->get()->map(function($order) use (&$products) {
             if($order->first_dish) {
-                $products[] = $order->first_dish->load('type');
+                $dish = $order->first_dish->load('type');
+                $dish->detail = $order->load('customer')->only(['notes', 'customer', 'order_date']);
+                $products[] = $dish;
             }
 
             if($order->second_dish) {
-                $products[] = $order->second_dish->load('type');
+                $dish = $order->second_dish->load('type');
+                $dish->detail = $order->load('customer')->only(['notes', 'customer', 'order_date']);
+                $products[] = $dish;
             }
 
             if($order->side_dish) {
-                $products[] = $order->side_dish->load('type');
+                $dish = $order->side_dish->load('type');
+                $dish->detail = $order->load('customer')->only(['notes', 'customer', 'order_date']);
+                $products[] = $dish;
             }
+
         });
+
 
         $products = collect($products)->groupBy('id')->map(function($item) {
             return [
@@ -156,7 +164,8 @@ class ProductController extends Controller
                 'name' => $item[0]->name,
                 'type' => $item[0]->type->name,
                 'image' => $item[0]->image,
-                'times_ordered' => count($item)
+                'times_ordered' => count($item),
+                'detail' => $item->pluck('detail')->all()
             ];
         })->sortByDesc('times_ordered')->values();
         

@@ -46,6 +46,13 @@ class UserController extends Controller
         $validate = User::validate($request);
         $validate['password'] = Hash::make($validate['password']);
 
+        $validate['name'] = ucwords(strtolower($validate['name']));
+        $validate['surname'] = ucwords(strtolower($validate['surname']));
+        $validate['child'] = ucwords(strtolower($validate['child']));
+
+        if(strtolower($validate['child_allergies']) == 'no' || strtolower($validate['child_allergies']) == 'nessuna')
+            $validate['child_allergies'] = null;
+
         User::create($validate);
 
         return redirect()->route('users.index')->with('message', 'Utente creato con successo.');
@@ -72,6 +79,13 @@ class UserController extends Controller
             $validate['password'] = Hash::make($validate['password']);
         else
             $validate['password'] = $user->password; // Keep the old password if not provided
+
+        $validate['name'] = ucwords(strtolower($validate['name']));
+        $validate['surname'] = ucwords(strtolower($validate['surname']));
+        $validate['child'] = ucwords(strtolower($validate['child']));
+
+        if(strtolower($validate['child_allergies']) == 'no' || strtolower($validate['child_allergies']) == 'nessuna')
+            $validate['child_allergies'] = null;
 
         $user->update($validate);
 
