@@ -327,7 +327,7 @@ async function submitRegister() {
                                     id="child_allergies"
                                     name="child_allergies"
                                     v-model="registerForm.child_allergies"
-                                    :disabled="form.has_allergies"
+                                    :disabled="!registerForm.has_allergies"
                                 />
                                 <label for="child_allergies">Allergie/intolleranze</label>
                             </FloatLabel>

@@ -81,7 +81,49 @@ class PaymentController extends Controller
         }
     }
 
-    public function checkout_with_stripe(Order $order) {
+    public function checkout_multiple(Request $request) {
+        $orders = Order::whereIn('id', $request->orders)->where('customer_id', auth()->id())->where('status', '!=', 2)->get();
+
+        switch ($request->payment_method) {
+            case 1:
+                return $this->checkout_with_credit($orders);
+                break;
+
+            case 2:
+                return $this->checkout_with_paypal($orders);
+                break;
+
+            case 3:
+                return $this->checkout_with_stripe($orders);
+                break;
+
+            default:
+                return redirect()->back()->withErrors('Metodo di pagamento non valido.');
+                break;
+        }
+    }
+
+    public function checkout_with_stripe($orders) {
+        $payment_name = '';
+
+        if(count($orders) == 1) {
+            $payment_name = "Pagamento menù: " . $orders[0]->menu->name . " " . Carbon::create($orders[0]->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y');
+            $to_be_paid = $orders[0]->to_be_paid * 100;
+            $success_url = route('orders.confirm-order', ['order' => $orders[0]->id]) . '?payment_method=3&session_id={CHECKOUT_SESSION_ID}';
+            $ids = $orders[0]->id;
+        } else {
+            $payment_name = "Pagamento dei menù";
+            $to_be_paid = 0;
+            $ids = [];
+            $orders->map(function($order) use (&$payment_name, &$to_be_paid, &$ids) {
+                $payment_name .= " | " . $order->menu->name . " " . Carbon::create($order->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y');
+                $to_be_paid += $order->to_be_paid * 100;
+                $ids[] = $order->id;
+            });
+            $ids = implode('-', $ids);
+            $success_url = route('orders.confirm-orders') . "?orders=$ids&payment_method=3&session_id={CHECKOUT_SESSION_ID}";
+        }
+
         Stripe::setApiKey(env('STRIPE_SECRET'));
 
         $session = Session::create([
@@ -90,17 +132,17 @@ class PaymentController extends Controller
                 'price_data' => [
                     'currency' => 'eur',
                     'product_data' => [
-                        'name' => "Pagamento menù: " . $order->menu->name . " " . Carbon::create($order->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y')
+                        'name' => $payment_name
                     ],
-                    'unit_amount' => $order->to_be_paid * 100,
+                    'unit_amount' => $to_be_paid,
                 ],
                 'quantity' => 1,
             ]],
             'mode' => 'payment',
-            'success_url' => route('orders.confirm-order', ['order' => $order->id]) . '?payment_method=3&session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('orders.payment-not-completed', ['order' => $order->id]),
+            'success_url' => $success_url,
+            'cancel_url' => route('orders.payment-not-completed'),
             'metadata' => [
-                'order_id' => $order->id,
+                'orders' => $ids,
                 'user_id' => auth()->id(),
             ]
         ]);
@@ -110,9 +152,40 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function checkout_with_credit(Order $order) {
+    public function checkout_with_credit($orders) {
         $credit_available = Credit::where('user_id', auth()->id())->where('amount_available', '>', 0)->get();
-        $to_be_paid = $order->to_be_paid;
+
+        $to_be_paid = $orders->sum('to_be_paid');
+        $total = 0;
+
+        foreach($orders as $order) {
+            foreach ($credit_available as $credit) {
+                if($credit->amount_available >= $order->to_be_paid) {
+                    // The available credit is enough to cover the order total
+                    $to_be_paid -= $order->to_be_paid;
+
+                    // Deduct the used amount from the credit
+                    $credit->amount_available -= $order->to_be_paid;
+                    $credit->save();
+
+                    // Update the order status to Paid
+                    $order->to_be_paid = 0;
+                    $order->status = 1;
+                    $order->save();
+
+                    continue 2;
+                } else {
+                    // Deduct the used amount from the credit (which will be zero now)
+                    $to_be_paid -= $credit->amount_available;
+                    $order->to_be_paid = $order->to_be_paid - $credit->amount_available;
+                    $credit->amount_available = 0;
+                    $credit->save();
+                    $order->save();
+                }
+            }
+        }
+
+        /* $to_be_paid = $order->to_be_paid;
         $total = 0;
 
         foreach ($credit_available as $credit) {
@@ -139,6 +212,7 @@ class PaymentController extends Controller
                 $order->save();
             }
         }
+        */
 
         $notes = $to_be_paid > 0 ? "Pagamento parziale effettuato con credito residuo." : "Pagamento effettuato con credito residuo.";
 
@@ -147,14 +221,19 @@ class PaymentController extends Controller
             'amount' => $total,
             'payment_date' => Carbon::now()->format('Y-m-d'),
             'notes' => $notes,
-            'order_id' => $order->id,
             'status' => 1,
             'payment_method_id' => 1,
         ]);
 
+        $ids = [];
+
+         $orders->where('to_be_paid', '>', 0)->each(function($order) use (&$ids) {
+            $ids[] = $order->id;
+        });
+
         if($to_be_paid > 0) {
             $to_be_paid = number_format($to_be_paid, 2, ',', '.');
-            return redirect()->route('orders.index', compact('order'))->withErrors("Scarico da credito effettuato. Restante da pagare: {$to_be_paid} €.");
+            return redirect()->route('orders.index', ['orders' => $ids])->withErrors("Scarico da credito effettuato. Restante da pagare: {$to_be_paid} €.");
         }
 
         return redirect()->route('orders.index')->with('message', 'Pagamento effettuato con successo utilizzando il credito residuo.');

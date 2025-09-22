@@ -19,16 +19,20 @@ class OrderController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Order $order = null)
+    public function index(Request $request)
     {
         if(Auth::user()->user_group_id == 3) {
+            $orders_to_be_paid = null;
+            if($request->has('orders'))
+                $orders_to_be_paid = Order::whereIn('id', $request->orders)->where('to_be_paid', '>', 0)->with('menu')->get();
+
             return Inertia::render('Orders/CustomerIndex', [
                 'credits' => Auth::user()->credits,
                 'orders' => Order::where('customer_id', Auth::user()->id)->where('status', '<>', 2)->orderBy('created_at', 'desc')->with(['first_dish', 'second_dish', 'side_dish', 'menu'])->get()->map(function($order) {
                     $order->status_info = $order->get_status();
                     return $order;
                 }),
-                'order' => $order?->load('menu'),
+                'orders_to_be_paid' => $orders_to_be_paid,
             ]);
         } else {
             return Inertia::render('Orders/Index', [
@@ -235,8 +239,36 @@ class OrderController extends Controller
         return redirect()->route('orders.index')->with('message', 'Pagamento registrato con successo. Grazie!');
     }
 
-    public function payment_not_completed(Order $order) {
-        return redirect()->route('orders.index')->withErrors('Il pagamento non è stato completato. Ordine non confermato.');
+    public function confirm_multiples(Request $request) {
+        $orders = Order::whereIn('id', explode('-', $request->orders))->get();
+        if($orders->isEmpty())
+            return redirect()->route('orders.index')->withErrors('Nessun ordine selezionato. Ordini non confermati.');
+
+        $payment_method = PaymentMethod::find($request->payment_method);
+
+        Payment::create([
+            'user_id' => $orders[0]->customer_id,
+            'amount' => $orders->sum('total_amount'),
+            'payment_date' => \Carbon\Carbon::now()->setTimezone('Europe/Rome')->format('Y-m-d'),
+            'notes' => "Pagamento effettuato tramite {$payment_method->name} per ordini: " . implode(', ', $orders->pluck('id')->toArray()),
+            'status' => 1,
+            'payment_method_id' => $request->payment_method,
+            'stripe_session_id' => $request->session_id ?? null,
+            'transaction_id' => $request->payment_method == 2 ? $this->set_paypal_payment($request) : null,
+        ]);
+
+        foreach ($orders as $order) {
+            $order->update([
+                'status' => 1,
+                'to_be_paid' => 0,
+            ]);
+        }
+
+        return redirect()->route('orders.index')->with('message', 'Pagamenti registrati con successo. Grazie!');
+    }
+
+    public function payment_not_completed() {
+        return redirect()->route('orders.index')->withErrors('Il pagamento non è stato completato. Ordine/i non confermato.');
     }
 
     public function set_paypal_payment(Request $request) {

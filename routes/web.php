@@ -44,9 +44,10 @@ Route::post('/sign-in', [ProfileController::class, 'sign_in'])->name('profile.si
 Route::middleware(['auth' , 'verified'])->group(function () {
     /* Orders */
     Route::resource('orders', OrderController::class)->middleware(['auth', 'verified'])->except(['index', 'show']);
-    Route::get('/orders/index/{order?}', [OrderController::class, 'index'])->middleware(['auth', 'verified'])->name('orders.index');
+    Route::get('/orders/index', [OrderController::class, 'index'])->middleware(['auth', 'verified'])->name('orders.index');
     Route::get('/orders/{order}/confirm', [OrderController::class, 'confirm'])->middleware(['auth', 'verified'])->name('orders.confirm-order');
-    Route::get('/orders/{order}/payment-not-completed', [OrderController::class, 'payment_not_completed'])->middleware(['auth', 'verified'])->name('orders.payment-not-completed');
+    Route::get('/orders/confirm/multiples', [OrderController::class, 'confirm_multiples'])->middleware(['auth', 'verified'])->name('orders.confirm-orders');
+    Route::get('/orders/payments/payment-not-completed', [OrderController::class, 'payment_not_completed'])->middleware(['auth', 'verified'])->name('orders.payment-not-completed');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -58,15 +59,18 @@ Route::middleware(['auth' , 'verified'])->group(function () {
     Route::delete('/credits/{credit}/destroy', [CreditController::class, 'destroy'])->middleware(['auth', 'verified'])->name('credits.destroy');
 
     Route::post('/payments/{order}/checkout', [PaymentController::class, 'checkout'])->middleware(['auth', 'verified'])->name('payments.checkout');
-});
-
-Route::middleware(['auth', 'admin'])->group(function () {
+    Route::post('/payments/orders/checkout-multiple', [PaymentController::class, 'checkout_multiple'])->middleware(['auth', 'verified'])->name('payments.checkout-multiple');
+    
     Route::get('/', function () {
         if(auth()->user()->user_group_id == 3)
             return redirect(route('orders.index'));
         else
             return redirect(route('dashboard'));
     })->name('home');
+});
+
+
+Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/dashboard', [ProfileController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
     

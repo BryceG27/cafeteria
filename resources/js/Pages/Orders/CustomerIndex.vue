@@ -10,7 +10,7 @@ import Dialog from 'primevue/dialog';
 import Swal from 'sweetalert2';
 
 import moment from 'moment';
-import { ref, computed, onMounted } from "vue"
+import { ref, computed, onMounted, onUpdated } from "vue"
 import axios from "axios";
 
 import "https://js.stripe.com/v3";
@@ -18,22 +18,24 @@ import "https://js.stripe.com/v3";
 const props = defineProps({
     variables : Object,
     credits : Array,
-    order : Object,
+    orders_to_be_paid : Object,
     orders: Array,
     auth: Object,
 });
 
 
+const connectionSecure = window.location.protocol === 'https:';
 const selectedOrder = ref(null)
+const selectedOrders = ref([]);
 const showDialog = ref(false);
 const disablePayButton = ref(false);
 const credit_available = computed(() => {
     return props.credits.reduce((acc, credit) => acc + parseFloat(credit.amount_available) , 0).toFixed(2);
 });
 
-onMounted(() => {
-    if (props.order) {
-        selectedOrder.value = props.order;
+onUpdated(() => {
+    if (props.orders_to_be_paid) {
+        selectedOrders.value = props.orders_to_be_paid;
         showDialog.value = true;
     }
 });
@@ -58,7 +60,7 @@ const destroy = (id) => {
 }
 
 const payWithStripe = () => {
-    axios.post(route('payments.checkout', { order : selectedOrder.value.id, payment_method: 3 }))
+    axios.post(route('payments.checkout-multiple', { payment_method: 3 }), { orders : selectedOrders.value.map(o => o.id) })
         .then(response => {
             const stripe = Stripe(props.variables.stripe_key);
             stripe.redirectToCheckout({ sessionId: response.data.id });
@@ -69,10 +71,13 @@ const payWithStripe = () => {
 }
 
 const payWithCreditAvailable = () => {
-    const form = useForm({});
+    const form = useForm({
+        orders : selectedOrders.value.map(o => o.id)
+    });
+
     disablePayButton.value = true;
 
-    form.post(route('payments.checkout', { order : selectedOrder.value.id, payment_method : 1 }), {
+    form.post(route('payments.checkout-multiple', { payment_method : 1 }), {
         onSuccess: () => {
             showDialog.value = false;
             disablePayButton.value = false;
@@ -92,6 +97,20 @@ const payWithPayPal = () => {
         }
     });
 }
+
+const checkSelectedOrders = () => {
+    selectedOrders.value = selectedOrders.value.filter(order => order.status == 0)
+}
+
+const get_checkout_title = computed(() => {
+    if(selectedOrders.value.length == 1) {
+        return `Pagamento menù: ${selectedOrders.value[0]?.menu?.name} - ${moment(selectedOrders.value[0]?.date).format('DD/MM')}`;
+    } else if (selectedOrders.value.length > 1) {
+        return `Pagamento di ${selectedOrders.value.length} ordini`;
+    } else {
+        return 'Nessun ordine selezionato';
+    }
+})
 </script>
 
 <template>
@@ -102,10 +121,18 @@ const payWithPayPal = () => {
             <SuccessMessage />
             <ErrorMessage v-if="!showDialog" />
 
+            <div class="alert alert-danger" v-if="!connectionSecure">
+                <i class="fa fa-exclamation-triangle fa-2x"></i>
+                <span class="ms-2">
+                    Attenzione: il pagamento con metodo elettronico funziona solo quando il sito è in modalità sicura!<br>
+                    Clicca <Link href="https://www.mensaranchibile.it" class="link-primary">qui</Link> per andare sul sito in versione sicura (HTTPS).
+                </span>
+            </div>
+
             <Dialog
                 v-model:visible="showDialog"
                 modal
-                :header="`Pagamento menù: ${selectedOrder?.menu?.name} - ${moment(selectedOrder?.date).format('DD/MM')}`"
+                :header="get_checkout_title"
                 :style="{ width: '50vw', minHeight: '46vh', maxHeight: '52vh' }"
             >
                 <div class="container">
@@ -118,19 +145,33 @@ const payWithPayPal = () => {
                                 <tbody>
                                     <tr>
                                         <th style="width: 40%">Menù</th>
-                                        <td style="width: 60%" v-text="selectedOrder?.menu?.name" />
+                                        <td style="width: 60%" v-text="selectedOrders[0]?.menu?.name" v-if="selectedOrders.length <= 1" />
+                                        <td style="width: 60%" v-else>
+                                            <ul class="list-group">
+                                                <li class="list-group-item" v-for="order in selectedOrders" :key="order.id">
+                                                    <p class="p-0 m-0 d-flex justify-content-between align-items-center">
+                                                        <span>
+                                                            - {{ order.menu.name }} | {{ moment(order.order_date).format('DD/MM') }}
+                                                        </span>
+                                                        <button class="btn-link link-danger me-3" @click="selectedOrders = selectedOrders.filter(o => o.id !== order.id)">
+                                                            <i class="fa fa-x"></i>
+                                                        </button>
+                                                    </p>
+                                                </li>
+                                            </ul>
+                                        </td>
                                     </tr>
-                                    <tr>
+                                    <tr v-if="selectedOrders.length == 1">
                                         <th style="width: 40%">Data</th>
                                         <td style="width: 60%" v-text="moment(selectedOrder?.order_date).format('DD/MM/YYYY')" />
                                     </tr>
                                     <tr>
                                         <th style="width: 40%">Totale</th>
-                                        <td style="width: 60%" v-text="parseFloat(selectedOrder?.total_amount).toFixed(2) + ' €'" />
+                                        <td style="width: 60%" v-text="parseFloat(selectedOrders.reduce((acc, order) => acc + parseFloat(order.total_amount), 0)).toFixed(2) + ' €'" />
                                     </tr>
                                     <tr>
                                         <th style="width: 40%">Da pagare</th>
-                                        <td style="width: 60%" v-text="parseFloat(selectedOrder?.to_be_paid).toFixed(2) + ' €'" />
+                                        <td style="width: 60%" v-text="parseFloat(selectedOrders.reduce((acc, order) => acc + parseFloat(order.to_be_paid), 0)).toFixed(2) + ' €'" />
                                     </tr>
                                     <tr v-if="credit_available > 0">
                                         <th style="width: 40%">Credito disponibile</th>
@@ -176,6 +217,9 @@ const payWithPayPal = () => {
                     striped-rows
                     :value="orders"
                     table-style="min-width: 50rem"
+                    v-model:selection="selectedOrders"
+                    selectionMode="multiple"
+                    @update:selection="checkSelectedOrders"
                 >
                     <template #empty>
                         <div class="p-4 text-center">
@@ -192,6 +236,14 @@ const payWithPayPal = () => {
                                 </div>
                             </div>
                             <div class="col-md-4 text-end d-none d-md-block">
+                                <button 
+                                    class="btn btn-alt-success btn-sm me-2" 
+                                    :disabled="selectedOrders.length == 0"
+                                    @click="showDialog = true"
+                                >
+                                    <i class="fa fa-euro-sign me-1"></i>
+                                    Paga ordini
+                                </button>
                                 <Link :href="route('orders.create')" class="btn btn-alt-primary btn-sm">
                                     <i class="fa fa-plus me-1"></i> Nuovo ordine
                                 </Link>

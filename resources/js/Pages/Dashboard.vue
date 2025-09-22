@@ -184,7 +184,7 @@ const filters = ref({
     child_name : { value : null, matchMode : FilterMatchMode.CONTAINS },
     'menu.name' : { value : null, matchMode : FilterMatchMode.CONTAINS },
     order_date : { value : null, matchMode: FilterMatchMode.DATE_IS},
-    'status_info.id' : { value : null, matchMode : FilterMatchMode.EQUALS}
+    'status_info.value' : { value : null, matchMode : FilterMatchMode.EQUALS}
 })
 
 const order_date_filter = ref(null)
@@ -965,7 +965,7 @@ const filter_products_by_date = () => {
                                 </InputGroup>
                             </template>
                         </Column>
-                        <Column style="width: 20%" header="Stato" field="status_info.id" :showFilterMenu="false">
+                        <Column style="width: 20%" header="Stato" field="status_info.value" :showFilterMenu="false">
                             <template #body="{ data }">
                                 <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
                             </template>
@@ -975,6 +975,14 @@ const filter_products_by_date = () => {
                                         class="w-100"
                                         inputClass="w-100"
                                         placeholder="Cerca per stato"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        v-model="filterModel.value"
+                                        @change="filterCallback"
+                                        :options="[
+                                            { label: 'Pagato', value: 1 },
+                                            { label: 'Completato', value: 3 }
+                                        ]"
                                     />
                                     <InputGroupAddon>
                                         <button class="btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">

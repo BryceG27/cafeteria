@@ -140,21 +140,20 @@ class ProductController extends Controller
             if($order->first_dish) {
                 $dish = $order->first_dish->load('type');
                 $dish->detail = $order->load('customer')->only(['notes', 'customer', 'order_date']);
-                $products[] = $dish;
+                $products[] = clone $dish;
             }
 
             if($order->second_dish) {
                 $dish = $order->second_dish->load('type');
                 $dish->detail = $order->load('customer')->only(['notes', 'customer', 'order_date']);
-                $products[] = $dish;
+                $products[] = clone $dish;
             }
 
             if($order->side_dish) {
                 $dish = $order->side_dish->load('type');
                 $dish->detail = $order->load('customer')->only(['notes', 'customer', 'order_date']);
-                $products[] = $dish;
+                $products[] = clone $dish;
             }
-
         });
 
 
