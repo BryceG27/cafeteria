@@ -7,9 +7,9 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dropdown from 'primevue/dropdown';
 import InputText from 'primevue/inputtext';
-import Calendar from "primevue/calendar";
+import DatePicker from 'primevue/datepicker';
 
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref } from 'vue';
 
 import moment from 'moment';
 
@@ -19,10 +19,14 @@ const props = defineProps({
     order_statuses: Array,
 });
 
+const ordersFilters = ref({
+
+});
 
 const filters = reactive({
     child_name : null,
-    status : 1
+    status : 1,
+    order_date : null,
 });
 
 const filteredOrders = computed(() => {
@@ -34,7 +38,10 @@ const filteredOrders = computed(() => {
         const name = order.child_name.toLowerCase();
         const searchTerm = filters.child_name.toLowerCase();
         return name.includes(searchTerm) || (order.customer && (order.customer.name.toLowerCase().includes(searchTerm) || order.customer.surname.toLowerCase().includes(searchTerm)));
-    })
+    }).filter(order => {
+        if (filters.order_date == undefined || filters.order_date == null) return true;
+        return moment(order.order_date).isSame(moment(filters.order_date), 'day');
+    });
 })
 
 const updateOrderStatus = (event) => {
@@ -65,35 +72,9 @@ const updateOrderStatus = (event) => {
                     editMode="cell" 
                     @cell-edit-complete="updateOrderStatus"
                     tableStyle="min-width: 60rem"
+                    v-model:filters="ordersFilters"
+                    filterDisplay="row"
                 >
-                    <template #header>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <label class="form-label">Filtra per cliente:</label>
-                                <InputText 
-                                    v-model="filters.child_name" 
-                                    placeholder="Cerca per nome o cognome" 
-                                    class="ms-2"
-                                    style="width: 250px"
-                                />
-                            </div>
-                            <div>
-                                <label class="form-label">
-                                    Filtra per stato: 
-                                </label>
-                                <Dropdown 
-                                    class="ms-2" 
-                                    :options="order_statuses" 
-                                    v-model="filters.status"
-                                    optionLabel="label" 
-                                    optionValue="value" 
-                                    placeholder="Seleziona stato" 
-                                    showClear
-                                    style="width: 250px"
-                                />
-                            </div>
-                        </div>
-                    </template>
                     <template #empty>
                         <div class="p-4 text-center">
                             <i class="fa fa-exclamation-triangle fa-2x"></i>
@@ -101,7 +82,7 @@ const updateOrderStatus = (event) => {
                         </div>
                     </template>
 
-                    <Column class="text-center" v-if="auth.user.user_group_id == 1">
+                    <Column style="width: 5%" class="text-center" v-if="auth.user.user_group_id == 1">
                         <template #body="{ data }">
                             <Link
                                 :href="route('orders.edit', data.id)"
@@ -111,7 +92,7 @@ const updateOrderStatus = (event) => {
                             </Link>
                         </template>
                     </Column>
-                    <Column header="Cliente" field="child_name" :showFilterMenu="false">
+                    <Column style="width: 15%" header="Cliente" field="child_name" :showFilterMenu="false">
                         <template #body="{ data }">
                             <div class="d-flex align-items-center">
                                 {{ data.child_name }}
@@ -125,22 +106,16 @@ const updateOrderStatus = (event) => {
                                 </ul>
                             </div>
                         </template>
-                        <template #filterclear="{ filterModel, filterCallback }">
-                            <button class="btn btn-sm btn-secondary" @click="filterModel.value = null; filterCallback();">
-                                <i class="fa fa-times"></i>
-                            </button>
-                        </template>
-                        <template #filter="{ filterModel, filterCallback }">
+                        <template #filter>
                             <InputText 
-                                v-model="filterModel.value" 
-                                @input="filterCallback()" 
-                                placeholder="Cerca per nome" 
-                                class="w-100"
+                                v-model="filters.child_name" 
+                                placeholder="Cerca per nome o cognome" 
+                                class="ms-2 w-100"
                             />
                         </template>
                     </Column>
-                    <Column header="Nome menù" field="menu.name" />
-                    <Column header="Prodotti">
+                    <Column style="width: 15%" header="Nome menù" field="menu.name" />
+                    <Column style="width: 30%" header="Prodotti">
                         <template #body="{ data }">
                             <div class="row">
                                 <div 
@@ -233,53 +208,32 @@ const updateOrderStatus = (event) => {
 
                         </template>
                     </Column>
-                    <Column header="Totale">
+                    <Column style="width: 10%" header="Totale">
                         <template #body="{ data }">
                             € {{ data.total_amount }}
                         </template>
                     </Column>
-                    <Column header="Creato il" field="created_at" :showFilterMenu="false">
+                    <Column style="width: 10%" header="Creato il" field="created_at" :showFilterMenu="false">
                         <template #body="{ data }">
                             {{ moment(data.created_at).format('DD/MM/YYYY') }}
                         </template>
-                        <template #filterclear="{ filterModel, filterCallback }">
-                            <button class="btn btn-sm btn-secondary" @click="filterModel.value = null; filterCallback();">
-                                <i class="fa fa-times"></i>
-                            </button>
-
-                        </template>
-                        <template #filter="{ filterModel, filterCallback }">
-                            <Calendar
-                                v-model="filterModel.value" 
-                                @blur="filterCallback()" 
-                                placeholder="Cerca per data" 
-                                class="w-100"
-                                inputClass="w-100"
-                                dateFormat="dd/mm/yy"
-                            />
-                        </template>
                     </Column>
-                    <Column header="Per giorno" field="order_date" :showFilterMenu="false">
+                    <Column style="width: 10%" header="Per giorno" field="order_date" :showFilterMenu="false">
                         <template #body="{ data }">
                             {{ moment(data.order_date).format('DD/MM/YYYY') }}
                         </template>
-                        <template #filterclear="{ filterModel, filterCallback }">
-                            <button class="btn btn-sm btn-secondary" @click="filterModel.value = null; filterCallback();">
-                                <i class="fa fa-times"></i>
-                            </button>
-                        </template>
-                        <template #filter="{ filterModel, filterCallback }">
-                            <Calendar
-                                v-model="filterModel.value" 
-                                @blur="filterCallback()" 
-                                placeholder="Cerca per data" 
-                                class="w-100"
+                        <template #filter>
+                            <DatePicker 
                                 inputClass="w-100"
-                                dateFormat="dd/mm/yy"
+                                class="w-100"
+                                placeholder="Cerca per data"
+                                date-format="dd/mm/yy"
+                                v-model="filters.order_date"
+                                showButtonBar
                             />
                         </template>
                     </Column>
-                    <Column header="Stato" field="status_info.value" :showFilterMenu="false">
+                    <Column style="width: 5%" header="Stato" field="status_info.value" :showFilterMenu="false">
                         <template #body="{ data }">
                             <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
                         </template>
@@ -293,21 +247,15 @@ const updateOrderStatus = (event) => {
                                 placeholder="Seleziona stato"
                             />
                         </template>
-                        <template #filterclear="{ filterModel, filterCallback }">
-                            <button class="btn btn-sm btn-secondary" @click="filterModel.value = null; filterCallback();">
-                                <i class="fa fa-times"></i>
-                            </button>
-                        </template>
-                        <template #filter="{ filterModel, filterCallback }">
+                        <template #filter>
                             <Dropdown 
-                                class="ms-2" 
+                                class="ms-2 w-100" 
                                 :options="order_statuses" 
-                                v-model="selectedStatus"
+                                v-model="filters.status"
                                 optionLabel="label" 
                                 optionValue="value" 
                                 placeholder="Seleziona stato" 
                                 showClear
-                                style="width: 200px"
                             />
                         </template>
                     </Column>

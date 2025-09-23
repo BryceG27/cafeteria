@@ -17,8 +17,9 @@ import BaseBackground from "@/Components/BaseBackground.vue";
 import BasePageHeading from "@/Components/BasePageHeading.vue";
 
 import SuccessMessage from "@/Components/SuccessMessage.vue";
-import ErrorMessage from "@/Components/ErrorMessage.vue";;
+import ErrorMessage from "@/Components/ErrorMessage.vue";
 
+import ToastService from 'primevue/toastservice';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -99,6 +100,7 @@ createInertiaApp({
                 }
             })
             .directive('tooltip', Tooltip)
+            .use(ToastService)
             .component("BaseBlock", BaseBlock)
             .component("BaseBackground", BaseBackground)
             .component("BasePageHeading", BasePageHeading)

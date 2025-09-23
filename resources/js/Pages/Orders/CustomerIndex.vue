@@ -6,14 +6,18 @@ import BaseBlock from "@/Components/BaseBlock.vue";
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
+import { useToast } from 'primevue/usetoast';
+import Toast from 'primevue/toast';
 
 import Swal from 'sweetalert2';
 
 import moment from 'moment';
-import { ref, computed, onMounted, onUpdated } from "vue"
+import { ref, computed, onUpdated } from "vue"
 import axios from "axios";
 
 import "https://js.stripe.com/v3";
+
+const toast = useToast();
 
 const props = defineProps({
     variables : Object,
@@ -23,9 +27,7 @@ const props = defineProps({
     auth: Object,
 });
 
-
 const connectionSecure = window.location.protocol === 'https:';
-const selectedOrder = ref(null)
 const selectedOrders = ref([]);
 const showDialog = ref(false);
 const disablePayButton = ref(false);
@@ -82,34 +84,27 @@ const payWithCreditAvailable = () => {
             showDialog.value = false;
             disablePayButton.value = false;
         },
-        onError: () => {
-            if(props.order)
-                selectedOrder.value = props.order;
-            disablePayButton.value = false;
-        }
-    });
-}
-
-const payWithPayPal = () => {
-    form.post(route('payments.checkout', { order : selectedOrder.value.id, payment_method : 2 }), {
-        onSuccess: () => {
-            showDialog.value = false;
-        }
     });
 }
 
 const checkSelectedOrders = () => {
-    selectedOrders.value = selectedOrders.value.filter(order => order.status == 0)
+    selectedOrders.value = selectedOrders.value.filter(order => order.status == 0).filter(order => moment(order.order_date).isSameOrAfter(moment(), 'day'));
+
+    if(moment().format('HH:mm') >= '10:00') {
+        const originalLength = selectedOrders.value.length;
+        selectedOrders.value = selectedOrders.value.filter(order => moment(order.order_date).isAfter(moment(), 'day'));
+        if(originalLength != selectedOrders.value.length)
+            toast.add({severity:'warn', summary: 'Attenzione', detail:'Data e ora utili per il pagamento superati.', life: 7000});
+    }
 }
 
 const get_checkout_title = computed(() => {
-    if(selectedOrders.value.length == 1) {
+    if(selectedOrders.value.length == 1)
         return `Pagamento menù: ${selectedOrders.value[0]?.menu?.name} - ${moment(selectedOrders.value[0]?.date).format('DD/MM')}`;
-    } else if (selectedOrders.value.length > 1) {
+    else if (selectedOrders.value.length > 1)
         return `Pagamento di ${selectedOrders.value.length} ordini`;
-    } else {
+    else
         return 'Nessun ordine selezionato';
-    }
 })
 </script>
 
@@ -121,11 +116,13 @@ const get_checkout_title = computed(() => {
             <SuccessMessage />
             <ErrorMessage v-if="!showDialog" />
 
+            <Toast />
+
             <div class="alert alert-danger" v-if="!connectionSecure">
                 <i class="fa fa-exclamation-triangle fa-2x"></i>
                 <span class="ms-2">
                     Attenzione: il pagamento con metodo elettronico funziona solo quando il sito è in modalità sicura!<br>
-                    Clicca <Link href="https://www.mensaranchibile.it" class="link-primary">qui</Link> per andare sul sito in versione sicura (HTTPS).
+                    Clicca <a href="https://www.mensaranchibile.it" class="link-primary">qui</a> per andare sul sito in versione sicura (HTTPS).
                 </span>
             </div>
 
@@ -142,6 +139,7 @@ const get_checkout_title = computed(() => {
                     <div class="row">
                         <div class="col-md-12">
                             <table class="table">
+                                {{ selectedOrders }}
                                 <tbody>
                                     <tr>
                                         <th style="width: 40%">Menù</th>
@@ -163,7 +161,7 @@ const get_checkout_title = computed(() => {
                                     </tr>
                                     <tr v-if="selectedOrders.length == 1">
                                         <th style="width: 40%">Data</th>
-                                        <td style="width: 60%" v-text="moment(selectedOrder?.order_date).format('DD/MM/YYYY')" />
+                                        <td style="width: 60%" v-text="moment(selectedOrders[0]?.order_date).format('DD/MM/YYYY')" />
                                     </tr>
                                     <tr>
                                         <th style="width: 40%">Totale</th>
@@ -276,11 +274,14 @@ const get_checkout_title = computed(() => {
                                         Modifica
                                     </Link>
                                 </li>
-                                <li v-if="data.status == 0">
+                                <li class="d-xl-none">
+                                    <hr class="dropdown-divider"></hr>
+                                </li>
+                                <!-- <li v-if="data.status == 0">
                                     <div
                                         class="dropdown-item d-flex gap-2 align-items-center clickable" 
                                         style="font-size: 13px"
-                                        @click="selectedOrder = data, showDialog = true"
+                                        @click="payOrder(data)"
                                     >
                                         <button class="btn btn-alt-success btn-sm" type="button">
                                             <i class="fa fa-dollar-sign"></i>
@@ -288,9 +289,7 @@ const get_checkout_title = computed(() => {
                                         Effettua pagamento
                                     </div>
                                 </li>
-                                <li v-if="data.status == 0">
-                                    <hr class="dropdown-divider"></hr>
-                                </li>
+                                -->
                                 <li v-if="data.status != 3 && (moment(data.created_at).format('YYYY-MM-DD') <= moment().format('YYYY-MM-DD'))">
                                     <div
                                         @click="destroy(data.id)"
