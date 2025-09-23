@@ -26,7 +26,7 @@ class PaymentController extends Controller
     public function index()
     {
         return Inertia::render('Payments/Index', [
-            'payments' => Payment::where('user_id', auth()->id())->with('order', 'method')->get()->map(function($payment) {
+            'payments' => Payment::where('user_id', auth()->id())->with(['orders', 'method'])->get()->map(function($payment) {
                 $payment->status_info = $payment->get_status();
                 return $payment;
             }),
@@ -171,6 +171,7 @@ class PaymentController extends Controller
                     // Update the order status to Paid
                     $order->to_be_paid = 0;
                     $order->status = 1;
+                    $order->payment_method = 1;
                     $order->save();
 
                     continue 2;

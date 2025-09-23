@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Inertia\Inertia;
 use App\Models\Order;
-use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
@@ -35,7 +34,7 @@ class CustomerController extends Controller
             return $order;
         });
 
-        $customer->payments = $customer->payments()->with('method', 'order')->orderBy('created_at', 'desc')->get()->map(function($payment) {
+        $customer->payments = $customer->payments()->with(['method', 'orders'])->orderBy('created_at', 'desc')->get()->map(function($payment) {
             $payment->status_info = $payment->get_status();
             return $payment;
         });

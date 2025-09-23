@@ -44,8 +44,6 @@ onUpdated(() => {
 });
 
 onMounted(() => {
-    console.table(props)
-
     if(props.orders_to_be_paid.length) {
         selectedOrders.value = props.orders_to_be_paid;
         showDialog.value = true;
@@ -53,7 +51,6 @@ onMounted(() => {
         selectedOrders.value = props.orders
         checkSelectedOrders();
     }
-
 })
 
 const destroy = (id) => {
@@ -173,7 +170,7 @@ const total_to_be_paid = computed(() => {
                 v-model:visible="showDialog"
                 modal
                 :header="get_checkout_title"
-                :style="{ width: '50vw', minHeight: '46vh', maxHeight: '52vh' }"
+                :style="{ width: '50rem', minHeight: '46vh', maxHeight: '52vh' }"
             >
                 <div class="container">
                     <div class="row py-1" v-if="Object.keys($page.props.errors).length">
@@ -254,10 +251,17 @@ const total_to_be_paid = computed(() => {
                 <Link 
                     :href="route('orders.create')" 
                     class="btn btn-alt-primary w-100 py-2 mb-3"
-                >
+                    >
                     <i class="fa fa-plus me-1"></i>
                     Nuovo ordine
                 </Link>
+                <button 
+                    class="btn btn-alt-success btn-sm w-100 py-2 mb-3" 
+                    @click.prevent="payOrders"
+                >
+                    <i class="fa fa-euro-sign me-1"></i>
+                    Paga ordini
+                </button>
             </div>
 
             <BaseBlock contentClass="pb-3">

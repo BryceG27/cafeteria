@@ -264,6 +264,7 @@ class OrderController extends Controller
             $order->update([
                 'status' => 1,
                 'to_be_paid' => 0,
+                'payment_method' => $request->payment_method
             ]);
 
             $order->payments()->attach($payment->id, ['amount' => $order->total_amount - $order->to_be_paid]);
