@@ -120,9 +120,11 @@ class Order extends Model
                     ->withTimestamps();
     }
 
-    public function payments() : HasMany
+    public function payments() : BelongsToMany
     {
-        return $this->hasMany(Payment::class);
+        return $this->belongsToMany(Payment::class, 'order_payment')
+                    ->withPivot('amount')
+                    ->withTimestamps();
     }
 
     public function menu() : BelongsTo

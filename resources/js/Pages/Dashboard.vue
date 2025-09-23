@@ -980,6 +980,7 @@ const filter_products_by_date = () => {
                                         v-model="filterModel.value"
                                         @change="filterCallback"
                                         :options="[
+                                            { label: 'In attesa', value: 0 },
                                             { label: 'Pagato', value: 1 },
                                             { label: 'Completato', value: 3 }
                                         ]"

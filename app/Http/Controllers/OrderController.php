@@ -22,7 +22,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         if(Auth::user()->user_group_id == 3) {
-            $orders_to_be_paid = null;
+            $orders_to_be_paid = [];
             if($request->has('orders'))
                 $orders_to_be_paid = Order::whereIn('id', $request->orders)->where('to_be_paid', '>', 0)->with('menu')->get();
 
@@ -93,8 +93,9 @@ class OrderController extends Controller
         $validated['order_date'] = \Carbon\Carbon::create($request->order_date)->setTimezone('Europe/Rome')->format('Y-m-d');
 
         $order = Order::create($validated);
+        $ids = [ $order->id ];
 
-        return redirect()->route('orders.index', compact('order'))->with('success', 'Ordine creato con successo.');
+        return redirect()->route('orders.index', ['orders' => $ids])->with('success', 'Ordine creato con successo.');
     }
 
     /**
@@ -155,12 +156,14 @@ class OrderController extends Controller
 
         if($order->payments->count() > 0) {
             if(Carbon::now()->format('Y-m-d H:i') < Carbon::create($order->order_date . '10:00:00')->format('Y-m-d H:i')) {
-                Credit::create([
-                    'user_id' => $order->customer_id,
-                    'total' => $order->total_amount,
-                    'amount_available' => $order->total_amount,
-                    'description' => 'Creato generato per ordine #' . $order->id,
-                ]);
+                foreach ($order->payments as $payment) {
+                    Credit::create([
+                        'user_id' => $order->customer_id,
+                        'total' => $payment->pivot->amount,
+                        'amount_available' => $payment->pivot->amount,
+                        'description' => 'Credito generato per pagamento #' . $payment->id . ' relativo all\'ordine #' . $order->id,
+                    ]);
+                }
 
                 $message .= ' Credito generato per l\'importo di ' . number_format($order->total_amount, 2) . '€.';
             } else {
@@ -246,7 +249,7 @@ class OrderController extends Controller
 
         $payment_method = PaymentMethod::find($request->payment_method);
 
-        Payment::create([
+        $payment = Payment::create([
             'user_id' => $orders[0]->customer_id,
             'amount' => $orders->sum('total_amount'),
             'payment_date' => \Carbon\Carbon::now()->setTimezone('Europe/Rome')->format('Y-m-d'),
@@ -262,13 +265,15 @@ class OrderController extends Controller
                 'status' => 1,
                 'to_be_paid' => 0,
             ]);
+
+            $order->payments()->attach($payment->id, ['amount' => $order->total_amount - $order->to_be_paid]);
         }
 
         return redirect()->route('orders.index')->with('message', 'Pagamenti registrati con successo. Grazie!');
     }
 
     public function payment_not_completed() {
-        return redirect()->route('orders.index')->withErrors('Il pagamento non è stato completato. Ordine/i non confermato.');
+        return redirect()->route('orders.index')->withErrors('Il pagamento non è stato completato. Ordine non confermato.');
     }
 
     public function set_paypal_payment(Request $request) {

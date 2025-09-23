@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Payment extends Model
 {
@@ -38,15 +40,15 @@ class Payment extends Model
         'credit_id',
     ];
 
-    public function method() {
+    public function method() : BelongsTo {
         return $this->belongsTo(PaymentMethod::class, 'payment_method_id');
     }
 
-    public function order() {
-        return $this->belongsTo(Order::class, 'order_id');
+    public function orders() : BelongsToMany {
+        return $this->belongsToMany(Order::class, 'order_id');
     }
 
-    public function customer() {
+    public function customer() : BelongsTo {
         return $this->belongsTo(User::class, 'user_id');
     }
 

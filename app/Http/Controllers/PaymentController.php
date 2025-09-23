@@ -185,38 +185,9 @@ class PaymentController extends Controller
             }
         }
 
-        /* $to_be_paid = $order->to_be_paid;
-        $total = 0;
-
-        foreach ($credit_available as $credit) {
-            if($credit->amount_available >= $order->to_be_paid) {
-                // The available credit is enough to cover the order total
-                $to_be_paid = 0;
-
-                // Deduct the used amount from the credit
-                $credit->amount_available -= $order->to_be_paid;
-                $credit->save();
-
-                // Update the order status to Paid
-                $order->to_be_paid = 0;
-                $order->status = 1;
-                $order->save();
-
-                break;
-            } else {
-                // Deduct the used amount from the credit (which will be zero now)
-                $order->to_be_paid = $order->to_be_paid - $credit->amount_available;
-                $to_be_paid = $order->to_be_paid;
-                $credit->amount_available = 0;
-                $credit->save();
-                $order->save();
-            }
-        }
-        */
-
         $notes = $to_be_paid > 0 ? "Pagamento parziale effettuato con credito residuo." : "Pagamento effettuato con credito residuo.";
 
-        Payment::create([
+        $payment = Payment::create([
             'user_id' => auth()->id(),
             'amount' => $total,
             'payment_date' => Carbon::now()->format('Y-m-d'),
@@ -224,6 +195,10 @@ class PaymentController extends Controller
             'status' => 1,
             'payment_method_id' => 1,
         ]);
+
+        $orders->each(function($order) use ($payment) {
+            $order->payments()->attach($payment->id, ['amount' => $order->total_amount - $order->to_be_paid]);
+        });
 
         $ids = [];
 

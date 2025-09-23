@@ -21,12 +21,6 @@ Route::get('/update', function() {
     return 'Updated';
 });
 
-Route::get('/migrate-fresh', function() {
-    Artisan::call('migrate:fresh', ['--seed' => true]);
-
-    return 'Migrated Fresh with Seed';
-});
-
 Route::get('/seed', function() {
     Artisan::call('db:seed');
 

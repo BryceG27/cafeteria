@@ -12,7 +12,7 @@ import Toast from 'primevue/toast';
 import Swal from 'sweetalert2';
 
 import moment from 'moment';
-import { ref, computed, onUpdated } from "vue"
+import { ref, computed, onUpdated, onMounted } from "vue"
 import axios from "axios";
 
 import "https://js.stripe.com/v3";
@@ -28,6 +28,7 @@ const props = defineProps({
 });
 
 const connectionSecure = window.location.protocol === 'https:';
+const selectedOrder = ref(null);
 const selectedOrders = ref([]);
 const showDialog = ref(false);
 const disablePayButton = ref(false);
@@ -36,12 +37,24 @@ const credit_available = computed(() => {
 });
 
 onUpdated(() => {
-    if (props.orders_to_be_paid) {
+    if(props.orders_to_be_paid.length) {
         selectedOrders.value = props.orders_to_be_paid;
         showDialog.value = true;
     }
 });
 
+onMounted(() => {
+    console.table(props)
+
+    if(props.orders_to_be_paid.length) {
+        selectedOrders.value = props.orders_to_be_paid;
+        showDialog.value = true;
+    } else {
+        selectedOrders.value = props.orders
+        checkSelectedOrders();
+    }
+
+})
 
 const destroy = (id) => {
     const form = useForm({});
@@ -92,9 +105,12 @@ const checkSelectedOrders = () => {
 
     if(moment().format('HH:mm') >= '10:00') {
         const originalLength = selectedOrders.value.length;
-        selectedOrders.value = selectedOrders.value.filter(order => moment(order.order_date).isAfter(moment(), 'day'));
+        selectedOrders.value = selectedOrders.value.filter(order => {
+            return moment(order.order_date).isAfter(moment(), 'day')
+        });
+
         if(originalLength != selectedOrders.value.length)
-            toast.add({severity:'warn', summary: 'Attenzione', detail:'Data e ora utili per il pagamento superati.', life: 7000});
+            toast.add({severity:'error', summary: 'Attenzione', detail:'Data e ora utili per il pagamento superati.', life: 7000});
     }
 }
 
@@ -105,6 +121,33 @@ const get_checkout_title = computed(() => {
         return `Pagamento di ${selectedOrders.value.length} ordini`;
     else
         return 'Nessun ordine selezionato';
+})
+
+const payOrder = (order) => {
+    selectedOrder.value = order
+    selectedOrders.value = [ selectedOrder.value ];
+    showDialog.value = true;
+}
+
+const payOrders = () => {
+    if(selectedOrders.value.length == 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Errore',
+            text: 'Seleziona almeno un ordine da pagare',
+        });
+        return;
+    }
+
+    showDialog.value = true;
+}
+
+const total_orders = computed(() => {
+    return parseFloat(selectedOrders.value.reduce((acc, order) => acc + parseFloat(order.total_amount), 0)).toFixed(2)
+})
+
+const total_to_be_paid = computed(() => {
+    return parseFloat(selectedOrders.value.reduce((acc, order) => acc + parseFloat(order.to_be_paid), 0)).toFixed(2)
 })
 </script>
 
@@ -139,24 +182,31 @@ const get_checkout_title = computed(() => {
                     <div class="row">
                         <div class="col-md-12">
                             <table class="table">
-                                {{ selectedOrders }}
                                 <tbody>
                                     <tr>
                                         <th style="width: 40%">Menù</th>
                                         <td style="width: 60%" v-text="selectedOrders[0]?.menu?.name" v-if="selectedOrders.length <= 1" />
                                         <td style="width: 60%" v-else>
-                                            <ul class="list-group">
-                                                <li class="list-group-item" v-for="order in selectedOrders" :key="order.id">
-                                                    <p class="p-0 m-0 d-flex justify-content-between align-items-center">
-                                                        <span>
-                                                            - {{ order.menu.name }} | {{ moment(order.order_date).format('DD/MM') }}
-                                                        </span>
-                                                        <button class="btn-link link-danger me-3" @click="selectedOrders = selectedOrders.filter(o => o.id !== order.id)">
-                                                            <i class="fa fa-x"></i>
-                                                        </button>
-                                                    </p>
-                                                </li>
-                                            </ul>
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="text-center" style="width: 10%"></th>
+                                                        <th style="width: 60%">Nome</th>
+                                                        <th class="text-center" style="width: 30%">Giorno</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr v-for="order in selectedOrders" :key="order.id">
+                                                        <td class="text-center">
+                                                            <button class="btn-link link-danger me-3" @click="selectedOrders = selectedOrders.filter(o => o.id !== order.id)">
+                                                                <i class="fa fa-minus"></i>
+                                                            </button>
+                                                        </td>
+                                                        <td v-text="order.menu.name" />
+                                                        <td class="text-center" v-text="moment(order.order_date).format('DD/MM')" />
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </td>
                                     </tr>
                                     <tr v-if="selectedOrders.length == 1">
@@ -165,11 +215,11 @@ const get_checkout_title = computed(() => {
                                     </tr>
                                     <tr>
                                         <th style="width: 40%">Totale</th>
-                                        <td style="width: 60%" v-text="parseFloat(selectedOrders.reduce((acc, order) => acc + parseFloat(order.total_amount), 0)).toFixed(2) + ' €'" />
+                                        <td style="width: 60%" v-text="total_orders + ' €'" />
                                     </tr>
                                     <tr>
                                         <th style="width: 40%">Da pagare</th>
-                                        <td style="width: 60%" v-text="parseFloat(selectedOrders.reduce((acc, order) => acc + parseFloat(order.to_be_paid), 0)).toFixed(2) + ' €'" />
+                                        <td style="width: 60%" v-text="total_to_be_paid + ' €'" />
                                     </tr>
                                     <tr v-if="credit_available > 0">
                                         <th style="width: 40%">Credito disponibile</th>
@@ -184,13 +234,13 @@ const get_checkout_title = computed(() => {
                     <div class="container-fluid">
                         <div class="row g-2" :class="{'justify-content-center' : credit_available == 0}">
                             <div class="col-md-6" @click.prevent="payWithStripe">
-                                <button class="btn btn-card btn-lg w-100 gap-2">
+                                <button class="btn btn-card btn-lg w-100 gap-2" :disabled="total_orders == 0">
                                     <i class="fa fa-credit-card me-1"></i>
                                     Paga con metodo elettronico
                                 </button>
                             </div>
                             <div class="col-md-6" v-if="credit_available > 0" @click.prevent="payWithCreditAvailable" :disabled="disablePayButton">
-                                <button class="btn btn-cash btn-lg w-100">
+                                <button class="btn btn-cash btn-lg w-100" :disabled="total_to_be_paid == 0">
                                     <i class="fa fa-euro-sign me-1"></i>
                                     Paga con credito residuo
                                 </button>
@@ -218,6 +268,7 @@ const get_checkout_title = computed(() => {
                     v-model:selection="selectedOrders"
                     selectionMode="multiple"
                     @update:selection="checkSelectedOrders"
+                    dataKey="id"
                 >
                     <template #empty>
                         <div class="p-4 text-center">
@@ -236,8 +287,7 @@ const get_checkout_title = computed(() => {
                             <div class="col-md-4 text-end d-none d-md-block">
                                 <button 
                                     class="btn btn-alt-success btn-sm me-2" 
-                                    :disabled="selectedOrders.length == 0"
-                                    @click="showDialog = true"
+                                    @click.prevent="payOrders"
                                 >
                                     <i class="fa fa-euro-sign me-1"></i>
                                     Paga ordini
@@ -288,8 +338,8 @@ const get_checkout_title = computed(() => {
                                         </button>
                                         Effettua pagamento
                                     </div>
-                                </li>
-                                -->
+                                </li> -->
+                               
                                 <li v-if="data.status != 3 && (moment(data.created_at).format('YYYY-MM-DD') <= moment().format('YYYY-MM-DD'))">
                                     <div
                                         @click="destroy(data.id)"
@@ -397,37 +447,29 @@ const get_checkout_title = computed(() => {
     </AuthenticatedLayout>
 </template>
 <style scoped>
-    .clickable {
-        cursor: pointer;
-    }
+.p-datatable .p-datatable-tbody > tr.p-highlight {
+    background: #cff4fc !important;   /* bg-info-subtle di Bootstrap 5 */
+    color: #055160 !important;        /* text-info */
+    border-left: 4px solid #31d2f2 !important;
+}
 
-    .btn-paypal {
-        background-color: #ffc439;
-        color: #003087;
-    }
+.btn-card {
+    background-color: #6772e5;
+    color: #ffffff;
+}
 
-    .btn-paypal:hover {
-        background-color: #ffb700;
-        color: #002663;
-    }
+.btn-card:hover {
+    background-color: #5469d4;
+    color: #ffffff;
+}
 
-    .btn-card {
-        background-color: #6772e5;
-        color: #ffffff;
-    }
+.btn-cash {
+    background-color: #50b83c;
+    color: #ffffff;
+}
 
-    .btn-card:hover {
-        background-color: #5469d4;
-        color: #ffffff;
-    }
-
-    .btn-cash {
-        background-color: #50b83c;
-        color: #ffffff;
-    }
-
-    .btn-cash:hover {
-        background-color: #3d9b2c;
-        color: #ffffff;
-    }
+.btn-cash:hover {
+    background-color: #3d9b2c;
+    color: #ffffff;
+}
 </style>
