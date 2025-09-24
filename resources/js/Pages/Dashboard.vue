@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import { reactive, ref, computed } from "vue";
+import jsPDF from 'jspdf';
+import { reactive, ref, computed, onMounted } from "vue";
 import axios from 'axios';
 
 // vue-chartjs, for more info and examples you can check out https://vue-chartjs.org/ and http://www.chartjs.org/docs/ -->
@@ -40,7 +41,7 @@ const productFilters = reactive({
         { label : 'Mese', value : 2, placeholder : 'Seleziona un giorno del mese'},
     ],
     filterType : 0,
-    selectedDate : null
+    selectedDate : moment().format('YYYY-MM-DD')
 })
 
 const total_paid = computed(() => {
@@ -470,6 +471,53 @@ const filter_products_by_date = () => {
         productsFiltered.value = response.data
     });
 }
+
+const export_products_filtered = (data) => {
+    // If data is given, use it, otherwise productsFiltered
+    const products = data ? [data] : productsFiltered.value;
+    const doc = new jsPDF();
+
+    // Central title
+    const selectedDate = moment(productFilters.selectedDate).format('DD-MM-YYYY');
+
+    doc.setFontSize(18);
+    doc.text(`Ordini giorno ${selectedDate}`, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+
+    let y = 35;
+    products.forEach((product, idx) => {
+        doc.setFontSize(14);
+        doc.text(`${product.name} (${product.times_ordered})`, 20, y);
+        y += 8;
+        if(product.detail && product.detail.length > 0) {
+            product.detail.forEach((detail) => {
+                doc.setFontSize(11);
+                doc.text(`- ${detail.customer.child}`, 30, y);
+                y += 7;
+                if (y > doc.internal.pageSize.getHeight() - 20) {
+                    doc.addPage();
+                    y = 20;
+                }
+            });
+        } else {
+            doc.setFontSize(11);
+            doc.text('Nessun cliente', 30, y);
+            y += 7;
+        }
+        y += 5;
+        if (y > doc.internal.pageSize.getHeight() - 20) {
+            doc.addPage();
+            y = 20;
+        }
+    });
+
+    const title = data ? `Ordini Prodotto ${data.name} ${selectedDate}.pdf` : `Ordini Prodotti ${selectedDate}.pdf`;
+
+    doc.save(title);
+}
+
+onMounted (() => {
+    filter_products_by_date();
+})
 </script>
 
 <template>
@@ -1023,22 +1071,21 @@ const filter_products_by_date = () => {
                                 
                         </template>
                         <template #header>
-                            <div class="row align-items-center justify-content-end">
-                                <div class="col-md-5" v-show="false">
-                                    <div class="d-flex align-items-center">
-                                        <label for="product-name" class="form-label w-75">Filtra per nome prodotto:</label>
-                                        <InputText
-                                            class="w-100"
-                                            inputClass="w-100"
-                                            id="product-name"
-                                            v-model="productFilters.productName"
-                                            placeholder="Nome prodotto"
-                                        />
-                                    </div>
+                            <div class="row align-items-center">
+                                <div class="pb-3 col-12 col-md-2 px-0 order-3 order-md-1">
+                                    <button 
+                                        class="btn btn-sm btn-alt-danger w-100"
+                                        type="button"
+                                        @click="export_products_filtered(null)"
+                                    >
+                                        <i class="fa fa-file-pdf me-1"></i>
+                                        Esporta
+                                    </button>
                                 </div>
-                                <div class="col-md-7">
-                                    <div class="d-flex align-items-center">
-                                        <label for="filter-for" class="form-label w-25">Filtra per:</label>
+                                <div class="pb-3 col-12 col-md-4 offset-md-3 order-md-2 order-1">
+                                    <div class="d-md-flex align-items-center">
+                                        <label class="form-label w-100 d-md-none text-center" for="filter-for">Filtra per:</label>
+                                        <label class="form-label w-25 d-md-inline d-none" for="filter-for">Filtra per:</label>
                                         <Dropdown
                                             class="w-100"
                                             inputClass="w-100"
@@ -1047,9 +1094,13 @@ const filter_products_by_date = () => {
                                             optionValue="value"
                                             v-model="productFilters.filterType"
                                         />
+                                    </div>
+                                </div>
+                                <div class="pb-3 col-md-3 order-md-3 order-2">
+                                    <div class="d-flex align-items-center">
                                         <InputGroup>
                                             <DatePicker 
-                                                class="w-100 ms-2"
+                                                class="w-100"
                                                 inputClass="w-100"
                                                 date-format="dd/mm/yy"
                                                 v-model="productFilters.selectedDate"
@@ -1073,7 +1124,18 @@ const filter_products_by_date = () => {
                                 <p class="mt-2">Nessun prodotto trovato</p>
                             </div>
                         </template>
-                        <Column style="width: 10%" expander />
+                        <Column style="width: 5%" expander />
+                        <Column style="width: 5%">
+                            <template #body="{ data }">
+                                <button 
+                                    class="btn-link link-danger"
+                                    type="button"
+                                    @click="export_products_filtered(data)"
+                                >
+                                    <i class="fa fa-file-pdf"></i>
+                                </button>
+                            </template>
+                        </Column>
                         <Column style="width: 45%" header="Nome" field="name">
                             <template #body="{ data }">
                                 <Link
@@ -1084,8 +1146,8 @@ const filter_products_by_date = () => {
                                 />
                             </template>
                         </Column>
-                        <Column style="width: 25%" header="Tipologia" field="type" />
-                        <Column style="width: 20%" header="Quantità" field="times_ordered" />
+                        <Column style="width: 30%" header="Tipologia" field="type" />
+                        <Column style="width: 15%" header="Quantità" field="times_ordered" />
                     </DataTable>
                 </div>
             </BaseBlock>
