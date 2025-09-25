@@ -1,7 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import jsPDF from 'jspdf';
-import { reactive, ref, computed, onMounted } from "vue";
+import { reactive, ref, computed, onMounted, watch } from "vue";
 import axios from 'axios';
 
 // vue-chartjs, for more info and examples you can check out https://vue-chartjs.org/ and http://www.chartjs.org/docs/ -->
@@ -16,8 +16,6 @@ import InputGroup from 'primevue/inputgroup';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import DatePicker from 'primevue/datepicker';
 import Dropdown from 'primevue/dropdown';
-import FloatLabel from 'primevue/floatlabel'
-import InputNumber from 'primevue/inputnumber'
 
 import { FilterMatchMode } from '@primevue/core/api';
 
@@ -42,18 +40,6 @@ const productFilters = reactive({
     ],
     filterType : 0,
     selectedDate : moment().format('YYYY-MM-DD')
-})
-
-const total_paid = computed(() => {
-    return props.orders.reduce((sum, order) => sum + ((order.status == 1 || order.status == 3) ? parseFloat(order.total_amount - order.to_be_paid) : 0), 0);
-})
-
-const paid_with_credit = computed(() => {
-    return props.orders.reduce((sum, order) => sum + ((order.status == 1 || order.status == 3) && order.payment_method == 1 ? parseFloat(order.total_amount - order.to_be_paid) : 0), 0);
-})
-
-const paid_with_stripe = computed(() => {
-    return props.orders.reduce((sum, order) => sum + ((order.status == 1 || order.status == 3) && order.payment_method == 3 ? parseFloat(order.total_amount - order.to_be_paid) : 0), 0);
 })
 
 const calculate_week_difference = computed(() => {
@@ -102,7 +88,17 @@ const total_payments = (method = null) => {
     return props.payments.reduce((sum, payment) => sum + (payment.status == 1 ? parseFloat(payment.amount) : 0), 0);
 }
 
-const productsFiltered = ref([]);
+const productsFiltered    = ref([]);
+const currentOrderView    = ref(1);
+const currentPaymentsView = ref(1);
+const paymentsFilterDate  = ref([]);
+
+const paymentsView = ref([
+    { label : 'Riassunto guadagni assoluto', id : 1 },
+    { label : 'Riassunto guadagni del mese', id : 2 },
+    { label : 'Riassunto guadagni del giorno', id: 3 },
+    { label : 'Riassunto guadagni per periodo', id: 4 }
+]);
 
 const ordersViews = ref([
     { label : 'Ordini del mese', id : 1 },
@@ -110,11 +106,12 @@ const ordersViews = ref([
     { label : 'Prodotti venduti', id: 3}
 ]);
 
-const currentView = ref(1);
 
 const filteredOrders = computed(() => {
-    return props.orders.filter(order => currentView.value == 1 ? true : order.order_date == moment().format('YYYY-MM-DD')).filter(order => order_date_filter.value == null ? true : moment(order_date_filter.value).format('YYYY-MM-DD') == order.order_date)
+    return props.orders.filter(order => currentOrderView.value == 1 ? true : order.order_date == moment().format('YYYY-MM-DD')).filter(order => order_date_filter.value == null ? true : moment(order_date_filter.value).format('YYYY-MM-DD') == order.order_date)
 })
+
+const filterOrders = () => {}
 
 const selectedDateType = computed(() => {
     if(productFilters.filterType)
@@ -139,7 +136,7 @@ const mostOrderedDish = computed(() => {
     return 'Nessun dato disponibile';
 });
 
-const currentMonthEarningsData = computed(() => {
+const filteredEarnings = computed(() => {
     const daysInMonth = moment().daysInMonth();
     let earningsData = Array(daysInMonth).fill(0);
 
@@ -368,7 +365,7 @@ const totalEarningsData = reactive({
             pointBorderColor: get_colors(calculate_month_difference.value).pointBackgroundColor,
             pointHoverBackgroundColor: get_colors(calculate_month_difference.value).pointBackgroundColor,
             pointHoverBorderColor: get_colors(calculate_month_difference.value).hover,
-            data: currentMonthEarningsData,
+            data: filteredEarnings,
         },
     ],
 });
@@ -693,11 +690,31 @@ onMounted (() => {
             <div class="row">
                 <div class="col-xl-8 col-xxl-9 d-flex flex-column">
                     <!-- Earnings Summary -->
-                    <BaseBlock title="Riassunto guadagni" class="flex-grow-1 d-flex flex-column">
+                    <BaseBlock :title="paymentsView.find(view => view.id == currentPaymentsView).label" class="flex-grow-1 d-flex flex-column">
                         <template #options>
-                            <button type="button" class="btn-block-option">
-                                <i class="si si-settings"></i>
-                            </button>
+                            <div class="d-flex align-items-center" v-if="false">
+                                <DatePicker 
+                                    v-show="currentPaymentsView == 4" 
+                                    selectionMode="range"
+                                    :manualInput="false"
+                                    placeholder="Seleziona un intervallo di date"
+                                    class="w-100"
+                                    inputClass="w-100"
+                                    v-model="paymentsFilterDate"
+                                    dateFormat="dd/mm/yy"
+                                    @hide="console.log(paymentsFilterDate)"
+                                />
+                                <button type="button" class="btn btn-link" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="si si-settings"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <template v-for="view in paymentsView" :key="view.id">
+                                        <button class="dropdown-item clickable" @click="currentPaymentsView = view.id">
+                                            {{ view.label }}
+                                        </button>
+                                    </template>
+                                </ul>
+                            </div>
                         </template>
 
                         <template #content>
@@ -831,7 +848,7 @@ onMounted (() => {
             <!-- END Statistics -->
 
             <!-- Recent Orders -->
-            <BaseBlock :title="ordersViews.find(view => view.id == currentView).label">
+            <BaseBlock :title="ordersViews.find(view => view.id == currentOrderView).label">
                 <template #options>
                     <div class="d-flex justify-content-center">
                         <button class="btn btn-link" data-bs-toggle="dropdown" aria-expanded="false">
@@ -839,10 +856,9 @@ onMounted (() => {
                         </button>
                         <ul class="dropdown-menu">
                             <template v-for="view in ordersViews" :key="view.id">
-                                <button class="dropdown-item clickable" @click="currentView = view.id">
+                                <button class="dropdown-item clickable" @click="currentOrderView = view.id">
                                     {{ view.label }}
                                 </button>
-                                <!-- <li class="dropdown-divider" v-if="view.id % 2 != 0" /> -->
                             </template>
                         </ul>
                     </div>
@@ -855,7 +871,7 @@ onMounted (() => {
                         v-model:expandedRows="expandedRows"
                         v-model:filters="filters"
                         filterDisplay="row"
-                        v-show="[1,2].includes(currentView)"
+                        v-show="[1,2].includes(currentOrderView)"
                     >
                         <template #empty>
                             <div class="p-4 text-center">
@@ -891,55 +907,6 @@ onMounted (() => {
                                         </tr>
                                     </tbody>
                                 </table>
-                            </div>
-                        </template>
-                        <template #header>
-                            <div class="row align-items-center justify-content-around pb-2">
-                                <div class="col-md-3">
-                                    <FloatLabel variant="on">
-                                        <InputNumber 
-                                            v-model="total_paid"
-                                            inputId="total_paid"
-                                            mode="currency"
-                                            currency="EUR"
-                                            locale="it-IT"
-                                            class="w-100"
-                                            inputClass="w-100"
-                                            readonly
-                                        />
-                                        <label for="total_paid">Totale ordini pagati</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col-md-3">
-                                    <FloatLabel variant="on">
-                                        <InputNumber 
-                                            v-model="paid_with_credit"
-                                            inputId="total_paid"
-                                            mode="currency"
-                                            currency="EUR"
-                                            locale="it-IT"
-                                            class="w-100"
-                                            inputClass="w-100"
-                                            readonly
-                                        />
-                                        <label for="total_paid">Ordini pagati con credito</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col-md-3">
-                                    <FloatLabel variant="on">
-                                        <InputNumber 
-                                            v-model="paid_with_stripe"
-                                            inputId="total_paid"
-                                            mode="currency"
-                                            currency="EUR"
-                                            locale="it-IT"
-                                            class="w-100"
-                                            inputClass="w-100"
-                                            readonly
-                                        />
-                                        <label for="total_paid">Ordini pagti con Stripe</label>
-                                    </FloatLabel>
-                                </div>
                             </div>
                         </template>
                         <Column style="width: 5%" expander />
@@ -996,7 +963,7 @@ onMounted (() => {
                             <template #body="{ data }">
                                 {{ moment(data.order_date).format('DD/MM/YYYY') }}
                             </template>
-                            <template #filter v-if="currentView == 1">
+                            <template #filter v-if="currentOrderView == 1">
                                 <InputGroup>
                                     <DatePicker 
                                         inputClass="w-100"
@@ -1045,7 +1012,7 @@ onMounted (() => {
                     <DataTable
                         paginator
                         :rows="10"
-                        v-if="currentView === 3"
+                        v-if="currentOrderView === 3"
                         :value="productsFiltered"
                         v-model:expandedRows="productsExpandedRows"
                     >

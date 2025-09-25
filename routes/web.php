@@ -59,14 +59,14 @@ Route::middleware(['auth' , 'verified'])->group(function () {
         if(auth()->user()->user_group_id == 3)
             return redirect(route('orders.index'));
         else
-            return redirect(route('dashboard'));
+            return redirect()->route('dashboard');
     })->name('home');
 });
 
 
 Route::middleware(['auth', 'admin'])->group(function () {
 
-    Route::get('/dashboard', [ProfileController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
+    Route::get('/dashboard', [OrderController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
     
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 

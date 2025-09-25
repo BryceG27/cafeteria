@@ -30,11 +30,3 @@ RUN chown -R www-data:www-data /var/www && chmod -R 775 /var/www/storage /var/ww
 
 # Installa le dipendenze di Composer
 RUN composer install
-
-# Copia i file di Laravel (Assumendo che siano già nella directory corrente sul tuo host)
-
-# Installa Node.js e npm
-# RUN apk add --no-cache nodejs npm
-
-# RUN npm install
-# RUN npm run build
