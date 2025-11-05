@@ -63,14 +63,6 @@ class MenuController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Menu $menu)
-    {
-        //
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
     public function edit(Menu $menu)

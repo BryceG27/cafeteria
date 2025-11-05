@@ -108,7 +108,13 @@ class OrderController extends Controller
             // $equal_or_after = '<>';
         }
 
-        $menus = Menu::where('is_active', true)->whereDate('start_date', '>=', $startDate)->whereDate('end_date', '<=', $endDate)->whereDate('validity_date', $equal_or_after, Carbon::now()->format('Y-m-d'))->orderBy('validity_date')->with('products')->get();
+        $menus = Menu::where('is_active', true)
+                        ->whereDate('start_date', '>=', $startDate)
+                        ->whereDate('end_date', '<=', $endDate)
+                        ->whereDate('validity_date', $equal_or_after, Carbon::now()->format('Y-m-d'))
+                        ->orderBy('validity_date')
+                        ->with('products')
+                        ->get();
 
         return Inertia::render('Orders/Create', [
             'menus' => $menus,
@@ -125,6 +131,12 @@ class OrderController extends Controller
         $validated = Order::validate($request);
 
         $menu = Menu::with('products')->find($request->menu_id);
+
+        if($menu->validity_date == Carbon::now()->setTimezone('Europe/Rome')->format('Y-m-d')) {
+            if(Carbon::now()->setTimezone('Europe/Rome')->format('H:i') >= '10:00')
+                return redirect()->back()->withErrors(['order_date' => 'Non è più possibile effettuare ordini per il menu oggi in quanto sono passate le 10:00.']);
+        }
+
         $validated['subtotal_amount'] = $menu->price;
         $validated['total_amount'] = $menu->price;
         $validated['to_be_paid'] = $menu->price;
@@ -141,14 +153,6 @@ class OrderController extends Controller
         $ids = [ $order->id ];
 
         return redirect()->route('orders.index', ['orders' => $ids])->with('success', 'Ordine creato con successo.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Order $order)
-    {
-        //
     }
 
     /**
@@ -228,7 +232,7 @@ class OrderController extends Controller
 
         if($request->status == 1 && $order->status != 1) {
             // If the order status was not "Paid" and is now set to "Paid", create a payment record
-            Payment::create([
+            $payment = Payment::create([
                 'user_id' => $order->customer_id,
                 'amount' => $order->total_amount,
                 'payment_date' => \Carbon\Carbon::now()->setTimezone('Europe/Rome')->format('Y-m-d'),
@@ -237,20 +241,24 @@ class OrderController extends Controller
                 'status' => 1,
                 'payment_method_id' => 1,
             ]);
+
+            $order->payments()->attach($payment->id, ['amount' => $order->total_amount - $order->to_be_paid]);
         } else if ($order->status == 1 && $request->status != 1) {
             // If the order status was "Paid" and is now changed to something else, refund the amount to user's credit
             Credit::create([
                 'user_id' => $order->customer_id,
                 'total' => $order->total_amount,
                 'amount_available' => $order->total_amount,
-                'description' => 'Creato generato per ordine #' . $order->id,
+                'description' => 'Credito generato per ordine #' . $order->id,
             ]);
 
             $order->to_be_paid = $order->total_amount;
         }
 
         $order->update([
-            'status' => $request->status
+            'status' => $request->status,
+            'to_be_paid' => $order->to_be_paid,
+            'payment_method' => $request->status == 1 ? 1 : null,
         ]);
 
         return redirect()->back()->with('message', 'Stato ordine aggiornato con successo.');
@@ -267,22 +275,24 @@ class OrderController extends Controller
 
         $payment_method = PaymentMethod::find($request->payment_method);
 
-        Payment::create([
+        $payment = Payment::create([
             'user_id' => $order->customer_id,
             'amount' => $order->total_amount,
             'payment_date' => \Carbon\Carbon::now()->setTimezone('Europe/Rome')->format('Y-m-d'),
-            'notes' => "Pagamento effettuato tramite {$payment_method->name}",
-            'order_id' => $order->id,
+            'notes' => "Pagamento effettuato tramite {$payment_method->name}. Ordine: {$order->id}",
             'status' => 1,
             'payment_method_id' => $request->payment_method,
             'stripe_session_id' => $request->session_id ?? null,
-            'transaction_id' => $request->payment_method == 2 ? $transactionid : null,
+            'transaction_id' => $request->payment_method == 2 ? $this->set_paypal_payment($request) : null,
         ]);
 
         $order->update([
             'status' => 1,
             'to_be_paid' => 0,
+            'payment_method' => $request->payment_method
         ]);
+
+        $order->payments()->attach($payment->id, ['amount' => $order->total_amount - $order->to_be_paid]);
 
         return redirect()->route('orders.index')->with('message', 'Pagamento registrato con successo. Grazie!');
     }
