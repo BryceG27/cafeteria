@@ -22,10 +22,17 @@ import ErrorMessage from "@/Components/ErrorMessage.vue";
 import ToastService from 'primevue/toastservice';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const el = document.getElementById('app');
+const initialPage = el?.dataset?.page ? JSON.parse(el.dataset.page) : undefined;
 
 createInertiaApp({
+    page: initialPage,
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
+    resolve: (name) =>
+        resolvePageComponent(
+            `./Pages/${name}.vue`,
+            import.meta.glob('./Pages/**/*.vue', { eager: true })
+        ),
     setup({ el, App, props, plugin }) {
         return createApp({ render: () => h(App, props) })
             .use(plugin)

@@ -10,9 +10,24 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <script>
+            (function() {
+                const appearance = '{{ $appearance ?? "system" }}';
+
+                if (appearance === 'system') {
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+                    if (prefersDark) {
+                        document.documentElement.classList.add('dark');
+                    }
+                }
+            })();
+        </script>
+
         <!-- Scripts -->
         @routes
-        @vite(['resources/js/app.js'])
+        @vite('resources/js/app.js')
+        <link rel="stylesheet" href="{{ asset('css/oneui.css') }}">
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
