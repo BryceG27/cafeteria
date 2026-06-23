@@ -2,28 +2,38 @@
 import InputNumber from "primevue/inputnumber";
 import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
-import Calendar from "primevue/calendar";
+import DatePicker from 'primevue/datepicker'
 import SelectButton from "primevue/selectbutton";
-import Datatable from "primevue/datatable";
+import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Image from "primevue/image";
+import MultiSelect from "primevue/multiselect";
+import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from "primevue"
+
+import { FilterMatchMode } from '@primevue/core/api'
 
 import InputError from "@/Components/InputError.vue";
 
-import { computed, ref, onMounted } from "vue";
+import { computed, ref } from "vue";
 import moment from "moment";
 
-/* To Group By product.type */
-
 const expandedRowGroups = ref([]);
+const expandedRows = ref([]);
 
 const props = defineProps({
     form : Object,
     categories : Array,
     products : Array,
+    product_types : Array,
     auth : Object,
+    menus : Array,
     errors : Object,
 });
+
+const filters = ref({
+    name: { value: null, matchMode: FilterMatchMode.CONTAINS},
+    type: { value: null, matchMode: FilterMatchMode.IN}
+})
 
 const emit = defineEmits(['submit']);
 
@@ -48,8 +58,8 @@ const availableProducts = computed(() => {
 <template>
     <form @submit.prevent="emit('submit')" class="container-fluid">
         <div class="row pb-3">
-            <div class="col-md-6">
-                <label for="is_active" class="form-label">Attivo</label> <br>
+            <div class="col-md-6 d-flex flex-column">
+                <label for="is_active" class="form-label">Attivo</label>
                 <SelectButton 
                     v-model="form.is_active" 
                     :options="[{ label: 'Sì', value: 1 }, { label: 'No', value: 0 }]"
@@ -58,6 +68,46 @@ const availableProducts = computed(() => {
                     option-label="label"
                     option-value="value"
                 />
+            </div>
+            <div class="col-md-6">
+                <Accordion>
+                    <AccordionPanel value="0">
+                        <AccordionHeader>Menù della settimana</AccordionHeader>
+                        <AccordionContent>
+                            <DataTable
+                                :value="menus"
+                                v-model:expandedRows="expandedRows"
+                                scrollable
+                                scroll-height="15rem"
+                            >
+                                <Column expander /> 
+                                <Column header="Nome" field="name">
+                                    <template #body="{ data }">
+                                        <a :href="route('menus.edit', { menu : data.id })" v-text="data.name" target="_blank" />
+                                    </template>
+                                </Column>
+                                <Column header="Valido il" field="validity_date">
+                                    <template #body="{ data }">
+                                        {{ moment(data.validity_date).format('DD/MM/YYYY') }}
+                                    </template>
+                                </Column>
+                                <template #expansion="{data}">
+                                    <div class="p-4">
+                                        <h5>Prodotti menù <em v-text="data.name" /></h5>
+                                        <DataTable
+                                            :value="data.products"
+                                            scrollable
+                                            scroll-height="11rem"
+                                        >
+                                            <Column header="Prodotto" field="name" />
+                                            <Column header="Tipo" field="type.name" />
+                                        </DataTable>
+                                    </div>
+                                </template>
+                            </DataTable>
+                        </AccordionContent>
+                    </AccordionPanel>
+                </Accordion>
             </div>
         </div>
         <div class="row pb-3">
@@ -119,35 +169,9 @@ const availableProducts = computed(() => {
             </div>
         </div>
         <div class="row mb-3">
-            <!-- <div class="col-md-4">
-                <label class="form-label">Data inizio</label><br>
-                <Calendar 
-                    v-model="form.start_date"
-                    inputId="start_date"
-                    class="w-100"
-                    inputClass="w-100"
-                    :minDate="moment().toDate()"
-                    dateFormat="dd/mm/yy"
-                    placeholder="gg/mm/aaaa"
-                />
-                <InputError class="mt-2" :message="errors.start_date" />
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Data fine</label><br>
-                <Calendar 
-                    v-model="form.end_date"
-                    inputId="end_date"
-                    class="w-100"
-                    inputClass="w-100"
-                    :minDate="moment(form.start_date).add(1, 'day').toDate()"
-                    dateFormat="dd/mm/yy"
-                    placeholder="gg/mm/aaaa"
-                />
-                <InputError class="mt-2" :message="errors.end_date" />
-            </div> -->
             <div class="col-md-6">
                 <label class="form-label">Valido il</label><br>
-                <Calendar 
+                <DatePicker 
                     v-model="form.validity_date"
                     inputId="end_date"
                     class="w-100"
@@ -162,10 +186,14 @@ const availableProducts = computed(() => {
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="products" class="form-label">Prodotti disponibili</label>
-                <Datatable
+                <DataTable
                     stripedRows
                     :value="availableProducts"
                     v-model:expandedRowGroups="expandedRowGroups"
+                    scrollable
+                    scrollHeight="25rem"
+                    v-model:filters="filters"
+                    filterDisplay="row"
                 >
                     <template #empty>
                         <div class="text-center p-4">
@@ -180,13 +208,27 @@ const availableProducts = computed(() => {
                     </template>
                     <Column style="width: 10%" class="text-center">
                         <template #body="{ data }">
-                            <button class="btn btn-alt-success btn-sm" @click="add_product_to_menu(data)" type="button">
+                            <button class="btn btn-link link-success btn-sm" @click="add_product_to_menu(data)" type="button">
                                 <i class="fa fa-plus"></i>
                             </button>
                         </template>
                     </Column>
-                    <Column style="width: 30%" header="Nome" field="name" />
-                    <Column style="width: 25%" header="Foto">
+                    <Column style="width: 40%" header="Nome" field="name" :showFilterMenu="false">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <div class="d-flex align-items-center gap-2">
+                                <InputText 
+                                    v-model="filterModel.value"
+                                    type="text"
+                                    @input="filterCallback"
+                                    class="w-75"
+                                />
+                                <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
+                                    <i class="fa fa-x"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </Column>
+                    <Column style="width: 20%" header="Foto">
                         <template #body="{ data }">
                             <Image 
                                 v-if="data.image" 
@@ -196,25 +238,30 @@ const availableProducts = computed(() => {
                             />
                         </template>
                     </Column>
-                    <Column field="type.name" style="width: 20%" header="Tipo" />
-                    <Column style="width: 15%" header="Qta">
-                        <template #body="{ data }">
-                            <InputNumber
-                                v-model="data.quantity"
-                                :min="1"
-                                :max="100" 
-                                class="w-100"
-                                inputClass="w-100 text-center"
-                            />
+                    <Column field="type.name" filterField="type" style="width: 30%" header="Tipo" :showFilterMenu="false">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <div class="d-flex align-items-center gap-2">
+                                <MultiSelect 
+                                    v-model="filterModel.value"
+                                    @change="filterCallback"
+                                    :options="product_types"
+                                    optionLabel="name"
+                                />
+                                <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
+                                    <i class="fa fa-x"></i>
+                                </button>
+                            </div>
                         </template>
                     </Column>
-                </Datatable>
+                </DataTable>
             </div>
             <div class="col-md-6">
                 <label for="products" class="form-label">Prodotti selezionati</label>
-                <Datatable
+                <DataTable
                     stripedRows
                     :value="props.form.products"
+                    scrollable
+                    scrollHeight="25rem"
                 >
                     <template #empty>
                         <div class="text-center p-4">
@@ -224,13 +271,13 @@ const availableProducts = computed(() => {
                     </template>
                     <Column style="width: 10%" class="text-center">
                         <template #body="{ data }">
-                            <button class="btn btn-alt-danger btn-sm" @click="remove_product_from_menu(data)" type="button">
+                            <button class="btn btn-link link-danger btn-sm" @click="remove_product_from_menu(data)" type="button">
                                 <i class="fa fa-minus"></i>
                             </button>
                         </template>
                     </Column>
-                    <Column style="width: 30%" header="Nome" field="name" />
-                    <Column style="width: 25%" header="Foto">
+                    <Column style="width: 40%" header="Nome" field="name" />
+                    <Column style="width: 30%" header="Foto">
                         <template #body="{ data }">
                             <Image 
                                 v-if="data.image" 
@@ -241,18 +288,7 @@ const availableProducts = computed(() => {
                         </template>
                     </Column>
                     <Column field="type.name" style="width: 20%" header="Tipo" />
-                    <Column style="width: 15%" header="Qta">
-                        <template #body="{ data }">
-                            <InputNumber
-                                v-model="data.quantity"
-                                :min="1"
-                                :max="100" 
-                                class="w-100"
-                                inputClass="w-100 text-center"
-                            />
-                        </template>
-                    </Column>
-                </Datatable>
+                </DataTable>
             </div>
         </div>
     </form>

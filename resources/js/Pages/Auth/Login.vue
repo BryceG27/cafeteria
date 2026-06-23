@@ -185,6 +185,7 @@ async function submitRegister() {
                                         v-model="form.password"
                                         :feedback="false"
                                         toggleMask
+                                        @keydown.enter="onSubmit"
                                     />
                                     <label for="login-password">Password</label>
                                 </FloatLabel>
@@ -202,9 +203,13 @@ async function submitRegister() {
                                     </Link>
                                 </div> -->
                                 <div>
-                                    <button type="submit" class="btn btn-lg btn-alt-primary">
+                                    <button type="submit" class="btn btn-lg btn-alt-primary" v-if="!form.processing">
                                         <i class="fa fa-fw fa-sign-in-alt me-1 opacity-50"></i>
                                         Entra
+                                    </button>
+                                    <button type="button" class="btn btn-lg btn-alt-primary" disabled v-else>
+                                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                        Caricamento...
                                     </button>
                                 </div>
                             </div>

@@ -64,22 +64,6 @@ onMounted(() => {
     <AuthenticatedLayout>
         <div class="content">
             <BaseBlock title="Inserisci nuovo ordine" class="mb-4">
-                <!-- <template #options>
-                    <button
-                        class="btn btn-alt-success btn-sm"
-                        @click="submit"
-                    >
-                        <i class="fa fa-save me-1"></i>
-                        Salva
-                    </button>
-                    <Link
-                        class="btn btn-alt-danger btn-sm"
-                        :href="route('orders.index')"
-                    >
-                        <i class="fa fa-x me-1"></i>
-                        Annulla
-                    </Link>
-                </template> -->
                 <OrderForm 
                     :form="form" 
                     :menus="menus" 
@@ -89,7 +73,6 @@ onMounted(() => {
                     @submit="submit"
                     :statuses="statuses"
                 />
-
             </BaseBlock>
         </div>
     </AuthenticatedLayout>

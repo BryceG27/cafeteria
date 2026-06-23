@@ -10,6 +10,7 @@ const props = defineProps({
     menu : Object,
     categories : Array,
     products : Array,
+    product_types : Array,
     errors : Object,
 })
 
@@ -28,7 +29,7 @@ const form = useForm({
     validity_date : props.menu.validity_date || '',
     price : parseFloat(props.menu.price || 0),
     second_price : parseFloat(props.menu.second_price || 0),
-    is_active : props.menu.is_active || 1, // Default to active
+    is_active : props.menu.is_active,
     description : props.menu.description || '',
     products : props.menu.products,
 })
@@ -72,6 +73,7 @@ onMounted(() => {
                     :form="form"
                     :categories="categories"
                     :products="products"
+                    :product_types="product_types"
                     :auth="auth"
                     :errors="errors"
                     @submit="submit"

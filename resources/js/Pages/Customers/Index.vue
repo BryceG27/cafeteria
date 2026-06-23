@@ -42,6 +42,9 @@ const filteredCustomers = computed(() => {
                     stripedRows
                     :value="filteredCustomers"
                     filterDisplay="row"
+                    paginator
+                    :rows="10"
+                    :rowsPerPageOptions="[10, 15, 20, 50]"
                 >
                     <template #header>
                         <div class="d-flex justify-content-between align-items-center">

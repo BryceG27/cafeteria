@@ -403,6 +403,11 @@ const goBack = () => {
                         placeholder="Note aggiuntive..."
                     />
                     <InputError class="mt-2" :message="errors.notes" />
+                    <small class="text-muted">
+                        <em>
+                            N.B. Le note aggiuntive sono relative alle rimozioni di ingredienti. Richieste come la sostituzione con un prodotto fuori menù non verranno considerate valide
+                        </em>
+                    </small>
                 </div>
             </div>
         </template>

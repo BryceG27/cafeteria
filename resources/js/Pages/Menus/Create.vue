@@ -8,8 +8,10 @@ import MenuFrom from './Components/MenuForm.vue';
 const props = defineProps({
     auth : Object,
     menu : Object,
+    menus : Array,
     categories : Array,
     products : Array,
+    product_types : Array,
     errors : Object,
 })
 
@@ -29,7 +31,7 @@ const form = useForm({
     price : props.menu.price || 0,
     second_price : props.menu.second_price || 6.00,
     is_active : props.menu.is_active || 1, // Default to active
-    description : props.menu.description || 'Ogni menù include un\'acqua naturale e la frutta di stagione.',
+    description : props.menu.description || 'Ogni menù include acqua naturale e la frutta di stagione.',
     products : props.menu.products ? props.menu.products.map(p => p.id) : [],
 })
 
@@ -62,8 +64,10 @@ const form = useForm({
                     :form="form"
                     :categories="categories"
                     :products="products"
+                    :product_types="product_types"
                     :auth="auth"
                     :errors="errors"
+                    :menus="menus"
                     @submit="submit"
                 />
             </BaseBlock>

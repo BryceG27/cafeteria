@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
-use App\Models\Menu;
-use Inertia\Inertia;
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Menu;
+use App\Models\Product;
+use App\Models\ProductType;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class MenuController extends Controller
 {
@@ -34,6 +35,8 @@ class MenuController extends Controller
                 $product->quantity = 1;
                 return $product;
             }),
+            'product_types' => ProductType::where('is_active', true)->get(),
+            'menus' => Menu::where('start_date', '>=', Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->where('end_date', '<=', Carbon::now()->endOfWeek(Carbon::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->with('products.type')->get(),
             'menu' => new Menu(),
         ]);
     }
@@ -46,7 +49,7 @@ class MenuController extends Controller
         $validate = Menu::validate($request);
         
         $validate['validity_date'] = Carbon::create($request->validity_date)->setTimezone('Europe/Rome')->format('Y-m-d');
-        $validate['start_date'] = Carbon::create($request->validity_date)->startOfWeek(CARBON::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+        $validate['start_date'] = Carbon::create($request->validity_date)->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
         $validate['end_date'] = Carbon::create($request->validity_date)->endOfWeek(Carbon::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
 
         $menu = Menu::create($validate);
@@ -73,6 +76,7 @@ class MenuController extends Controller
                 $product->quantity = 1;
                 return $product;
             }),
+            'product_types' => ProductType::where('is_active', true)->get(),
             'menu' => $menu->load('products.type')
         ]);
     }
