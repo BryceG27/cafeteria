@@ -8,17 +8,15 @@ import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Image from "primevue/image";
 import MultiSelect from "primevue/multiselect";
-import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from "primevue"
-
-import { FilterMatchMode } from '@primevue/core/api'
+import Dialog from "primevue/dialog";
 
 import InputError from "@/Components/InputError.vue";
 
 import { computed, ref } from "vue";
 import moment from "moment";
+import { FilterMatchMode } from '@primevue/core/api'
 
-const expandedRowGroups = ref([]);
-const expandedRows = ref([]);
+const emit = defineEmits(['submit']);
 
 const props = defineProps({
     form : Object,
@@ -35,7 +33,9 @@ const filters = ref({
     type: { value: null, matchMode: FilterMatchMode.IN}
 })
 
-const emit = defineEmits(['submit']);
+const expandedRowGroups = ref([]);
+const selected_menu = ref(null);
+const show_menu_modal = ref(false)
 
 const add_product_to_menu = (product) => {
     props.form.products.push(product);
@@ -54,11 +54,35 @@ const availableProducts = computed(() => {
         });
 });
 
+const show_menu = (menu) => {
+    selected_menu.value     = menu;
+    show_menu_modal.value   = true;
+}
+
 </script>
 <template>
+    <Dialog
+        modal
+        v-model:visible="show_menu_modal"
+        :style="{
+            width : '45rem'
+        }"
+        :header="`Menù - ${selected_menu?.name}`"
+    >
+        <DataTable
+            :value="selected_menu?.products"
+            striped-rows
+            scrollable
+            scroll-height="27.5rem"
+        >
+            <Column header="Prodotto" field="name"></Column>
+            <Column header="Tipo" field="type.name"></Column>
+        </DataTable>
+    </Dialog>
+
     <form @submit.prevent="emit('submit')" class="container-fluid">
-        <div class="row pb-3">
-            <div class="col-md-6 d-flex flex-column">
+        <div class="row align-items-center pb-3">
+            <div class="col-lg-6 col-md-4 d-flex flex-column justify-content-center">
                 <label for="is_active" class="form-label">Attivo</label>
                 <SelectButton 
                     v-model="form.is_active" 
@@ -69,45 +93,21 @@ const availableProducts = computed(() => {
                     option-value="value"
                 />
             </div>
-            <div class="col-md-6">
-                <Accordion>
-                    <AccordionPanel value="0">
-                        <AccordionHeader>Menù della settimana</AccordionHeader>
-                        <AccordionContent>
-                            <DataTable
-                                :value="menus"
-                                v-model:expandedRows="expandedRows"
-                                scrollable
-                                scroll-height="15rem"
-                            >
-                                <Column expander /> 
-                                <Column header="Nome" field="name">
-                                    <template #body="{ data }">
-                                        <a :href="route('menus.edit', { menu : data.id })" v-text="data.name" target="_blank" />
-                                    </template>
-                                </Column>
-                                <Column header="Valido il" field="validity_date">
-                                    <template #body="{ data }">
-                                        {{ moment(data.validity_date).format('DD/MM/YYYY') }}
-                                    </template>
-                                </Column>
-                                <template #expansion="{data}">
-                                    <div class="p-4">
-                                        <h5>Prodotti menù <em v-text="data.name" /></h5>
-                                        <DataTable
-                                            :value="data.products"
-                                            scrollable
-                                            scroll-height="11rem"
-                                        >
-                                            <Column header="Prodotto" field="name" />
-                                            <Column header="Tipo" field="type.name" />
-                                        </DataTable>
-                                    </div>
-                                </template>
-                            </DataTable>
-                        </AccordionContent>
-                    </AccordionPanel>
-                </Accordion>
+            <div class="col-lg-6 col-md-8">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="text-center" :colspan="menus.length">Menù della settimana</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td v-for="menu in menus" :key="menu.id">
+                                <button class="btn btn-link link-info" type="button" @click="show_menu(menu)">{{ menu.name }}</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
         <div class="row pb-3">
@@ -132,6 +132,7 @@ const availableProducts = computed(() => {
                     inputClass="w-100"
                     placeholder="Descrizione" 
                     :class="{ 'is-invalid': errors.description }"
+                    rows="1"
                 />
                 <InputError class="mt-2" :message="errors.description" />
             </div>
@@ -184,7 +185,7 @@ const availableProducts = computed(() => {
             </div>
         </div>
         <div class="row mb-3">
-            <div class="col-md-6">
+            <div class="col-sm-12 mt-4 col-xxl-6">
                 <label for="products" class="form-label">Prodotti disponibili</label>
                 <DataTable
                     stripedRows
@@ -255,7 +256,7 @@ const availableProducts = computed(() => {
                     </Column>
                 </DataTable>
             </div>
-            <div class="col-md-6">
+            <div class="col-sm-12 mt-4 col-xxl-6">
                 <label for="products" class="form-label">Prodotti selezionati</label>
                 <DataTable
                     stripedRows

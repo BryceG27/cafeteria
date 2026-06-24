@@ -1,27 +1,29 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
-import { reactive, computed } from "vue";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
+import MultiSelect from "primevue/multiselect";
+
+import { FilterMatchMode } from '@primevue/core/api'
+import { Head, Link } from "@inertiajs/vue3";
+import { ref, computed } from 'vue';
 
 const props = defineProps({
-    products: Array,
     auth: Object,
+    categories : Array,
+    products: Array,
+    types : Array,
 });
 
-const filters = reactive({
-    name: '',
-});
-
-const filteredProducts = computed(() => {
-    return props.products.filter(product => {
-        return filters.name != '' ? product.name.toLowerCase().includes(filters.name.toLowerCase()) : true;
-    });
-});
+const filters = ref({
+    name: { value: null, matchMode: FilterMatchMode.CONTAINS},
+    type: { value: null, matchMode: FilterMatchMode.IN},
+    category: { value: null, matchMode: FilterMatchMode.IN},
+    status: { value: null, matchMode: FilterMatchMode.EQUALS}
+})
 
 </script>
 <template>
@@ -46,10 +48,12 @@ const filteredProducts = computed(() => {
 
                 <DataTable
                     stripedRows
-                    :value="filteredProducts"
+                    :value="products"
                     paginator
                     :rows="10"
+                    v-model:filters="filters"
                     :rowsPerPageOptions="[10,25,50]"
+                    filterDisplay="row"
                 >
                     <template #empty>
                         <div class="p-4 text-center">
@@ -67,25 +71,9 @@ const filteredProducts = computed(() => {
                             />
                         </div>
                     </template>
-                    <Column class="text-center">
+                    <Column style="width: 5%" class="text-center">
                         <template #body="{ data }">
-                            <Link 
-                                class="btn btn-sm"
-                                :class="!data.is_active ? 'btn-alt-success' : 'btn-alt-warning'"
-                                :href="route('products.toggle-active', { product : data.id })"
-                                as="button"
-                                method="put"
-                            >
-                                <i class="fa" :class="!data.is_active ? 'fa-play' : 'fa-pause'"></i>
-                            </Link>
-                            <!-- <Link 
-                                class="btn btn-alt-info btn-sm ms-2"
-                                :href="route('products.edit', { product : data.id })"
-                                v-if="auth.user.user_group_id == 1"
-                            >
-                                <i class="fa fa-pencil"></i>
-                            </Link> -->
-                            <button class="btn btn-alt-secondary btn-sm ms-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <button class="btn btn-width btn-alt-secondary btn-sm ms-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 ...
                             </button>
                             <ul class="dropdown-menu">
@@ -95,10 +83,24 @@ const filteredProducts = computed(() => {
                                         :href="route('products.edit', { product : data.id })"
                                         v-if="auth.user.user_group_id == 1"
                                     >
-                                        <button class="btn btn-sm btn-alt-info" type="button">
+                                        <button class="btn btn-width btn-sm btn-alt-info" type="button">
                                             <i class="fa fa-pencil"></i>
                                         </button>
                                         Modifica
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link 
+                                        class="dropdown-item d-flex gap-2 align-items-center"
+                                        :href="route('products.toggle-active', { product : data.id })"
+                                        style="font-size: 13px"
+                                        as="button"
+                                        method="put"
+                                    >
+                                        <button class="btn btn-width btn-sm" :class="!data.is_active ? 'btn-alt-success' : 'btn-alt-warning'" type="button">
+                                            <i class="fa" :class="!data.is_active ? 'fa-play' : 'fa-pause'"></i>
+                                        </button>
+                                        <span v-text="!data.is_active ? 'Attiva' : 'Disattiva'" />
                                     </Link>
                                 </li>
                                 <li>
@@ -112,7 +114,7 @@ const filteredProducts = computed(() => {
                                         as="button"
                                         v-if="auth.user.user_group_id == 1"
                                     >
-                                        <button class="btn btn-sm btn-alt-danger" type="button">
+                                        <button class="btn btn-width btn-sm btn-alt-danger" type="button">
                                             <i class="fa fa-trash"></i>
                                         </button>
                                         Cancella
@@ -121,11 +123,50 @@ const filteredProducts = computed(() => {
                             </ul>
                         </template>
                     </Column>
-                    <Column field="name" header="Nome" />
-                    <Column field="description" header="Descrizione" />
-                    <Column field="type.name" header="Tipo di pasto" />
-                    <Column field="category.name" header="Categoria" />
-                    <Column field="is_active" header="Stato">
+                    <Column style="width: 25%" field="name" header="Nome" :showFilterMenu="false">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <div class="d-flex align-items-center">
+                                <InputText v-model="filterModel.value" @input="filterCallback()" class="w-75" />
+                                <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
+                                    <i class="fa fa-x"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </Column>
+                    <Column style="width: 35%" field="description" header="Descrizione" />
+                    <Column style="width: 15%" field="type.name" header="Tipo di pasto" :showFilterMenu="false">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <div class="d-flex align-items-center">
+                                <MultiSelect 
+                                    :options="types"
+                                    optionLabel="name"
+                                    v-model="filterModel.value"
+                                    @change="filterCallback()"
+                                    class="w-75"
+                                />
+                                <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
+                                    <i class="fa fa-x"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </Column>
+                    <Column style="width: 15%" field="category.name" header="Categoria" :showFilterMenu="false">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <div class="d-flex align-items-center">
+                                <MultiSelect 
+                                    :options="categories"
+                                    optionLabel="name"
+                                    v-model="filterModel.value"
+                                    @change="filterCallback()"
+                                    class="w-75"
+                                />
+                                <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
+                                    <i class="fa fa-x"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </Column>
+                    <Column style="width: 5%" field="is_active" header="Stato">
                         <template #body="{ data }">
                             <span v-if="data.is_active" class="badge bg-success">Attivo</span>
                             <span v-else class="badge bg-danger">Inattivo</span>
@@ -136,3 +177,9 @@ const filteredProducts = computed(() => {
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+.btn-width {
+    width: 2rem
+}
+</style>

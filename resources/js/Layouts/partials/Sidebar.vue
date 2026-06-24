@@ -104,12 +104,8 @@ onMounted(() => {
   // });
   new SimpleBar(document.getElementById("simplebar-sidebar"));
 
-
-  if(route().current() == 'orders.index')
-    store.sidebarMini({ mode: 'on' })
-  else
-    store.sidebarMini({ mode: 'off' })
-
+  const sidebar_mini_status = ['orders.index', 'menus.create', 'menus.edit'].includes(route().current()) ? 'on' : 'off' ;
+  store.sidebarMini({ mode: sidebar_mini_status })
 });
 
 </script>

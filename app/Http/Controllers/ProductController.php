@@ -17,7 +17,9 @@ class ProductController extends Controller
     public function index()
     {
         return Inertia::render('Products/Index', [
-            'products' => Product::with('category', 'type')->get()
+            'products' => Product::with('category', 'type')->get(),
+            'types' => ProductType::where('is_active', true)->get(),
+            'categories' => Category::where('is_active', true)->get()
         ]);
     }
 

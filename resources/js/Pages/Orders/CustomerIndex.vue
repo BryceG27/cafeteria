@@ -362,7 +362,7 @@ const total_to_be_paid = computed(() => {
                     </Column>
                     <Column style="width: 20%" header="Giorno menù" field="menu.name">
                         <template #body="{data}">
-                            <span v-text="`${data.menu.name} - ${moment(data.order_date).format('DD/MM')}`" />
+                            <span v-text="`${data.menu?.name} - ${moment(data.order_date).format('DD/MM')}`" />
                         </template>
                     </Column>
                     <Column style="width: 30%" header="Prodotti">
