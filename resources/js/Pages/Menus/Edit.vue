@@ -8,6 +8,7 @@ import { onMounted, watch } from "vue";
 const props = defineProps({
     auth : Object,
     menu : Object,
+    menus : Object,
     categories : Array,
     products : Array,
     product_types : Array,
@@ -33,12 +34,6 @@ const form = useForm({
     description : props.menu.description || '',
     products : props.menu.products,
 })
-
-watch(() => form.validity_date, (newVal) => {
-    console.log(newVal);
-    console.log(form.validity_date)
-    
-}, { deep: true })
 
 onMounted(() => {
     form.products.map(p => p.quantity = p.pivot.quantity)
@@ -75,6 +70,7 @@ onMounted(() => {
                     :products="products"
                     :product_types="product_types"
                     :auth="auth"
+                    :menus="menus"
                     :errors="errors"
                     @submit="submit"
                 />

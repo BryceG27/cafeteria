@@ -2,27 +2,45 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, watchEffect } from "vue";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import InputGroup from 'primevue/inputgroup';
+import Toast from 'primevue/toast';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import { FilterMatchMode } from '@primevue/core/api';
 
+import { useToast } from 'primevue/usetoast';
+
 import moment from 'moment';
 import Swal from 'sweetalert2';
+
+const toast = useToast();
+
+const props = defineProps({
+    menus: Array,
+    auth: Object,
+    errors : Object,
+    flash : Object
+});
+
+watchEffect(() => {
+    if(props.flash?.message)
+        toast.add({ severity: 'success', summary: 'Menù aggiornato', detail: props.flash.message, life: 3000 });
+
+    if(Object.keys(props.errors).length > 0) {
+        Object.values(props.errors).forEach(error => {
+            toast.add({ severity: 'error', summary: 'Riscontrato errore', detail: error, life: 3000 });
+        })
+    }
+})
 
 onMounted(() => {
     moment.locale('it');
     moment().isoWeekday(1);
 })
-
-const props = defineProps({
-    menus: Array,
-    auth: Object,
-});
 
 const filters = ref({
     name : { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -78,10 +96,10 @@ const deleteMenu = (id) => {
 <template>
     <Head title="Menu" />
 
+    <Toast />
+
     <AuthenticatedLayout>
         <div class="content">
-            <SuccessMessage />
-            <ErrorMessage />
 
             <BaseBlock title="Menu" contentClass="pb-3">
                 <template #options>

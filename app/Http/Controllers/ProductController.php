@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\ProductType;
+use App\Models\SpecialMenu;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller

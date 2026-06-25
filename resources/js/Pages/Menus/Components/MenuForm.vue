@@ -28,7 +28,17 @@ const props = defineProps({
     errors : Object,
 });
 
-const filters = ref({
+const avilable_filters = ref({
+    name: { value: null, matchMode: FilterMatchMode.CONTAINS},
+    type: { value: null, matchMode: FilterMatchMode.IN}
+})
+
+const selected_filters = ref({
+    name: { value: null, matchMode: FilterMatchMode.CONTAINS},
+    type: { value: null, matchMode: FilterMatchMode.IN}
+})
+
+const past_filters = ref({
     name: { value: null, matchMode: FilterMatchMode.CONTAINS},
     type: { value: null, matchMode: FilterMatchMode.IN}
 })
@@ -74,9 +84,38 @@ const show_menu = (menu) => {
             striped-rows
             scrollable
             scroll-height="27.5rem"
+            v-model:filters="past_filters"
         >
-            <Column header="Prodotto" field="name"></Column>
-            <Column header="Tipo" field="type.name"></Column>
+            <Column header="Prodotto" field="name" :showFilterMenu="false">
+                <template #filter="{ filterModel, filterCallback }">
+                    <div class="d-flex align-items-center gap-2">
+                        <InputText 
+                            v-model="filterModel.value"
+                            type="text"
+                            @input="filterCallback"
+                            class="w-75"
+                        />
+                        <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
+                            <i class="fa fa-x"></i>
+                        </button>
+                    </div>
+                </template>
+            </Column>
+            <Column header="Tipo" field="type.name">
+                <template #filter="{ filterModel, filterCallback }">
+                    <div class="d-flex align-items-center gap-2">
+                        <MultiSelect 
+                            v-model="filterModel.value"
+                            @change="filterCallback"
+                            :options="product_types"
+                            optionLabel="name"
+                        />
+                        <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
+                            <i class="fa fa-x"></i>
+                        </button>
+                    </div>
+                </template>
+            </Column>
         </DataTable>
     </Dialog>
 
@@ -93,7 +132,7 @@ const show_menu = (menu) => {
                     option-value="value"
                 />
             </div>
-            <div class="col-lg-6 col-md-8">
+            <div class="col-lg-6 col-md-8" v-if="menus.length">
                 <table class="table">
                     <thead>
                         <tr>
@@ -193,7 +232,7 @@ const show_menu = (menu) => {
                     v-model:expandedRowGroups="expandedRowGroups"
                     scrollable
                     scrollHeight="25rem"
-                    v-model:filters="filters"
+                    v-model:filters="avilable_filters"
                     filterDisplay="row"
                 >
                     <template #empty>
@@ -263,6 +302,8 @@ const show_menu = (menu) => {
                     :value="props.form.products"
                     scrollable
                     scrollHeight="25rem"
+                    v-model:filters="selected_filters"
+                    filterDisplay="row"
                 >
                     <template #empty>
                         <div class="text-center p-4">
@@ -277,7 +318,21 @@ const show_menu = (menu) => {
                             </button>
                         </template>
                     </Column>
-                    <Column style="width: 40%" header="Nome" field="name" />
+                    <Column style="width: 40%" header="Nome" field="name" :showFilterMenu="false">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <div class="d-flex align-items-center gap-2">
+                                <InputText 
+                                    v-model="filterModel.value"
+                                    type="text"
+                                    @input="filterCallback"
+                                    class="w-75"
+                                />
+                                <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
+                                    <i class="fa fa-x"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </Column>
                     <Column style="width: 30%" header="Foto">
                         <template #body="{ data }">
                             <Image 
@@ -288,7 +343,21 @@ const show_menu = (menu) => {
                             />
                         </template>
                     </Column>
-                    <Column field="type.name" style="width: 20%" header="Tipo" />
+                    <Column field="type.name" filterField="type" style="width: 20%" header="Tipo" :showFilterMenu="false">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <div class="d-flex align-items-center gap-2">
+                                <MultiSelect 
+                                    v-model="filterModel.value"
+                                    @change="filterCallback"
+                                    :options="product_types"
+                                    optionLabel="name"
+                                />
+                                <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
+                                    <i class="fa fa-x"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </Column>
                 </DataTable>
             </div>
         </div>

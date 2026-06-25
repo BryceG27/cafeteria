@@ -31,11 +31,11 @@ class MenuController extends Controller
     {
         return Inertia::render('Menus/Create', [
             'categories' => Category::orderBy('name')->with('products')->get(),
-            'products' => Product::orderBy('name')->with('category', 'type')->get()->map(function($product) {
+            'products' => Product::where('product_type_id', '!=', 5)->orderBy('name')->with('category', 'type')->get()->map(function($product) {
                 $product->quantity = 1;
                 return $product;
             }),
-            'product_types' => ProductType::where('is_active', true)->get(),
+            'product_types' => ProductType::where('id', '!=', 5)->where('is_active', true)->get(),
             'menus' => Menu::where('start_date', '>=', Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->where('end_date', '<=', Carbon::now()->endOfWeek(Carbon::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->with('products.type')->get(),
             'menu' => new Menu(),
         ]);
@@ -72,12 +72,13 @@ class MenuController extends Controller
     {
         return Inertia::render('Menus/Edit', [
             'categories' => Category::orderBy('name')->with('products')->get(),
-            'products' => Product::orderBy('name')->with('category', 'type')->get()->map(function($product) {
+            'products' => Product::where('product_type_id', '!=', 5)->orderBy('name')->with('category', 'type')->get()->map(function($product) {
                 $product->quantity = 1;
                 return $product;
-            }),
-            'product_types' => ProductType::where('is_active', true)->get(),
-            'menu' => $menu->load('products.type')
+                }),
+            'menu' => $menu->load('products.type'),
+            'menus' => Menu::where('start_date', '>=', Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->where('end_date', '<=', Carbon::now()->endOfWeek(Carbon::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->with('products.type')->get(),
+            'product_types' => ProductType::where('id', '!=', 5)->where('is_active', true)->get()
         ]);
     }
 
@@ -125,10 +126,6 @@ class MenuController extends Controller
             'is_active' => !$menu->is_active   
         ]);
 
-        return redirect()->route('menus.index');
-    }
-
-    public function get_test() {
-        dd(Menu::all());
+        return back()->with('message', 'Menù '  . ($menu->is_active ? 'attivato' : 'disattivato') . ' correttamente');
     }
 }

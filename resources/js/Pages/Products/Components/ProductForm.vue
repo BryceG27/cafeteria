@@ -95,7 +95,7 @@ const loadImage = (event) => {
             </div>
         </div>
 
-        <div class="row pb-3">
+        <div class="row pb-3" v-if="form.product_type_id != 5">
             <label for="" class="form-label">Immagine</label>
             <div class="col-md-6">
                 <InputText 

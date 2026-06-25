@@ -56,7 +56,7 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        $validate = Category::validate($request, $category->id);
+        $validate = Category::validate($request);
         $category->update($validate);
 
         return redirect()->route('categories.index')->with('message', 'Categoria aggiornata con successo.');
@@ -64,8 +64,6 @@ class CategoryController extends Controller
 
     public function toggle_active(Category $category)
     {
-
-
         $category->is_active = !$category->is_active;
         $category->save();
         if(!$category->is_active)

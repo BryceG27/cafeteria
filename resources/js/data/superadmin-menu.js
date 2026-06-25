@@ -52,6 +52,12 @@ export default {
       group : 'menus',
       icon : "fa fa-calendar-alt"
     },
+    {
+      name : "Menu Extra",
+      to : route('special-menus.index'),
+      group : 'special-menus',
+      icon : "fa fa-table-list"
+    },
     /* {
       name: "Blocks",
       icon: "si si-energy",

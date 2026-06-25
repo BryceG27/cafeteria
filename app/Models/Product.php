@@ -61,6 +61,10 @@ class Product extends Model
             'product_type_id' => 'required|exists:product_types,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'is_active' => 'required|boolean',
+        ], [
+            'name.required' => 'Il campo nome è obbligatorio.',
+            'category_id.required' => 'E\' necessario inserire una categoria.',
+            'product_type_id.required' => 'E\' necessario inserire una tipologi.a',
         ]);
     }
 }

@@ -104,6 +104,7 @@ class PaymentController extends Controller
     }
 
     public function checkout_with_stripe($orders) {
+        $customer = $orders[0]->customer;
         $payment_name = '';
 
         if(count($orders) == 1) {
@@ -138,6 +139,10 @@ class PaymentController extends Controller
                 ],
                 'quantity' => 1,
             ]],
+            'customer_email' => $customer?->email ?? '',
+            'invoice_creation' => [
+                'enabled' => true
+            ],
             'mode' => 'payment',
             'success_url' => $success_url,
             'cancel_url' => route('orders.payment-not-completed'),

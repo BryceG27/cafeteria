@@ -21,6 +21,7 @@ const props = defineProps({
 const filters = ref({
     name: { value: null, matchMode: FilterMatchMode.CONTAINS},
     type: { value: null, matchMode: FilterMatchMode.IN},
+    description: { value: null, matchMode: FilterMatchMode.CONTAINS},
     category: { value: null, matchMode: FilterMatchMode.IN},
     status: { value: null, matchMode: FilterMatchMode.EQUALS}
 })
@@ -59,16 +60,6 @@ const filters = ref({
                         <div class="p-4 text-center">
                             <i class="fa fa-exclamation-triangle fa-2x"></i>
                             <p class="mt-2">Nessun prodotto inserito</p>
-                        </div>
-                    </template>
-                    <template #header>
-                        <div class="d-flex align-items-center justify-content-end">
-                            <label class="form-label">Filtra per nome:</label>
-                            <InputText 
-                                v-model="filters.name" 
-                                placeholder="Cerca per nome" 
-                                class="ms-2"
-                            />
                         </div>
                     </template>
                     <Column style="width: 5%" class="text-center">
@@ -125,7 +116,7 @@ const filters = ref({
                     </Column>
                     <Column style="width: 25%" field="name" header="Nome" :showFilterMenu="false">
                         <template #filter="{ filterModel, filterCallback }">
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center justify-content-around">
                                 <InputText v-model="filterModel.value" @input="filterCallback()" class="w-75" />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
                                     <i class="fa fa-x"></i>
@@ -133,28 +124,21 @@ const filters = ref({
                             </div>
                         </template>
                     </Column>
-                    <Column style="width: 35%" field="description" header="Descrizione" />
-                    <Column style="width: 15%" field="type.name" header="Tipo di pasto" :showFilterMenu="false">
+                    <Column style="width: 35%" field="description" header="Descrizione" :showFilterMenu="false">
                         <template #filter="{ filterModel, filterCallback }">
-                            <div class="d-flex align-items-center">
-                                <MultiSelect 
-                                    :options="types"
-                                    optionLabel="name"
-                                    v-model="filterModel.value"
-                                    @change="filterCallback()"
-                                    class="w-75"
-                                />
+                            <div class="d-flex align-items-center justify-content-around">
+                                <InputText v-model="filterModel.value" @input="filterCallback()" class="w-75" />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
                                     <i class="fa fa-x"></i>
                                 </button>
                             </div>
                         </template>
                     </Column>
-                    <Column style="width: 15%" field="category.name" header="Categoria" :showFilterMenu="false">
+                    <Column style="width: 15%" filterField="type" field="type.name" header="Tipo di pasto" :showFilterMenu="false">
                         <template #filter="{ filterModel, filterCallback }">
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center justify-content-around">
                                 <MultiSelect 
-                                    :options="categories"
+                                    :options="types"
                                     optionLabel="name"
                                     v-model="filterModel.value"
                                     @change="filterCallback()"

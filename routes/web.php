@@ -13,7 +13,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
-
+use App\Http\Controllers\SpecialMenuController;
 
 Route::get('/update', function() {
     Artisan::call('migrate');
@@ -93,6 +93,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/menus/get/test', [MenuController::class, 'get_test'])->name('menus.get-test');
 
     Route::put('/orders/{order}/update-status', [OrderController::class, 'change_status'])->middleware(['auth', 'verified'])->name('orders.update-status');
+
+    Route::get('/special-menus', [SpecialMenuController::class, 'index'])->middleware(['auth', 'verified'])->name('special-menus.index');
+    Route::put('/special-menus/{menu}/toggle-active', [SpecialMenuController::class, 'toggle_active'])->middleware(['auth', 'verified'])->name('special-menus.toggle-active');
 
 });
 
