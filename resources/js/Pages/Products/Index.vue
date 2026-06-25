@@ -6,10 +6,11 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import MultiSelect from "primevue/multiselect";
+import Select from "primevue/select";
 
 import { FilterMatchMode } from '@primevue/core/api'
 import { Head, Link } from "@inertiajs/vue3";
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 
 const props = defineProps({
     auth: Object,
@@ -23,7 +24,7 @@ const filters = ref({
     type: { value: null, matchMode: FilterMatchMode.IN},
     description: { value: null, matchMode: FilterMatchMode.CONTAINS},
     category: { value: null, matchMode: FilterMatchMode.IN},
-    status: { value: null, matchMode: FilterMatchMode.EQUALS}
+    is_active: { value: null, matchMode: FilterMatchMode.EQUALS}
 })
 
 </script>
@@ -116,8 +117,8 @@ const filters = ref({
                     </Column>
                     <Column style="width: 25%" field="name" header="Nome" :showFilterMenu="false">
                         <template #filter="{ filterModel, filterCallback }">
-                            <div class="d-flex align-items-center justify-content-around">
-                                <InputText v-model="filterModel.value" @input="filterCallback()" class="w-75" />
+                            <div class="d-flex align-items-center justify-content-between">
+                                <InputText v-model="filterModel.value" @input="filterCallback()" class="w-75" placeholder="Cerca per nome" />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
                                     <i class="fa fa-x"></i>
                                 </button>
@@ -126,17 +127,17 @@ const filters = ref({
                     </Column>
                     <Column style="width: 35%" field="description" header="Descrizione" :showFilterMenu="false">
                         <template #filter="{ filterModel, filterCallback }">
-                            <div class="d-flex align-items-center justify-content-around">
-                                <InputText v-model="filterModel.value" @input="filterCallback()" class="w-75" />
+                            <div class="d-flex align-items-center justify-content-between">
+                                <InputText v-model="filterModel.value" @input="filterCallback()" class="w-75" placeholder="Cerca per descrizione" />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
                                     <i class="fa fa-x"></i>
                                 </button>
                             </div>
                         </template>
                     </Column>
-                    <Column style="width: 15%" filterField="type" field="type.name" header="Tipo di pasto" :showFilterMenu="false">
+                    <Column style="width: 10%" filterField="type" field="type.name" header="Tipo di pasto" :showFilterMenu="false">
                         <template #filter="{ filterModel, filterCallback }">
-                            <div class="d-flex align-items-center justify-content-around">
+                            <div class="d-flex align-items-center justify-content-between">
                                 <MultiSelect 
                                     :options="types"
                                     optionLabel="name"
@@ -150,10 +151,34 @@ const filters = ref({
                             </div>
                         </template>
                     </Column>
-                    <Column style="width: 5%" field="is_active" header="Stato">
+                    <Column style="width: 10%" field="is_active" header="Stato" :showFilterMenu="false">
                         <template #body="{ data }">
                             <span v-if="data.is_active" class="badge bg-success">Attivo</span>
                             <span v-else class="badge bg-danger">Inattivo</span>
+                        </template>
+                        <template #filter="{ filterModel, filterCallback }">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <Select 
+                                    :options="[
+                                        {
+                                            label : 'Attivo',
+                                            value : 1
+                                        },
+                                        {
+                                            label : 'Inattivo',
+                                            value : 0
+                                        }
+                                    ]"
+                                    optionValue="value"
+                                    optionLabel="label"
+                                    class="w-75"
+                                    v-model="filterModel.value"
+                                    @change="filterCallback"
+                                />
+                                <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
+                                    <i class="fa fa-x"></i>
+                                </button>
+                            </div>
                         </template>
                     </Column>
                 </DataTable>

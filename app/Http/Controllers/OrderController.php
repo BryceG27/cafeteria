@@ -37,11 +37,29 @@ class OrderController extends Controller
             ]);
         } else {
             return Inertia::render('Orders/Index', [
-                'orders' => Order::with(['customer', 'first_dish', 'second_dish', 'side_dish', 'menu'])->orderBy('created_at', 'desc')->get()->map(function($order) {
-                    $order->status_info = $order->get_status();
-                    $order->child_name = $order->customer->child . " ";
+                'orders' => Order::when(isset($request->child_name), function($query) use ($request) {
+                    $query->whereHas('customer', function($query) use ($request) {
+                        $query->where('child', 'like', "%{$request->child_name}%");
+                    });
+                })
+                                    ->when(isset($request->order_date), function($query) use ($request) {
+                                        $query->where('order_date', Carbon::create($request->order_date)->setTimezone('Europe/Rome')->format('Y-m-d'));
+                                    })
+                                    ->when(isset($request->created_at), function($query) use ($request) {
+                                        $query->whereDate('created_at', Carbon::create($request->created_at)->setTimezone('Europe/Rome')->format('Y-m-d'));
+                                    })
+                                    ->when(isset($request->status), function($query) use ($request) {
+                                        $query->where('status', $request->status);
+                                    })
+                                    ->with(['customer', 'first_dish', 'second_dish', 'side_dish', 'menu'])
+                                    ->orderBy('created_at', 'desc')
+                                    ->paginate(50)
+                                    ->through(function ($order) {
 
-                    $order->child_name .= count(explode(' ', $order->customer->child)) == 1 ? $order->customer->surname : '';
+                    $order->status_info = $order->get_status();
+                    $order->child_name = $order->customer->child . ' ';
+                    $order->child_name .= count(explode(' ', $order->customer->child)) === 1 ? $order->customer->surname : '';
+
                     return $order;
                 }),
                 'order_statuses' => Order::get_statuses(),

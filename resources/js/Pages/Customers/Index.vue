@@ -2,20 +2,54 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
-import { computed, ref } from "vue";
+import { computed, ref, nextTick, watchEffect } from "vue";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import ToggleSwitch from 'primevue/toggleswitch';
 import InputText from 'primevue/inputtext';
+import Popover from 'primevue/popover';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
     customers: Array,
     auth: Object,
+    flash : Object,
+    errors : Object
 });
 
 const showOnlyActive = ref(true);
 const customersFilter = ref('');
+const selectedCustomer = ref(null)
+const op = ref(null)
+
+const toast = useToast();
+
+watchEffect(() => {
+    if(props.flash?.message)
+        toast.add({ severity: 'success', summary: 'Cliente aggiornato', detail: props.flash.message, life: 3000 });
+
+    if(Object.keys(props.errors).length > 0) {
+        Object.values(props.errors).forEach(error => {
+            toast.add({ severity: 'error', summary: 'Riscontrato errore', detail: error, life: 3000 });
+        })
+    }
+})
+
+const display_op = (event, customer) => {
+    op.value.hide();
+
+    if (selectedCustomer.value?.id === customer.id) {
+        selectedCustomer.value = null;
+    } else {
+        selectedCustomer.value = customer;
+
+        nextTick(() => {
+            op.value.show(event);
+        });
+    }
+}
 
 const filteredCustomers = computed(() => {
     return props.customers.filter(customer => {
@@ -32,19 +66,17 @@ const filteredCustomers = computed(() => {
 <template>
     <Head title="Clienti" />
 
+    <Toast />
+
     <AuthenticatedLayout>
         <div class="content">
-            <SuccessMessage />
-            <ErrorMessage />
-
             <BaseBlock title="Clienti" contentClass="pb-3">
                 <DataTable
                     stripedRows
                     :value="filteredCustomers"
                     filterDisplay="row"
-                    paginator
-                    :rows="10"
-                    :rowsPerPageOptions="[10, 15, 20, 50]"
+                    scrollable
+                    scrollHeight="40rem"
                 >
                     <template #header>
                         <div class="d-flex justify-content-between align-items-center">
@@ -59,51 +91,9 @@ const filteredCustomers = computed(() => {
                     </template>
                     <Column field="id" class="text-center" v-if="auth.user.user_group_id == 1">
                         <template #body="{ data }">
-                            <div>
-                                <button class="btn btn-sm btn-alt-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    ...
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <Link
-                                            :href="route('customers.show', { customer : data.id})"
-                                            class="dropdown-item d-flex gap-2 align-items-center"
-                                            style="font-size: 13px"
-                                        >
-                                            <button
-                                                class="btn btn-alt-info btn-sm me-1"
-                                                type="button"
-                                                style="width: 25%"
-                                            >
-                                                <i class="fa fa-eye"></i>
-                                            </button>
-                                            <span>
-                                                Visualizza
-                                            </span>
-                                        </Link>
-                                    </li>
-                                    <li class="dropdown-divider"></li>
-                                    <li>
-                                        <Link 
-                                            :href="route('users.toggle-active', data.id)"
-                                            method="put"
-                                            as="button"
-                                            class="dropdown-item d-flex gap-2 align-items-center"
-                                            style="font-size: 13px"
-                                        >
-                                            <button 
-                                                class="btn btn-sm me-1"
-                                                :class="!data.is_active ? 'btn-alt-success' : 'btn-alt-warning'"
-                                                type="button"
-                                                style="width: 25%"
-                                            >
-                                                <i class="fa" :class="!data.is_active ? 'fa-play' : 'fa-pause'"></i>
-                                            </button>
-                                            <span v-text="!data.is_active ? 'Attiva' : 'Disattiva'" />
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </div>
+                            <button class="btn btn-sm btn-alt-secondary" type="button" @click="display_op($event, data)">
+                                ...
+                            </button>
                         </template>
                     </Column>
                     <Column header="Cliente" :showFilterMenu="false">
@@ -151,6 +141,41 @@ const filteredCustomers = computed(() => {
                         </template>
                     </Column>
                 </DataTable>
+                <Popover ref="op">
+                    <Link
+                        :href="route('customers.show', { customer : selectedCustomer.id})"
+                        class="d-flex gap-2 align-items-center link-dark"
+                        style="font-size: 13px"
+                    >
+                        <button
+                            class="btn btn-width btn-alt-info btn-sm me-1"
+                            type="button"
+                        >
+                            <i class="fa fa-eye"></i>
+                        </button>
+                        <span>
+                            Visualizza cliente
+                        </span>
+                    </Link>
+                    <hr />
+                    
+                    <Link 
+                        :href="route('users.toggle-active', selectedCustomer.id)"
+                        method="put"
+                        as="button"
+                        class="d-flex btn btn-link gap-2 align-items-center p-0 link-dark"
+                        style="font-size: 13px"
+                    >
+                        <button 
+                            class="btn btn-width btn-sm me-1"
+                            :class="!selectedCustomer.is_active ? 'btn-alt-success' : 'btn-alt-warning'"
+                            type="button"
+                        >
+                            <i class="fa" :class="!selectedCustomer.is_active ? 'fa-play' : 'fa-pause'"></i>
+                        </button>
+                        <span v-text="!selectedCustomer.is_active ? 'Attiva cliente' : 'Disattiva cliente'" />
+                    </Link>
+                </Popover>
             </BaseBlock>
         </div>
     </AuthenticatedLayout>
@@ -159,5 +184,9 @@ const filteredCustomers = computed(() => {
 <style scoped>
 .clickable {
     cursor: pointer;
+}
+
+.btn-width {
+    width: 2rem
 }
 </style>

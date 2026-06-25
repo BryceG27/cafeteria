@@ -7,9 +7,8 @@ import { ref, reactive, computed, onMounted, watchEffect } from "vue";
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
-import InputGroup from 'primevue/inputgroup';
 import Toast from 'primevue/toast';
-import InputGroupAddon from 'primevue/inputgroupaddon';
+import DatePicker from 'primevue/datepicker'
 import { FilterMatchMode } from '@primevue/core/api';
 
 import { useToast } from 'primevue/usetoast';
@@ -25,6 +24,9 @@ const props = defineProps({
     errors : Object,
     flash : Object
 });
+
+console.log(props.menus);
+
 
 watchEffect(() => {
     if(props.flash?.message)
@@ -45,6 +47,7 @@ onMounted(() => {
 const filters = ref({
     name : { value: null, matchMode: FilterMatchMode.CONTAINS },
     start_date : { value: null, matchMode: FilterMatchMode.BETWEEN },
+    validity_date : { value: null, matchMode: FilterMatchMode.DATE_IS }
 })
 
 const expandedRows = ref(null);
@@ -52,11 +55,12 @@ const expandedRows = ref(null);
 const dateFilter = reactive({ 
     start: moment().isoWeekday(1).startOf('week').toDate(), 
     end: moment().isoWeekday(1).endOf('week').toDate(),
-    validity_date : null,
     week : null,
 });
 
 const filteredMenus = computed(() => {
+    console.log(filters.validity_date?.value);
+    
     return props.menus.filter(menu => {
         if(dateFilter.week) {
             const [year, week] = dateFilter.week.split('-W');
@@ -64,12 +68,10 @@ const filteredMenus = computed(() => {
             const startOfWeek = moment().year(year).week(week).startOf('week').add(1, 'days').format('YYYY-MM-DD');
             const endOfWeek = moment().year(year).week(week).endOf('week').add(1, 'days').format('YYYY-MM-DD');
 
-            console.log(menu.name, startOfWeek, menu.start_date, endOfWeek, menu.end_date, menu.start_date >= startOfWeek && menu.end_date <= endOfWeek);
-
             return menu.start_date >= startOfWeek && menu.end_date <= endOfWeek;
         }
         
-       return dateFilter.validity_date == null ? menu.validity_date >= moment(dateFilter.start).format('YYYY-MM-DD') && menu.validity_date <= moment(dateFilter.end).format('YYYY-MM-DD') : menu.validity_date == moment(dateFilter.validity_date).format('YYYY-MM-DD');
+       return menu.validity_date >= moment(dateFilter.start).format('YYYY-MM-DD') && menu.validity_date <= moment(dateFilter.end).format('YYYY-MM-DD')
     });
 });
 
@@ -124,7 +126,7 @@ const deleteMenu = (id) => {
                     <template #empty>
                         <div class="p-4 text-center">
                             <i class="fa fa-exclamation-triangle fa-2x"></i>
-                            <p class="mt-2">Nessun menù inserito</p>
+                            <p class="mt-2">Nessun menù trovato</p>
                         </div>
                     </template>
                     <template #expansion="{ data }">
@@ -193,7 +195,7 @@ const deleteMenu = (id) => {
                     </Column>
                     <Column style="width: 15%" field="name" header="Nome" :showFilterMenu="false">
                         <template #filter="{ filterModel, filterCallback }">
-                            <InputGroup>
+                            <div class="d-flex align-items-center gap-2">
                                 <InputText
                                     class="w-100"
                                     input-class="w-100"
@@ -201,12 +203,10 @@ const deleteMenu = (id) => {
                                     v-model="filterModel.value" 
                                     @input="filterCallback" 
                                 />
-                                <InputGroupAddon>
-                                    <button class="btn-link link-danger" @click.prevent="filterModel.value = null; filterCallback()">
-                                        <i class="fa fa-x"></i>
-                                    </button>
-                                </InputGroupAddon>
-                            </InputGroup>
+                                <button class="btn btn-link link-danger" @click.prevent="filterModel.value = null; filterCallback()">
+                                    <i class="fa fa-x"></i>
+                                </button>
+                            </div>
                         </template>
                     </Column>
                     <Column style="width: 10%" field="price" header="Prezzo">
@@ -218,22 +218,13 @@ const deleteMenu = (id) => {
                         <template #body="{ data }">
                             {{ moment(data.start_date).format('DD/MM') }} - {{ moment(data.end_date).format('DD/MM') }}
                         </template>
-                        <template #filter>
-                            <InputGroup>
-                                <!-- <DatePicker 
-                                    dateFormat="dd/mm/yy"
-                                    v-model="dates" 
-                                    class="w-100" 
-                                    inputClass="w-100"
-                                    selectionMode="range"
-                                /> -->
+                        <template #filter="{ filterModel, filterCallback }">
+                            <div class="d-flex align-items-center gap-2">
                                 <input type="week" class="form-control" v-model="dateFilter.week" />
-                                <InputGroupAddon>
-                                    <button class="btn-link link-danger" @click.prevent="dates = []">
-                                        <i class="fa fa-x"></i>
-                                    </button>
-                                </InputGroupAddon>
-                            </InputGroup>
+                                <button class="btn btn-link link-danger" @click.prevent="dates = []">
+                                    <i class="fa fa-x"></i>
+                                </button>
+                            </div>
                         </template>
                     </Column>
                     <Column style="width: 14%" field="validity_date" header="Valido il" :showFilterMenu="false">
@@ -241,23 +232,21 @@ const deleteMenu = (id) => {
                             <span v-if="data.validity_date" v-text="moment(data.validity_date).format('DD/MM')" />
                             <span v-else>-</span>
                         </template>
-                        <template #filter="{ filterModel, filterCallback }">
-                            <InputGroup>
-                                <!-- <DatePicker 
-                                    dateFormat="dd/mm/yy"
-                                    v-model="dateFilter.validity_date" 
-                                    class="w-100" 
-                                    inputClass="w-100"
-                                /> -->
-                                <input type="date" class="form-control" v-model="dateFilter.validity_date" />
-
-                                <InputGroupAddon>
-                                    <button class="btn-link link-danger" @click.prevent="dateFilter.validity_date = null; filterCallback()">
-                                        <i class="fa fa-x"></i>
-                                    </button>
-                                </InputGroupAddon>
-                            </InputGroup>
-                        </template>
+                        <!-- <template #filter="{ filterModel, filterCallback }">
+                            <div class="d-flex align-items-center gap-2">
+                                <DatePicker 
+                                    inputClass="w-75"
+                                    class="w-75"
+                                    placeholder="Cerca per data"
+                                    date-format="dd/mm/yy"
+                                    v-model="filterModel.value"
+                                    @date-select="filterCallback()"
+                                />
+                                <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null; filterCallback()">
+                                    <i class="fa fa-x"></i>
+                                </button>
+                            </div>
+                        </template> -->
                     </Column>
                 </DataTable>
             </BaseBlock>

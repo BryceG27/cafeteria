@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 255)->comment("Short Name for the menù");
             $table->string('description')->nullable()->comment("What is included in the menù");
+            $table->string('img_url', 100)->nullable()->comment('Display image');
             $table->foreignIdFor(\App\Models\Product::class)->constrained();
             $table->double('price')->default(0.0);
             $table->boolean('active')->default(true);

@@ -49,6 +49,7 @@ const form = useForm({
     description : props.product.description || '',
     category_id : null, // Default to first category if available
     is_active : props.product.is_active || 1, // Default to active
+    to_special_menu : 0,
     product_type_id : null,
     image : null,
 });

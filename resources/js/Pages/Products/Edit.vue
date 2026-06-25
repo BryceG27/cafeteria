@@ -50,6 +50,7 @@ const form = useForm({
     category_id : props.product.category_id,
     product_type_id : props.product.product_type_id,
     is_active : props.product.is_active || 1, // Default to active
+    to_special_menu : props.product.to_special_menu ? 1 : 0,
     image : props.product.image || null,
 });
 

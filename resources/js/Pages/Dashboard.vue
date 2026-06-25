@@ -15,11 +15,16 @@ import InputText from 'primevue/inputtext';
 import InputGroup from 'primevue/inputgroup';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import DatePicker from 'primevue/datepicker';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 
 import { FilterMatchMode } from '@primevue/core/api';
 
 import moment from 'moment';
+
+const MoneyFormat = new Intl.NumberFormat("it-IT", {
+    style : 'currency',
+    currency : 'EUR'
+})
 
 const props = defineProps({
     auth: Object,
@@ -726,8 +731,7 @@ onMounted (() => {
                                     <div class="col-sm-4">
                                         <dl class="mb-0">
                                             <dt class="fs-3 fw-bold d-inline-flex align-items-center space-x-2">
-                                                <!-- <i class="fa fa-caret-up fs-base text-success"></i> -->
-                                                <span v-text="total_payments().toFixed(2) + ' €'" />
+                                                {{ MoneyFormat.format(total_payments()) }}
                                             </dt>
                                             <dd class="fs-sm fw-medium text-muted mb-0">
                                                 Totale assoluto pagato
@@ -737,8 +741,7 @@ onMounted (() => {
                                     <div class="col-sm-4">
                                         <dl class="mb-0">
                                             <dt class="fs-3 fw-bold d-inline-flex align-items-center space-x-2">
-                                                <!-- <i class="fa fa-caret-up fs-base text-success"></i> -->
-                                                <span v-text="total_payments(1).toFixed(2) + ' €'" />
+                                                {{ MoneyFormat.format(total_payments(1)) }}
                                             </dt>
                                             <dd class="fs-sm fw-medium text-muted mb-0">
                                                 Totale assoluto con credito
@@ -748,8 +751,7 @@ onMounted (() => {
                                     <div class="col-sm-4">
                                         <dl class="mb-0">
                                             <dt class="fs-3 fw-bold d-inline-flex align-items-center space-x-2">
-                                                <!-- <i class="fa fa-caret-down fs-base text-danger"></i> -->
-                                                <span v-text="total_payments(3).toFixed(2) + ' €'" />
+                                                {{ MoneyFormat.format(total_payments(3)) }}
                                             </dt>
                                             <dd class="fs-sm fw-medium text-muted mb-0">
                                                 Totale assoluto con Stripe
@@ -925,7 +927,7 @@ onMounted (() => {
                                 </div>
                             </template>
                             <template #filter="{ filterModel, filterCallback }">
-                                <InputGroup>
+                                <div class="d-flex align-items-center gap-2">
                                     <InputText 
                                         class="w-100"
                                         inputClass="w-100"
@@ -933,17 +935,15 @@ onMounted (() => {
                                         placeholder="Nome cliente"
                                         @input="filterCallback"
                                     />
-                                    <InputGroupAddon>
-                                        <button class="btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
-                                            <i class="fa fa-x"></i>
-                                        </button>
-                                    </InputGroupAddon>
-                                </InputGroup>
+                                    <button class="btn btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
+                                        <i class="fa fa-x"></i>
+                                    </button>
+                                </div>
                             </template>
                         </Column>
                         <Column style="width: 25%" header="Nome" field="menu.name" :showFilterMenu="false">
                             <template #filter="{ filterModel, filterCallback }">
-                                <InputGroup>
+                                <div class="d-flex align-items-center gap-2">
                                     <InputText 
                                         class="w-100"
                                         inputClass="w-100"
@@ -951,12 +951,10 @@ onMounted (() => {
                                         placeholder="Nome menù"
                                         @input="filterCallback"
                                     />
-                                    <InputGroupAddon>
-                                        <button class="btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
-                                            <i class="fa fa-x"></i>
-                                        </button>
-                                    </InputGroupAddon>
-                                </InputGroup>
+                                    <button class="btn btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
+                                        <i class="fa fa-x"></i>
+                                    </button>
+                                </div>
                             </template>
                         </Column>
                         <Column style="width: 20%" header="Giorno" field="order_date" :showFilterMenu="false">
@@ -964,7 +962,7 @@ onMounted (() => {
                                 {{ moment(data.order_date).format('DD/MM/YYYY') }}
                             </template>
                             <template #filter v-if="currentOrderView == 1">
-                                <InputGroup>
+                                <div class="d-flex align-items-center gap-2">
                                     <DatePicker 
                                         inputClass="w-100"
                                         class="w-100"
@@ -972,12 +970,10 @@ onMounted (() => {
                                         date-format="dd/mm/yy"
                                         v-model="order_date_filter"
                                     />
-                                    <InputGroupAddon>
-                                        <button class="btn-link link-danger" type="button" @click.prevent="order_date_filter = null">
-                                            <i class="fa fa-x"></i>
-                                        </button>
-                                    </InputGroupAddon>
-                                </InputGroup>
+                                    <button class="btn btn-link link-danger" type="button" @click.prevent="order_date_filter = null">
+                                        <i class="fa fa-x"></i>
+                                    </button>
+                                </div>
                             </template>
                         </Column>
                         <Column style="width: 20%" header="Stato" field="status_info.value" :showFilterMenu="false">
@@ -985,10 +981,10 @@ onMounted (() => {
                                 <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
                             </template>
                             <template #filter="{ filterModel, filterCallback }">
-                                <InputGroup>
-                                    <Dropdown 
-                                        class="w-100"
-                                        inputClass="w-100"
+                                <div class="d-flex align-items-center gap-2">
+                                    <Select 
+                                        class="w-75"
+                                        inputClass="w-75"
                                         placeholder="Cerca per stato"
                                         optionLabel="label"
                                         optionValue="value"
@@ -1000,12 +996,10 @@ onMounted (() => {
                                             { label: 'Completato', value: 3 }
                                         ]"
                                     />
-                                    <InputGroupAddon>
-                                        <button class="btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
-                                            <i class="fa fa-x"></i>
-                                        </button>
-                                    </InputGroupAddon>
-                                </InputGroup>
+                                    <button class="btn btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
+                                        <i class="fa fa-x"></i>
+                                    </button>
+                                </div>
                             </template>
                         </Column>
                     </DataTable>
@@ -1053,7 +1047,7 @@ onMounted (() => {
                                     <div class="d-md-flex align-items-center">
                                         <label class="form-label w-100 d-md-none text-center" for="filter-for">Filtra per:</label>
                                         <label class="form-label w-25 d-md-inline d-none" for="filter-for">Filtra per:</label>
-                                        <Dropdown
+                                        <Select
                                             class="w-100"
                                             inputClass="w-100"
                                             :options="productFilters.selectOptions"
@@ -1065,22 +1059,20 @@ onMounted (() => {
                                 </div>
                                 <div class="pb-3 col-md-3 order-md-3 order-2">
                                     <div class="d-flex align-items-center">
-                                        <InputGroup>
-                                            <DatePicker 
-                                                class="w-100"
-                                                inputClass="w-100"
-                                                date-format="dd/mm/yy"
-                                                v-model="productFilters.selectedDate"
-                                                :placeholder="selectedDateType"
-                                            />
-                                            <button 
-                                                class="btn btn-alt-success rounded-start-0" 
-                                                @click.prevent="filter_products_by_date"
-                                                :disabled="!productFilters.selectedDate"
-                                            >
-                                                <i class="fa fa-search"></i>
-                                            </button>
-                                        </InputGroup>
+                                        <DatePicker 
+                                            class="w-100"
+                                            inputClass="w-100"
+                                            date-format="dd/mm/yy"
+                                            v-model="productFilters.selectedDate"
+                                            :placeholder="selectedDateType"
+                                        />
+                                        <button 
+                                            class="btn btn-alt-success rounded-start-0" 
+                                            @click.prevent="filter_products_by_date"
+                                            :disabled="!productFilters.selectedDate"
+                                        >
+                                            <i class="fa fa-search"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>

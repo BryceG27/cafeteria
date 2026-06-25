@@ -12,11 +12,33 @@ class SpecialMenuSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\SpecialMenu::create([
-            'name' => 'Pasta al forno',
-            'description' => 'Menù completamente a caso',
-            'product_id' => 14,
-            'price' => 12.00,
-        ]);
+        $menus = [
+            [
+                'name' => 'Hamburger',
+                'description' => 'Il menù è compreso di patatine, bibita a scelta e hamburger',
+                'img_url' => public_path('/assets/media/various/menus/hamburger menu.png'),
+                'product_id' => 102,
+                'price' => 0.0
+            ],
+            [
+                'name' => 'Hamburger di pollo',
+                'description' => 'Il menù è compreso di patatine, bibita a scelta e hamburger di pollo',
+                'img_url' => public_path('/assets/media/various/menus/chicken menu.png'),
+                'product_id' => 39,
+                'price' => 0.0
+            ],
+            [
+                'name' => 'Wrap con pollo',
+                'description' => 'Il menù è compreso di patatine, bibita a scelta e wrap con pollo',
+                'img_url' => public_path('/assets/media/various/menus/wrap menu.png'),
+                'product_id' => 39,
+                'price' => 0.0
+            ],
+        ];
+
+        foreach ($menus as $menu) {
+            \App\Models\SpecialMenu::create($menu);
+        }
+
     }
 }

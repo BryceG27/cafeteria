@@ -25,9 +25,9 @@ const loadImage = (event) => {
 </script>
 <template>
     <form @submit.prevent="emit('submit')" class="container">
-        <div class="row pb-3">
-            <div class="col-md-6">
-                <label for="is_active" class="form-label">Attivo</label><br>
+        <div class="row pb-2">
+            <div class="col-md-6 d-flex flex-column">
+                <label for="to_special_menu" class="form-label">Attivo</label>
                 <SelectButton 
                     v-model="form.is_active" 
                     :options="[{ label: 'Sì', value: 1 }, { label: 'No', value: 0 }]"
@@ -36,6 +36,20 @@ const loadImage = (event) => {
                     option-label="label"
                     option-value="value"
                 />
+            </div>
+            <div class="col-md-6 d-flex flex-column">
+                <label for="to_special_menu" class="form-label">Disponibile per menù extra</label>
+                <SelectButton 
+                    v-model="form.to_special_menu" 
+                    :options="[{ label: 'Sì', value: 1 }, { label: 'No', value: 0 }]"
+                    inputId="to_special_menu"
+                    :class="{ 'is-invalid': errors.to_special_menu }"
+                    option-label="label"
+                    option-value="value"
+                />
+                <small class="mt-2" style="font-size: 12px;">
+                    <em>* Prodotto disponibile nella selezione dei menù extra</em>
+                </small>
             </div>
         </div>
         <div class="row pb-3">
@@ -95,7 +109,7 @@ const loadImage = (event) => {
             </div>
         </div>
 
-        <div class="row pb-3" v-if="form.product_type_id != 5">
+        <div class="row align-items-center pb-3" v-if="form.product_type_id != 5 && !form.to_special_menu">
             <label for="" class="form-label">Immagine</label>
             <div class="col-md-6">
                 <InputText 

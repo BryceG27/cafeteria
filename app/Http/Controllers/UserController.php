@@ -107,6 +107,6 @@ class UserController extends Controller
             'is_active' => !$user->is_active
         ]);
 
-        return redirect()->back()->with('success', 'Stato utente aggiornato con successo.');
+        return redirect()->back()->with('message', "Profilo ".  ($user->is_active ? 'attivato' : 'disattivato'). " con successo.");
     }
 }

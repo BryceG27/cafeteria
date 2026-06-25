@@ -34,12 +34,12 @@ export default {
       group : 'users',
       icon : "fa fa-users"
     },
-    {
+    /* {
       name : "Categorie Prodotti",
       to : route('categories.index'),
       group : 'categories',
       icon : "fa fa-tags"
-    },
+    }, */
     {
       name : "Prodotti",
       to : route('products.index'),
