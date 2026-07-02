@@ -160,7 +160,7 @@ const onPage = debounce((page = 1) => {
                                     </ul>
                                 </div>
 
-                                <div class="border rounded-2 px-0" :class="{ 'col-md-10' : data.customer.child_allergies != '' && data.notes != '', 'col-md-11' : data.customer.child_allergies != '' || data.notes != '', 'col-md-12' : data.customer.child_allergies == '' && data.notes == ''}" v-if="data.menu">
+                                <div class="col-md-10 border rounded-2 px-0" :class="{'rounded-start-0' : data.customer.child_allergies != undefined, 'rounded-end-0' : data.notes != undefined, 'col-md-12' : data.customer.child_allergies == undefined && data.notes == undefined, 'col-md-11' : data.customer.child_allergies == undefined || data.notes == undefined}" v-if="data.menu">
                                     <div class="row py-1" v-if="data.first_dish">
                                         <div class="col-md-10 offset-md-1">
                                             <span class="fs-14" style="font-weight: 500;" v-text="data.first_dish.name" />
@@ -190,7 +190,7 @@ const onPage = debounce((page = 1) => {
                                     </div>
                                 </div>
 
-                                <div class="col-md-10 border rounded-2 px-0" v-else-if="data.special_menu">
+                                <div class="col-md-10 border rounded-2 px-0" :class="{'rounded-start-0' : data.customer.child_allergies != undefined, 'rounded-end-0' : data.notes != undefined, 'col-md-12' : data.customer.child_allergies == undefined && data.notes == undefined, 'col-md-11' : data.customer.child_allergies == undefined || data.notes == undefined}" v-else-if="data.special_menu">
                                     <div class="row">
                                         <div class="col-md-10 offset-md-1">
                                             <span class="fs-14" style="font-weight: 500;" v-text="data.special_menu.product?.name" />

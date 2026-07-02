@@ -124,12 +124,12 @@ class OrderController extends Controller
     public function create()
     {
         $startDate = Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
-        $endDate = Carbon::now()->endOfWeek(CARBON::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+        $endDate = Carbon::now()->endOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
         $equal_or_after = Carbon::now()->setTimezone('Europe/Rome')->format('H:i') >= '10:00' ? '>' : '>=';
 
         if(in_array(Carbon::now()->locale('it_IT')->dayName, ['sabato', 'domenica'])) {
             $startDate = Carbon::now()->addWeek()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
-            $endDate = Carbon::now()->addWeek()->endOfWeek(CARBON::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+            $endDate = Carbon::now()->addWeek()->endOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
             // $equal_or_after = '<>';
         }
 
@@ -211,11 +211,11 @@ class OrderController extends Controller
     public function edit(Order $order)
     {
        $startDate = Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
-        $endDate = Carbon::now()->endOfWeek(Carbon::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+        $endDate = Carbon::now()->endOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
 
         if(in_array(Carbon::now()->locale('it_IT')->dayName, ['sabato', 'domenica'])) {
             $startDate = Carbon::now()->addWeek()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
-            $endDate = Carbon::now()->addWeek()->endOfWeek(Carbon::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+            $endDate = Carbon::now()->addWeek()->endOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
         }
 
         $equal_or_after = Carbon::now()->setTimezone('Europe/Rome')->format('H:i') >= '10:00' ? '>' : '>=';
