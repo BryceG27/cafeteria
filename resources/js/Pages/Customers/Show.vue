@@ -118,7 +118,7 @@ const denyPayment = () => {
                         class="btn btn-sm btn-alt-danger"
                         @click="denyPayment"
                     >
-                        <i class="fa fa-x me-1"></i>
+                        <i class="fa fa-times me-1"></i>
                         Chiudi
                     </button>
                 </div>

@@ -96,7 +96,7 @@ const show_menu = (menu) => {
                             class="w-75"
                         />
                         <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
-                            <i class="fa fa-x"></i>
+                            <i class="fa fa-times"></i>
                         </button>
                     </div>
                 </template>
@@ -111,7 +111,7 @@ const show_menu = (menu) => {
                             optionLabel="name"
                         />
                         <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
-                            <i class="fa fa-x"></i>
+                            <i class="fa fa-times"></i>
                         </button>
                     </div>
                 </template>
@@ -263,7 +263,7 @@ const show_menu = (menu) => {
                                     class="w-75"
                                 />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
-                                    <i class="fa fa-x"></i>
+                                    <i class="fa fa-times"></i>
                                 </button>
                             </div>
                         </template>
@@ -288,7 +288,7 @@ const show_menu = (menu) => {
                                     optionLabel="name"
                                 />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
-                                    <i class="fa fa-x"></i>
+                                    <i class="fa fa-times"></i>
                                 </button>
                             </div>
                         </template>
@@ -328,7 +328,7 @@ const show_menu = (menu) => {
                                     class="w-75"
                                 />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
-                                    <i class="fa fa-x"></i>
+                                    <i class="fa fa-times"></i>
                                 </button>
                             </div>
                         </template>
@@ -353,7 +353,7 @@ const show_menu = (menu) => {
                                     optionLabel="name"
                                 />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
-                                    <i class="fa fa-x"></i>
+                                    <i class="fa fa-times"></i>
                                 </button>
                             </div>
                         </template>

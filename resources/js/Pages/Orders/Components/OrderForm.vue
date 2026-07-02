@@ -2,7 +2,7 @@
 import Dropdown from "primevue/dropdown";
 import InputNumber from "primevue/inputnumber";
 import Textarea from "primevue/textarea";
-import Calendar from "primevue/calendar";
+import DatePicker from "primevue/datepicker";
 import Listbox from "primevue/listbox";
 import Dialog from "primevue/dialog";
 
@@ -175,7 +175,7 @@ const goBack = () => {
                                             <div class="w-100">
                                                 <div class="d-flex align-items-center justify-content-between">
                                                     {{ slotProps.option.name }} <br>
-                                                    <button class="btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
+                                                    <button class="btn btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
                                                         <i class="fa fa-camera"></i>
                                                     </button>
                                                 </div>
@@ -200,7 +200,7 @@ const goBack = () => {
                                            <div class="w-100">
                                                 <div class="d-flex align-items-center justify-content-between">
                                                     {{ slotProps.option.name }} <br>
-                                                    <button class="btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
+                                                    <button class="btn btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
                                                         <i class="fa fa-camera"></i>
                                                     </button>
                                                 </div>
@@ -224,7 +224,7 @@ const goBack = () => {
                                            <div class="w-100">
                                                 <div class="d-flex align-items-center justify-content-between">
                                                     {{ slotProps.option.name }} <br>
-                                                    <button class="btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
+                                                    <button class="btn btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
                                                         <i class="fa fa-camera"></i>
                                                     </button>
                                                 </div>
@@ -256,7 +256,7 @@ const goBack = () => {
                                             <div class="w-100">
                                                 <div class="d-flex align-items-center justify-content-between">
                                                     {{ slotProps.option.name }} <br>
-                                                    <button class="btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
+                                                    <button class="btn btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
                                                         <i class="fa fa-camera"></i>
                                                     </button>
                                                 </div>
@@ -284,7 +284,7 @@ const goBack = () => {
                                            <div class="w-100">
                                                 <div class="d-flex align-items-center justify-content-between">
                                                     {{ slotProps.option.name }} <br>
-                                                    <button class="btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
+                                                    <button class="btn btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
                                                         <i class="fa fa-camera"></i>
                                                     </button>
                                                 </div>
@@ -311,7 +311,7 @@ const goBack = () => {
                                            <div class="w-100">
                                                 <div class="d-flex align-items-center justify-content-between">
                                                     {{ slotProps.option.name }} <br>
-                                                    <button class="btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
+                                                    <button class="btn btn-link" v-if="slotProps.option.image" @click.prevent="selectedProduct = slotProps.option; openDialog = true;">
                                                         <i class="fa fa-camera"></i>
                                                     </button>
                                                 </div>
@@ -378,7 +378,7 @@ const goBack = () => {
                 </div>
                 <div class="col-md-6 pt-2 pt-md-0" :class="{ 'pt-3' : auth.user.user_group_id == 1 }">
                     <label for="order_date" class="form-label">Ordine valido il:</label>
-                    <Calendar 
+                    <DatePicker 
                         v-model="form.order_date" 
                         inputId="order_date"
                         :class="{ 'is-invalid': errors.order_date }"
@@ -446,7 +446,7 @@ const goBack = () => {
                     @click="goBack"
                     v-else
                 >
-                    <i class="fa fa-x me-1"></i>
+                    <i class="fa fa-times me-1"></i>
                     Annulla
                 </button>
             </div>

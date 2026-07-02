@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link } from "@inertiajs/vue3";
-import { useForm } from "@inertiajs/vue3";
+import { Head, Link, useForm } from "@inertiajs/vue3";
+
 import BaseBlock from "@/Components/BaseBlock.vue";
 import MenuFrom from './Components/MenuForm.vue';
 
@@ -13,7 +13,7 @@ const props = defineProps({
     products : Array,
     product_types : Array,
     errors : Object,
-})
+});
 
 const submit = () => {
     form.post(route('menus.store'), {
@@ -55,7 +55,7 @@ const form = useForm({
                         class="btn btn-alt-danger btn-sm"
                         :href="route('menus.index')"
                     >
-                        <i class="fa fa-x me-1"></i>
+                        <i class="fa fa-times me-1"></i>
                         Annulla
                     </Link>
                 </template>

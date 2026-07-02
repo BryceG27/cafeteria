@@ -7,7 +7,9 @@ import Column from 'primevue/column';
 import Select from 'primevue/select';
 import InputText from 'primevue/inputtext';
 import DatePicker from 'primevue/datepicker';
-import Toast from 'primevue/toast'
+import Fieldset from 'primevue/fieldset';
+import Divider from 'primevue/divider';
+import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 
 const toast = useToast();
@@ -124,17 +126,9 @@ const onPage = debounce((page = 1) => {
                     </template>
                     <Column style="width: 15%" header="Cliente" field="child_name" :showFilterMenu="false">
                         <template #body="{ data }">
-                            <div class="d-flex align-items-center">
-                                {{ data.child_name }}
-                                <a class="link-info ms-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fa fa-info"></i>
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li class="dropdown-item">
-                                        <strong>Genitore: </strong><em v-text="`${data.customer.name} ${data.customer.surname}`" />
-                                    </li>
-                                </ul>
-                            </div>
+                            <span v-text="data.child_name" class="fs-14" />
+                            <br>
+                            <span class="text-muted fs-12">{{ data.customer.name }} {{ data.customer.surname }}</span>
                         </template>
                         <template #filter="{ filterModel, filterCallback }">
                             <InputText 
@@ -145,7 +139,12 @@ const onPage = debounce((page = 1) => {
                             />
                         </template>
                     </Column>
-                    <Column style="width: 15%" header="Nome menù" field="menu.name" />
+                    <Column style="width: 15%" header="Nome menù" field="menu.name">
+                        <template #body="{ data }">
+                            <span v-if="data.menu" v-text="data.menu.name" />
+                            <span v-else-if="data.special_menu" v-text="data.special_menu.name" />
+                        </template>
+                    </Column>
                     <Column style="width: 30%" header="Prodotti">
                         <template #body="{ data }">
                             <div class="row">
@@ -161,69 +160,56 @@ const onPage = debounce((page = 1) => {
                                     </ul>
                                 </div>
 
-                                <div class="col-md-10 px-0">
-                                    <table class="table table-bordered rounded-2 h-100 align-middle">
-                                        <tbody>
-                                            <tr v-if="data.first_dish">
-                                                <td class="p-2 align-middle">
-                                                    <div class="d-flex justify-content-between">
-                                                        <span>
-                                                            <strong>Primo:</strong> <span v-text="data.first_dish.name" />
-                                                        </span>
-                                                        <button class="btn btn-link" v-if="data.first_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
-                                                            <i class="fa fa-camera"></i>
-                                                        </button>
-                                                        <ul class="dropdown-menu">
-                                                            <li class="dropdown-item">
-                                                                <div style="width: 15rem; height: 10rem">
-                                                                    <img :src="`/storage/app/public/${data.first_dish.image}`" :alt="data.first_dish.name" class="img-fluid">
-                                                                </div>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr v-if="data.second_dish">
-                                                <td class="p-2 align-middle">
-                                                    <div class="d-flex justify-content-between">
-                                                        <span>
-                                                            <strong>Secondo:</strong> <span v-text="data.second_dish.name" />
-                                                        </span>
-                                                        <button class="btn btn-link" v-if="data.second_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
-                                                            <i class="fa fa-camera"></i>
-                                                        </button>
-                                                        <ul class="dropdown-menu">
-                                                            <li class="dropdown-item">
-                                                                <div style="width: 15rem; height: 10rem">
-                                                                    <img :src="`/storage/app/public/${data.second_dish.image}`" :alt="data.second_dish.name" class="img-fluid">
-                                                                </div>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr v-if="data.side_dish">
-                                                <td class="p-2 align-middle">
-                                                    <div class="d-flex justify-content-between">
-                                                        <span>
-                                                            <strong>Contorno:</strong> <span v-text="data.side_dish.name" />
-                                                        </span>
-                                                        <button class="btn btn-link" v-if="data.side_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
-                                                            <i class="fa fa-camera"></i>
-                                                        </button>
-                                                        <ul class="dropdown-menu">
-                                                            <li class="dropdown-item">
-                                                                <div style="width: 15rem; height: 10rem">
-                                                                    <img :src="`/storage/app/public/${data.side_dish.image}`" :alt="data.side_dish.name" class="img-fluid">
-                                                                </div>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                <div class="border rounded-2 px-0" :class="{ 'col-md-10' : data.customer.child_allergies != '' && data.notes != '', 'col-md-11' : data.customer.child_allergies != '' || data.notes != '', 'col-md-12' : data.customer.child_allergies == '' && data.notes == ''}" v-if="data.menu">
+                                    <div class="row py-1" v-if="data.first_dish">
+                                        <div class="col-md-10 offset-md-1">
+                                            <span class="fs-14" style="font-weight: 500;" v-text="data.first_dish.name" />
+                                            <br>
+                                            <em class="fs-12">Primo piatto</em>
+                                        </div>
+                                    </div>
+
+                                    <Divider class="my-1" v-if="data.first_dish && data.second_dish" />
+
+                                    <div class="row py-1" v-if="data.second_dish">
+                                        <div class="col-md-10 offset-md-1">
+                                            <span class="fs-14" style="font-weight: 500;" v-text="data.second_dish.name" />
+                                            <br>
+                                            <em class="fs-12">Secondo piatto</em>
+                                        </div>
+                                    </div>
+
+                                    <Divider class="my-1" v-if="data.second_dish && data.side_dish" />
+
+                                    <div class="row py-1" v-if="data.side_dish">
+                                        <div class="col-md-10 offset-md-1">
+                                            <span class="fs-14" style="font-weight: 500;" v-text="data.side_dish.name" />
+                                            <br>
+                                            <em class="fs-12">Contorno</em>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <div class="col-md-10 border rounded-2 px-0" v-else-if="data.special_menu">
+                                    <div class="row">
+                                        <div class="col-md-10 offset-md-1">
+                                            <span class="fs-14" style="font-weight: 500;" v-text="data.special_menu.product?.name" />
+                                            <br>
+                                            <em class="fs-12">Prodotto del menù</em>
+                                        </div>
+                                    </div>
+
+                                    <Divider class="my-1" />
+
+                                    <div class="row">
+                                        <div class="col-md-10 offset-md-1">
+                                            <span class="fs-14" style="font-weight: 500;" v-text="data.first_dish?.name" />
+                                            <br>
+                                            <em class="fs-12">Bibita</em>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div 
                                     v-if="data.notes != undefined && data.notes != ''" class="rounded-2 rounded-start-0 border border-start-0 col-md-1 px-0 d-flex justify-content-center align-items-center">
                                     <a class="link-primary attention" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -255,7 +241,7 @@ const onPage = debounce((page = 1) => {
                                 placeholder="Cerca per data"
                                 date-format="dd/mm/yy"
                                 v-model="filterModel.value"
-                                @date-select="filterCallback()"
+                                @value-change="filterCallback()"
                                 showButtonBar
                             />
                         </template>
@@ -271,8 +257,9 @@ const onPage = debounce((page = 1) => {
                                 placeholder="Cerca per data"
                                 date-format="dd/mm/yy"
                                 v-model="filterModel.value"
-                                @date-select="filterCallback()"
+                                @value-change="filterCallback()"
                                 showButtonBar
+                                
                             />
                         </template>
                     </Column>
@@ -299,7 +286,7 @@ const onPage = debounce((page = 1) => {
                                 v-model="filterModel.value"
                                 optionLabel="label" 
                                 optionValue="value" 
-                                placeholder="Seleziona stato" 
+                                placeholder="Stato" 
                                 showClear
                                 @change="filterCallback()"
                             />
@@ -318,6 +305,14 @@ const onPage = debounce((page = 1) => {
 
 .clickable {
     cursor: pointer;
+}
+
+.fs-12 {
+    font-size: 12px;
+}
+
+.fs-14 {
+    font-size: 14px;
 }
 
 @keyframes blink {

@@ -108,7 +108,11 @@ class PaymentController extends Controller
         $payment_name = '';
 
         if(count($orders) == 1) {
-            $payment_name = "Pagamento menù: " . $orders[0]->menu->name . " " . Carbon::create($orders[0]->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y');
+            if($orders[0]->menu)
+                $payment_name = "Pagamento menù: " . $orders[0]->menu->name . " " . Carbon::create($orders[0]->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y');
+            else if($orders[0]->special_menu)
+                $payment_name = "Pagamento menù extra: " . $orders[0]->special_menu->name . " " . Carbon::create($orders[0]->order_date)->setTimezone('Europe/Rome')->format('d/m/Y');
+
             $to_be_paid = $orders[0]->to_be_paid * 100;
             $success_url = route('orders.confirm-order', ['order' => $orders[0]->id]) . '?payment_method=3&session_id={CHECKOUT_SESSION_ID}';
             $ids = $orders[0]->id;
@@ -117,10 +121,15 @@ class PaymentController extends Controller
             $to_be_paid = 0;
             $ids = [];
             $orders->map(function($order) use (&$payment_name, &$to_be_paid, &$ids) {
-                $payment_name .= " | " . $order->menu->name . " " . Carbon::create($order->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y');
+                if($order->menu)
+                    $payment_name .= " | " . $order->menu->name . " " . Carbon::create($order->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y');
+                else if($order->special_menu)
+                    $payment_name .= " | " . $order->special_menu->name . " " . Carbon::create($order->special_menu->order_date)->setTimezone('Europe/Rome')->format('d/m/Y');
+
                 $to_be_paid += $order->to_be_paid * 100;
                 $ids[] = $order->id;
             });
+            
             $ids = implode('-', $ids);
             $success_url = route('orders.confirm-orders') . "?orders=$ids&payment_method=3&session_id={CHECKOUT_SESSION_ID}";
         }

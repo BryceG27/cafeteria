@@ -2,7 +2,6 @@
 
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\UserController;
@@ -16,9 +15,8 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SpecialMenuController;
 
 Route::get('/update', function() {
-    Artisan::call('migrate');
-
-    return 'Updated';
+    Artisan::call('migrate', ['--force' => true]);
+    dump(Artisan::output());
 });
 
 Route::get('/seed', function() {
@@ -42,6 +40,11 @@ Route::middleware(['auth' , 'verified'])->group(function () {
     Route::get('/orders/{order}/confirm', [OrderController::class, 'confirm'])->middleware(['auth', 'verified'])->name('orders.confirm-order');
     Route::get('/orders/confirm/multiples', [OrderController::class, 'confirm_multiples'])->middleware(['auth', 'verified'])->name('orders.confirm-orders');
     Route::get('/orders/payments/payment-not-completed', [OrderController::class, 'payment_not_completed'])->middleware(['auth', 'verified'])->name('orders.payment-not-completed');
+
+    Route::get('/orders/create/menu-special', [OrderController::class, 'create_special'])->middleware(['auth', 'verified'])->name('orders.create.special-menu');
+    Route::get('/orders/{order}/edit/menu-special', [OrderController::class, 'edit_special'])->middleware(['auth', 'verified'])->name('orders.edit.special-menu');
+    Route::post('/orders/store/menu-special', [OrderController::class, 'store_special'])->middleware(['auth', 'verified'])->name('orders.store.special-menu');
+    Route::patch('/orders/{order}/update/menu-special', [OrderController::class, 'update_special'])->middleware(['auth', 'verified'])->name('orders.update.special-menu');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

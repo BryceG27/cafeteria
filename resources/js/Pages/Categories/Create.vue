@@ -44,7 +44,7 @@ const form = useForm({
                         class="btn btn-alt-danger btn-sm"
                         :href="route('categories.index')"
                     >
-                        <i class="fa fa-x me-1"></i>
+                        <i class="fa fa-times me-1"></i>
                         Annulla
                     </Link>
                 </template>

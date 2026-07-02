@@ -1,18 +1,19 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, Link, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
+
+import { ref, computed, onUpdated, onMounted, watchEffect } from "vue"
+import { Head, Link, useForm } from "@inertiajs/vue3";
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
-import { useToast } from 'primevue/usetoast';
+import Popover from 'primevue/popover'
 import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
 
 import Swal from 'sweetalert2';
-
 import moment from 'moment';
-import { ref, computed, onUpdated, onMounted } from "vue"
 import axios from "axios";
 
 import "https://js.stripe.com/v3";
@@ -20,21 +21,27 @@ import "https://js.stripe.com/v3";
 const toast = useToast();
 
 const props = defineProps({
+    auth: Object,
     variables : Object,
     credits : Array,
     orders_to_be_paid : Object,
     orders: Array,
-    auth: Object,
+    errors : Object,
+    flash : Object
 });
 
 const connectionSecure = window.location.protocol === 'https:';
-const selectedOrder = ref(null);
+const op = ref(null);
 const selectedOrders = ref([]);
 const showDialog = ref(false);
 const disablePayButton = ref(false);
 const credit_available = computed(() => {
     return props.credits.reduce((acc, credit) => acc + parseFloat(credit.amount_available) , 0).toFixed(2);
 });
+
+const new_order = (event) => {
+    op.value.toggle(event)
+}
 
 onUpdated(() => {
     if(props.orders_to_be_paid.length) {
@@ -50,6 +57,17 @@ onMounted(() => {
     } else {
         selectedOrders.value = props.orders
         checkSelectedOrders();
+    }
+})
+
+watchEffect(() => {
+    if(props.flash?.message)
+        toast.add({ severity: 'success', summary: 'Dati aggiornati', detail: props.flash.message, life: 3000 });
+
+    if(Object.keys(props.errors).length > 0) {
+        Object.values(props.errors).forEach(error => {
+            toast.add({ severity: 'error', summary: 'Riscontrato errore', detail: error, life: 3000 });
+        })
     }
 })
 
@@ -106,25 +124,23 @@ const checkSelectedOrders = () => {
             return moment(order.order_date).isAfter(moment(), 'day')
         });
 
-        if(originalLength != selectedOrders.value.length)
+        if(originalLength != selectedOrders.value.length && selectedOrders.value.length != 0)
             toast.add({severity:'error', summary: 'Attenzione', detail:'Data e ora utili per il pagamento superati.', life: 7000});
     }
 }
 
 const get_checkout_title = computed(() => {
-    if(selectedOrders.value.length == 1)
-        return `Pagamento menù: ${selectedOrders.value[0]?.menu?.name} - ${moment(selectedOrders.value[0]?.date).format('DD/MM')}`;
+    console.log(selectedOrders.value);
+    
+    if(selectedOrders.value.length == 1 && selectedOrders.value[0]?.menu_id != undefined)
+        return `Pagamento menù: ${selectedOrders.value[0]?.menu?.name} - ${moment(selectedOrders.value[0]?.order_date).format('DD/MM')}`;
+    else if (selectedOrders.value.length == 1 && selectedOrders.value[0]?.special_menu_id != undefined)
+        return `Pagamento menù extra: ${selectedOrders.value[0]?.special_menu?.name} - ${moment(selectedOrders.value[0]?.order_date).format('DD/MM')}`;
     else if (selectedOrders.value.length > 1)
         return `Pagamento di ${selectedOrders.value.length} ordini`;
     else
         return 'Nessun ordine selezionato';
 })
-
-const payOrder = (order) => {
-    selectedOrder.value = order
-    selectedOrders.value = [ selectedOrder.value ];
-    showDialog.value = true;
-}
 
 const payOrders = () => {
     if(selectedOrders.value.length == 0) {
@@ -146,17 +162,33 @@ const total_orders = computed(() => {
 const total_to_be_paid = computed(() => {
     return parseFloat(selectedOrders.value.reduce((acc, order) => acc + parseFloat(order.to_be_paid), 0)).toFixed(2)
 })
+
 </script>
 
 <template>
-    <Head title="Ordini" />    
+    <Head title="Ordini" />
+
+    <Toast />
 
     <AuthenticatedLayout>
         <div class="content">
-            <SuccessMessage />
             <ErrorMessage v-if="!showDialog" />
 
-            <Toast />
+            <Popover ref="op">
+                <Link
+                    :href="route('orders.create')"
+                    class="link-dark"
+                >
+                    Menù settimanale
+                </Link>
+                <hr>
+                <Link
+                    :href="route('orders.create.special-menu')"
+                    class="link-dark"
+                >
+                    Menù extra
+                </Link>
+            </Popover>
 
             <div class="alert alert-danger" v-if="!connectionSecure">
                 <i class="fa fa-exclamation-triangle fa-2x"></i>
@@ -170,7 +202,7 @@ const total_to_be_paid = computed(() => {
                 v-model:visible="showDialog"
                 modal
                 :header="get_checkout_title"
-                :style="{ width: '50rem', minHeight: '46vh', maxHeight: '52vh' }"
+                :style="{ width: '50rem', minHeight: '46vh', maxHeight: '60vh' }"
             >
                 <div class="container">
                     <div class="row py-1" v-if="Object.keys($page.props.errors).length">
@@ -180,35 +212,41 @@ const total_to_be_paid = computed(() => {
                         <div class="col-md-12">
                             <table class="table">
                                 <tbody>
-                                    <tr>
-                                        <th style="width: 40%">Menù</th>
-                                        <td style="width: 60%" v-text="selectedOrders[0]?.menu?.name" v-if="selectedOrders.length <= 1" />
-                                        <td style="width: 60%" v-else>
+                                    <template v-if="selectedOrders.length <= 1">
+                                        <tr>
+                                            <th style="width: 40%">Menù</th>
+                                            <td style="width: 60%" v-text="selectedOrders[0]?.menu?.name" v-if="selectedOrders.length <= 1 && selectedOrders[0].menu" />
+                                            <td style="width: 60%" v-text="selectedOrders[0]?.special_menu?.name" v-else-if="selectedOrders.length <= 1 && selectedOrders[0].special_menu" />
+                                        </tr>
+                                        <tr v-if="selectedOrders.length == 1">
+                                            <th style="width: 40%">Data</th>
+                                            <td style="width: 60%" v-text="moment(selectedOrders[0]?.order_date).format('DD/MM/YYYY')" />
+                                        </tr>
+                                    </template>
+                                    <tr v-else>
+                                        <td class="w-100" colspan="2">
                                             <table class="table">
                                                 <thead>
                                                     <tr>
                                                         <th class="text-center" style="width: 10%"></th>
-                                                        <th style="width: 60%">Nome</th>
+                                                        <th style="width: 60%">Nome menù</th>
                                                         <th class="text-center" style="width: 30%">Giorno</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     <tr v-for="order in selectedOrders" :key="order.id">
                                                         <td class="text-center">
-                                                            <button class="btn-link link-danger me-3" @click="selectedOrders = selectedOrders.filter(o => o.id !== order.id)">
+                                                            <button class="btn btn-link link-danger me-3" @click="selectedOrders = selectedOrders.filter(o => o.id !== order.id)">
                                                                 <i class="fa fa-minus"></i>
                                                             </button>
                                                         </td>
-                                                        <td v-text="order.menu.name" />
-                                                        <td class="text-center" v-text="moment(order.order_date).format('DD/MM')" />
+                                                        <td v-if="order.menu" v-text="order.menu.name" />
+                                                        <td v-else-if="order.special_menu" v-text="order.special_menu.name" />
+                                                        <td class="text-center" v-text="moment(order.order_date).format('DD/MM/YYYY')" />
                                                     </tr>
                                                 </tbody>
                                             </table>
                                         </td>
-                                    </tr>
-                                    <tr v-if="selectedOrders.length == 1">
-                                        <th style="width: 40%">Data</th>
-                                        <td style="width: 60%" v-text="moment(selectedOrders[0]?.order_date).format('DD/MM/YYYY')" />
                                     </tr>
                                     <tr>
                                         <th style="width: 40%">Totale</th>
@@ -248,13 +286,14 @@ const total_to_be_paid = computed(() => {
             </Dialog>
             
             <div class="w-100 d-md-none">
-                <Link 
-                    :href="route('orders.create')" 
+                <button 
                     class="btn btn-alt-primary w-100 py-2 mb-3"
-                    >
+                    type="button"
+                    @click="new_order($event)"
+                >
                     <i class="fa fa-plus me-1"></i>
                     Nuovo ordine
-                </Link>
+                </button>
                 <button 
                     class="btn btn-alt-success btn-sm w-100 py-2 mb-3" 
                     @click.prevent="payOrders"
@@ -296,9 +335,17 @@ const total_to_be_paid = computed(() => {
                                     <i class="fa fa-euro-sign me-1"></i>
                                     Paga ordini
                                 </button>
-                                <Link :href="route('orders.create')" class="btn btn-alt-primary btn-sm">
+                                <!-- <Link :href="route('orders.create')" class="btn btn-alt-primary btn-sm">
                                     <i class="fa fa-plus me-1"></i> Nuovo ordine
-                                </Link>
+                                </Link> -->
+                                <button 
+                                    class="btn btn-sm btn-alt-primary"
+                                    type="button"
+                                    @click="new_order($event)"
+                                >
+                                    <i class="fa fa-plus me-1"></i>
+                                    Nuovo ordine
+                                </button>
                             </div>
                         </div>
                     </template>
@@ -360,22 +407,28 @@ const total_to_be_paid = computed(() => {
                             </ul>
                         </template>
                     </Column>
-                    <Column style="width: 20%" header="Giorno menù" field="menu.name">
+                    <Column style="width: 15%" header="Nome menù" field="menu.name">
                         <template #body="{data}">
-                            <span v-text="`${data.menu?.name} - ${moment(data.order_date).format('DD/MM')}`" />
+                            <span v-if="data.menu" v-text="`${data.menu?.name}`"/>
+                            <span v-else-if="data.special_menu" v-text="`${data.special_menu?.name}`"/>
                         </template>
                     </Column>
-                    <Column style="width: 30%" header="Prodotti">
+                    <Column style="width: 10%" header="Validità del menù" field="data.order_date">
+                        <template #body="{ data }">
+                            {{ moment(data.order_date).format('DD/MM/YYYY') }}
+                        </template>
+                    </Column>
+                    <Column style="width: 25%" header="Prodotti">
                         <template #body="{ data }">
                             <table class="table table-bordered rounded-2 h-100 align-middle">
-                                <tbody>
+                                <tbody v-if="data.menu_id">
                                     <tr v-if="data.first_dish">
                                         <td class="p-2 align-middle">
-                                            <div class="d-flex justify-content-between">
+                                            <div class="d-flex justify-content-between align-items-center">
                                                 <span>
                                                     <strong>Primo:</strong> <span v-text="data.first_dish.name" />
                                                 </span>
-                                                <button class="btn-link" v-if="data.first_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <button class="btn btn-link" v-if="data.first_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
                                                     <i class="fa fa-camera"></i>
                                                 </button>
                                                 <ul class="dropdown-menu">
@@ -390,11 +443,11 @@ const total_to_be_paid = computed(() => {
                                     </tr>
                                     <tr v-if="data.second_dish">
                                         <td class="p-2 align-middle">
-                                            <div class="d-flex justify-content-between">
+                                            <div class="d-flex justify-content-between align-items-center">
                                                 <span>
                                                     <strong>Secondo:</strong> <span v-text="data.second_dish.name" />
                                                 </span>
-                                                <button class="btn-link" v-if="data.second_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <button class="btn btn-link" v-if="data.second_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
                                                     <i class="fa fa-camera"></i>
                                                 </button>
                                                 <ul class="dropdown-menu">
@@ -409,17 +462,57 @@ const total_to_be_paid = computed(() => {
                                     </tr>
                                     <tr v-if="data.side_dish">
                                         <td class="p-2 align-middle">
-                                            <div class="d-flex justify-content-between">
+                                            <div class="d-flex justify-content-between align-items-center">
                                                 <span>
                                                     <strong>Contorno:</strong> <span v-text="data.side_dish.name" />
                                                 </span>
-                                                <button class="btn-link" v-if="data.side_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <button class="btn btn-link" v-if="data.side_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
                                                     <i class="fa fa-camera"></i>
                                                 </button>
                                                 <ul class="dropdown-menu">
                                                     <li class="dropdown-item">
                                                         <div style="width: 15rem; height: 10rem">
                                                             <img :src="`/storage/app/public/${data.side_dish.image}`" :alt="data.side_dish.name" class="img-fluid">
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tbody v-else-if="data.special_menu">
+                                    <tr>
+                                        <td class="p-2 align-middle">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <strong>Piatto:</strong> <span v-text="data.special_menu?.product.name" />
+                                                </span>
+                                                <button class="btn btn-link" v-if="data.special_menu?.product.image" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fa fa-camera"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li class="dropdown-item">
+                                                        <div style="width: 15rem; height: 10rem">
+                                                            <img :src="`/storage/app/public/${data.special_menu?.product.image}`" :alt="data.special_menu?.product.name" class="img-fluid">
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2 align-middle">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <strong>Bibita:</strong> <span v-text="data.first_dish?.name" />
+                                                </span>
+                                                <button class="btn btn-link" v-if="data.first_dish?.image" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fa fa-camera"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li class="dropdown-item">
+                                                        <div style="width: 15rem; height: 10rem">
+                                                            <img :src="`/storage/app/public/${data.first_dish?.image}`" :alt="data.special_menu?.product.name" class="img-fluid">
                                                         </div>
                                                     </li>
                                                 </ul>

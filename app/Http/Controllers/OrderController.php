@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
-use App\Models\Menu;
-use App\Models\User;
-use Inertia\Inertia;
-use App\Models\Order;
 use App\Models\Credit;
+use App\Models\Menu;
+use App\Models\Order;
 use App\Models\Payment;
-use PayPal\Rest\ApiContext;
-use Illuminate\Http\Request;
 use App\Models\PaymentMethod;
+use App\Models\Product;
+use App\Models\SpecialMenu;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 use PayPal\Auth\OAuthTokenCredential;
+use PayPal\Rest\ApiContext;
 
 class OrderController extends Controller
 {
@@ -25,11 +27,16 @@ class OrderController extends Controller
         if(Auth::user()->user_group_id == 3) {
             $orders_to_be_paid = [];
             if($request->has('orders'))
-                $orders_to_be_paid = Order::whereIn('id', $request->orders)->where('to_be_paid', '>', 0)->with('menu')->get();
+                $orders_to_be_paid = Order::whereIn('id', $request->orders)->where('to_be_paid', '>', 0)->with('menu', 'special_menu')->get();
 
             return Inertia::render('Orders/CustomerIndex', [
                 'credits' => Auth::user()->credits,
-                'orders' => Order::where('customer_id', Auth::user()->id)->where('status', '<>', 2)->orderBy('created_at', 'desc')->with(['first_dish', 'second_dish', 'side_dish', 'menu'])->get()->map(function($order) {
+                'orders' => Order::where('customer_id', Auth::user()->id)
+                                    ->where('status', '<>', 2)
+                                    ->orderBy('created_at', 'desc')
+                                    ->with(['first_dish', 'second_dish', 'side_dish', 'menu', 'special_menu.product'])
+                                    ->get()
+                                    ->map(function($order) {
                     $order->status_info = $order->get_status();
                     return $order;
                 }),
@@ -51,7 +58,7 @@ class OrderController extends Controller
                                     ->when(isset($request->status), function($query) use ($request) {
                                         $query->where('status', $request->status);
                                     })
-                                    ->with(['customer', 'first_dish', 'second_dish', 'side_dish', 'menu'])
+                                    ->with(['customer', 'first_dish', 'second_dish', 'side_dish', 'menu', 'special_menu.product'])
                                     ->orderBy('created_at', 'desc')
                                     ->paginate(50)
                                     ->through(function ($order) {
@@ -141,6 +148,15 @@ class OrderController extends Controller
         ]);
     }
 
+    public function create_special() {
+        return Inertia::render('Orders/Create-Special', [
+            'menus' => SpecialMenu::where('active', true)->with('product')->get(),
+            'order' => new Order(),
+            'statuses' => Order::get_statuses(),
+            'beverage' => Product::get_beverage()->get()
+        ]);
+    }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -173,17 +189,33 @@ class OrderController extends Controller
         return redirect()->route('orders.index', ['orders' => $ids])->with('success', 'Ordine creato con successo.');
     }
 
+    public function store_special(Request $request) {
+        $validate = Order::validate_special($request);
+
+        $menu = SpecialMenu::find($validate['special_menu_id']);
+
+        $validate['order_date'] = Carbon::create($request->order_date)->setTimezone('Europe/Rome')->format('Y-m-d');
+        $validate['special_menu_id'] = $menu->id;
+        $validate['subtotal_amount'] = $menu->price;
+        $validate['total_amount'] = $menu->price;
+        $validate['to_be_paid'] = $menu->price;
+
+        $order = Order::create($validate);
+
+        return redirect()->route('orders.index', ['orders' => [$order->id]]);
+    }
+
     /**
      * Show the form for editing the specified resource.
      */
     public function edit(Order $order)
     {
        $startDate = Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
-        $endDate = Carbon::now()->endOfWeek(CARBON::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+        $endDate = Carbon::now()->endOfWeek(Carbon::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
 
         if(in_array(Carbon::now()->locale('it_IT')->dayName, ['sabato', 'domenica'])) {
             $startDate = Carbon::now()->addWeek()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
-            $endDate = Carbon::now()->addWeek()->endOfWeek(CARBON::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+            $endDate = Carbon::now()->addWeek()->endOfWeek(Carbon::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
         }
 
         $equal_or_after = Carbon::now()->setTimezone('Europe/Rome')->format('H:i') >= '10:00' ? '>' : '>=';

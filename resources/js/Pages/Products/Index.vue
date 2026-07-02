@@ -120,7 +120,7 @@ const filters = ref({
                             <div class="d-flex align-items-center justify-content-between">
                                 <InputText v-model="filterModel.value" @input="filterCallback()" class="w-75" placeholder="Cerca per nome" />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
-                                    <i class="fa fa-x"></i>
+                                    <i class="fa fa-times"></i>
                                 </button>
                             </div>
                         </template>
@@ -130,7 +130,7 @@ const filters = ref({
                             <div class="d-flex align-items-center justify-content-between">
                                 <InputText v-model="filterModel.value" @input="filterCallback()" class="w-75" placeholder="Cerca per descrizione" />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
-                                    <i class="fa fa-x"></i>
+                                    <i class="fa fa-times"></i>
                                 </button>
                             </div>
                         </template>
@@ -146,7 +146,7 @@ const filters = ref({
                                     class="w-75"
                                 />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
-                                    <i class="fa fa-x"></i>
+                                    <i class="fa fa-times"></i>
                                 </button>
                             </div>
                         </template>
@@ -176,7 +176,7 @@ const filters = ref({
                                     @change="filterCallback"
                                 />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
-                                    <i class="fa fa-x"></i>
+                                    <i class="fa fa-times"></i>
                                 </button>
                             </div>
                         </template>

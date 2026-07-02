@@ -936,7 +936,7 @@ onMounted (() => {
                                         @input="filterCallback"
                                     />
                                     <button class="btn btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
-                                        <i class="fa fa-x"></i>
+                                        <i class="fa fa-times"></i>
                                     </button>
                                 </div>
                             </template>
@@ -952,7 +952,7 @@ onMounted (() => {
                                         @input="filterCallback"
                                     />
                                     <button class="btn btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
-                                        <i class="fa fa-x"></i>
+                                        <i class="fa fa-times"></i>
                                     </button>
                                 </div>
                             </template>
@@ -971,7 +971,7 @@ onMounted (() => {
                                         v-model="order_date_filter"
                                     />
                                     <button class="btn btn-link link-danger" type="button" @click.prevent="order_date_filter = null">
-                                        <i class="fa fa-x"></i>
+                                        <i class="fa fa-times"></i>
                                     </button>
                                 </div>
                             </template>
@@ -997,7 +997,7 @@ onMounted (() => {
                                         ]"
                                     />
                                     <button class="btn btn-link link-danger" type="button" @click.prevent="filterModel.value = null; filterCallback">
-                                        <i class="fa fa-x"></i>
+                                        <i class="fa fa-times"></i>
                                     </button>
                                 </div>
                             </template>

@@ -140,13 +140,14 @@ async function submitRegister() {
                     <h1 class="fw-bold mb-2">Entra nel portale</h1>
                     <p class="fw-medium text-muted">
                         Benvenuto, effettua il login oppure
-                        <button
+                        <a
                             type="button" 
-                            class="btn-link link-primary"
+                            class="link-primary"
+                            href="#"
                             @click="register = true"
                         >
                             registrati
-                        </button>
+                        </a>
                         per creare un nuovo account.
                     </p>
                 </div>
@@ -170,7 +171,7 @@ async function submitRegister() {
                                     />
                                     <label for="login-username">Email</label>
                                 </FloatLabel>
-                                <InputError class="mt-2" :message="errors.email" />
+                                <InputError class="mt-2 text-danger" :message="errors.email" />
                             </div>
                             <div class="mb-4">
                                 <FloatLabel variant="on">
@@ -229,13 +230,13 @@ async function submitRegister() {
                     <h1 class="fw-bold mb-2">Entra nel portale</h1>
                     <p class="fw-medium text-muted">
                         Benvenuto, effettua la registrazione per creare un nuovo account oppure
-                        <button
-                            type="button" 
-                            class="btn-link link-primary"
+                        <a
+                            href="#" 
+                            class="link-primary"
                             @click="register = false"
                         >
                             effettua il login
-                        </button>
+                        </a>
                     </p>
                 </div>
 

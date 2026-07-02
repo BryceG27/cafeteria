@@ -1,9 +1,10 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, useForm } from "@inertiajs/vue3";
 import BaseBlock from "@/Components/BaseBlock.vue";
 import OrderForm from './Components/OrderForm.vue';
+
 import { onMounted, watch } from "vue";
+import { Head, useForm } from "@inertiajs/vue3";
 
 const props = defineProps({
     menus : Array,

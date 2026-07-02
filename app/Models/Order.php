@@ -16,6 +16,7 @@ class Order extends Model
     protected $fillable = [
         'customer_id',
         'menu_id',
+        'special_menu_id',
         'notes',
         'status',
         'subtotal_amount',
@@ -95,6 +96,25 @@ class Order extends Model
             'side_dish_id.max' => 'Il campo contorno non deve superare i :max caratteri.',
         ]);
     }
+
+    public static function validate_special(Request $request) {
+        return $request->validate([
+            'customer_id' => 'required|exists:users,id',
+            'special_menu_id' => 'required|exists:special_menus,id',
+            'notes' => 'nullable|string|max:500',
+            'status' => 'nullable|integer',
+            'subtotal_amount' => 'nullable|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0',
+            'total_amount' => 'nullable|numeric|min:0',
+            'payment_method' => 'nullable|string|max:100',
+            'order_date' => 'required|date',
+            'first_dish_id' => 'nullable|required|max:255|exists:products,id',
+        ], [
+            'special_menu_id.required' => 'E\' necessario selezionare un menù',  
+            'order_date.required' => 'E\' necessario selezionare la data di validità',  
+            'first_dish_id.required' => 'E\' necessario selezionare una bibita',  
+        ]);
+    }
     
     public function first_dish() {
         return $this->belongsTo(Product::class, 'first_dish_id');
@@ -129,8 +149,12 @@ class Order extends Model
 
     public function menu() : BelongsTo
     {
-        return $this->belongsTo(Menu::class, 'menu_id');
-        
+        return $this->belongsTo(Menu::class);
+    }
+
+    public function special_menu() : BelongsTo
+    {
+        return $this->belongsTo(SpecialMenu::class);
     }
 
     public function get_status() {

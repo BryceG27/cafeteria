@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\belongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 
 class Product extends Model
 {
@@ -33,23 +34,23 @@ class Product extends Model
     }
 
     public function menus() : belongsToMany {
-        dd($this);
         return $this->belongsToMany(Menu::class, 'menu_product')->withPivot('quantity');
+    }
+
+    public static function get_beverage() : Builder {
+        return SELF::where('product_type_id', 5)->where('is_active', true);
     }
 
     public function orders() {
         switch($this->product_type_id) {
             case 2:
                 return $this->belongsTo(Order::class, 'first_dish');
-                break;
 
             case 3:
                 return $this->belongsTo(Order::class, 'second_dish');
-                break;
 
             case 4:
                 return $this->belongsTo(Order::class, 'side_dish');
-                break;
         }
     }
 

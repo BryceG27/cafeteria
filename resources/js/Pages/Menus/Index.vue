@@ -204,7 +204,7 @@ const deleteMenu = (id) => {
                                     @input="filterCallback" 
                                 />
                                 <button class="btn btn-link link-danger" @click.prevent="filterModel.value = null; filterCallback()">
-                                    <i class="fa fa-x"></i>
+                                    <i class="fa fa-times"></i>
                                 </button>
                             </div>
                         </template>
@@ -222,7 +222,7 @@ const deleteMenu = (id) => {
                             <div class="d-flex align-items-center gap-2">
                                 <input type="week" class="form-control" v-model="dateFilter.week" />
                                 <button class="btn btn-link link-danger" @click.prevent="dates = []">
-                                    <i class="fa fa-x"></i>
+                                    <i class="fa fa-times"></i>
                                 </button>
                             </div>
                         </template>
@@ -243,7 +243,7 @@ const deleteMenu = (id) => {
                                     @date-select="filterCallback()"
                                 />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null; filterCallback()">
-                                    <i class="fa fa-x"></i>
+                                    <i class="fa fa-times"></i>
                                 </button>
                             </div>
                         </template> -->
