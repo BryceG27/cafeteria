@@ -1,8 +1,9 @@
 <script setup>
 
 import InputText from "primevue/inputtext";
+import InputNumber from "primevue/inputnumber"
 import Textarea from "primevue/textarea";
-import Dropdown from "primevue/dropdown";
+import Select from "primevue/select";
 import SelectButton from "primevue/selectbutton";
 import Image from "primevue/image";
 
@@ -38,7 +39,7 @@ const loadImage = (event) => {
                 />
             </div>
             <div class="col-md-6 d-flex flex-column">
-                <label for="to_special_menu" class="form-label">Disponibile per menù extra</label>
+                <label for="to_special_menu" class="form-label">Disponibile <em>solo</em> per menù extra</label>
                 <SelectButton 
                     v-model="form.to_special_menu" 
                     :options="[{ label: 'Sì', value: 1 }, { label: 'No', value: 0 }]"
@@ -54,7 +55,7 @@ const loadImage = (event) => {
         </div>
         <div class="row pb-3">
             <div class="col-md-6">
-                <label for="name" class="form-label">Nome</label> <br></br>
+                <label for="name" class="form-label">Nome</label>
                 <InputText 
                     v-model="form.name" 
                     inputId="name"
@@ -66,7 +67,7 @@ const loadImage = (event) => {
                 <InputError class="mt-2" :message="errors.name" />
             </div>
             <div class="col-md-6">
-                <label for="description" class="form-label">Descrizione</label> <br></br>
+                <label for="description" class="form-label">Descrizione</label>
                 <Textarea 
                     v-model="form.description" 
                     inputId="description"
@@ -79,9 +80,9 @@ const loadImage = (event) => {
             </div>
         </div>
         <div class="row pb-3">
-            <div class="col-md-6">
-                <label for="category_id" class="form-label">Categoria</label> <br></br>
-                <Dropdown 
+            <div class="col-md-4">
+                <label for="category_id" class="form-label">Categoria</label>
+                <Select
                     v-model="form.category_id" 
                     :options="categories" 
                     optionLabel="name" 
@@ -93,9 +94,9 @@ const loadImage = (event) => {
                 />
                 <InputError class="mt-2" :message="errors.category_id" />
             </div>
-            <div class="col-md-6">
-                <label for="product_type_id" class="form-label">Tipo</label> <br></br>
-                <Dropdown 
+            <div class="col-md-4">
+                <label for="product_type_id" class="form-label">Tipo</label>
+                <Select 
                     v-model="form.product_type_id" 
                     :options="types" 
                     optionLabel="name" 
@@ -106,6 +107,18 @@ const loadImage = (event) => {
                     :class="{ 'is-invalid': errors.product_type_id }"
                 />
                 <InputError class="mt-2" :message="errors.product_type_id" />
+            </div>
+            <div class="col-md-4">
+                <label for="price" class="form-label">Prezzo</label>
+                <InputNumber 
+                    class="w-100"
+                    v-model="form.price"
+                    inputId="price"
+                    mode="currency"
+                    currency="EUR"
+                    locale="it-IT"
+                />
+                <InputError class="mt-2" :message="errors.price" />
             </div>
         </div>
 

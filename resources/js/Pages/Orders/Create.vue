@@ -9,6 +9,7 @@ import { Head, useForm } from "@inertiajs/vue3";
 const props = defineProps({
     menus : Array,
     order : Object,
+    beverage : Array,
     auth : Object,
     errors : Object,
     statuses : Array,
@@ -33,6 +34,7 @@ const form = useForm({
     first_dish_id : null,
     second_dish_id : null,
     side_dish_id : null,
+    beverage_id : null
 })
 
 watch(() => form.menu_id, (newMenuId) => {
@@ -67,7 +69,8 @@ onMounted(() => {
             <BaseBlock title="Inserisci nuovo ordine" class="mb-4">
                 <OrderForm 
                     :form="form" 
-                    :menus="menus" 
+                    :menus="menus"
+                    :beverage="beverage"
                     :order="order"
                     :auth="auth"
                     :errors="errors"

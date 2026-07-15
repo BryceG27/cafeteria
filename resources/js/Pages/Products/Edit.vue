@@ -47,6 +47,7 @@ const form = useForm({
     id : props.product.id || null,
     name : props.product.name || '',
     description : props.product.description || '',
+    price : props.product.price,
     category_id : props.product.category_id,
     product_type_id : props.product.product_type_id,
     is_active : props.product.is_active || 1, // Default to active

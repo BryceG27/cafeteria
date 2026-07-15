@@ -118,24 +118,24 @@ const filters = ref({
                     <Column style="width: 25%" field="name" header="Nome" :showFilterMenu="false">
                         <template #filter="{ filterModel, filterCallback }">
                             <div class="d-flex align-items-center justify-content-between">
-                                <InputText v-model="filterModel.value" @input="filterCallback()" class="w-75" placeholder="Cerca per nome" />
+                                <InputText v-model="filterModel.value" @input="filterCallback()" class="w-100" placeholder="Cerca per nome" />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
                                     <i class="fa fa-times"></i>
                                 </button>
                             </div>
                         </template>
                     </Column>
-                    <Column style="width: 35%" field="description" header="Descrizione" :showFilterMenu="false">
+                    <Column style="width: 30%" field="description" header="Descrizione" :showFilterMenu="false">
                         <template #filter="{ filterModel, filterCallback }">
                             <div class="d-flex align-items-center justify-content-between">
-                                <InputText v-model="filterModel.value" @input="filterCallback()" class="w-75" placeholder="Cerca per descrizione" />
+                                <InputText v-model="filterModel.value" @input="filterCallback()" class="w-100" placeholder="Cerca per descrizione" />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
                                     <i class="fa fa-times"></i>
                                 </button>
                             </div>
                         </template>
                     </Column>
-                    <Column style="width: 10%" filterField="type" field="type.name" header="Tipo di pasto" :showFilterMenu="false">
+                    <Column style="width: 15%" filterField="type" field="type.name" header="Tipo di prodotto" :showFilterMenu="false">
                         <template #filter="{ filterModel, filterCallback }">
                             <div class="d-flex align-items-center justify-content-between">
                                 <MultiSelect 
@@ -143,7 +143,7 @@ const filters = ref({
                                     optionLabel="name"
                                     v-model="filterModel.value"
                                     @change="filterCallback()"
-                                    class="w-75"
+                                    class="w-100"
                                 />
                                 <button class="btn btn-link link-danger" type="button" @click="filterModel.value = null, filterCallback()">
                                     <i class="fa fa-times"></i>
@@ -171,7 +171,7 @@ const filters = ref({
                                     ]"
                                     optionValue="value"
                                     optionLabel="label"
-                                    class="w-75"
+                                    class="w-100"
                                     v-model="filterModel.value"
                                     @change="filterCallback"
                                 />

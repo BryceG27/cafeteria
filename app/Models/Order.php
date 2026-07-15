@@ -28,6 +28,7 @@ class Order extends Model
         'first_dish_id',
         'second_dish_id',
         'side_dish_id',
+        'beverage_id'
     ];
 
     private static $STATUSES = [
@@ -68,6 +69,7 @@ class Order extends Model
             'first_dish_id' => 'nullable|required_if:second_dish_id,null|max:255|exists:products,id',
             'second_dish_id' => 'nullable|required_if:first_dish_id,null|max:255|exists:products,id',
             'side_dish_id' => 'nullable|max:255|exists:products,id',
+            'beverage_id' => 'nullable|max:255|exists:products,id',
         ], [
             'first_dish_id.required_if' => 'Il campo primo piatto è obbligatorio se non è stato selezionato un secondo piatto.',
             'second_dish_id.required_if' => 'Il campo secondo piatto è obbligatorio se non è stato selezionato un primo piatto.',
@@ -94,6 +96,7 @@ class Order extends Model
             'second_dish_id.max' => 'Il campo secondo piatto non deve superare i :max caratteri.',
             'side_dish_id.exists' => 'Il contorno selezionato non esiste.',
             'side_dish_id.max' => 'Il campo contorno non deve superare i :max caratteri.',
+            'beverage_id.exists' => 'La bibita selezionata non esiste'
         ]);
     }
 
@@ -108,11 +111,11 @@ class Order extends Model
             'total_amount' => 'nullable|numeric|min:0',
             'payment_method' => 'nullable|string|max:100',
             'order_date' => 'required|date',
-            'first_dish_id' => 'nullable|required|max:255|exists:products,id',
+            'beverage_id' => 'required|max:255|exists:products,id',
         ], [
             'special_menu_id.required' => 'E\' necessario selezionare un menù',  
             'order_date.required' => 'E\' necessario selezionare la data di validità',  
-            'first_dish_id.required' => 'E\' necessario selezionare una bibita',  
+            'beverage_id.required' => 'E\' necessario selezionare una bibita',  
         ]);
     }
     
@@ -126,6 +129,10 @@ class Order extends Model
 
     public function side_dish() {
         return $this->belongsTo(Product::class, 'side_dish_id');
+    }
+
+    public function beverage() {
+        return $this->belongsTo(Product::class, 'beverage_id');
     }
 
     public function customer() : BelongsTo

@@ -203,7 +203,7 @@ const onPage = debounce((page = 1) => {
 
                                     <div class="row">
                                         <div class="col-md-10 offset-md-1">
-                                            <span class="fs-14" style="font-weight: 500;" v-text="data.first_dish?.name" />
+                                            <span class="fs-14" style="font-weight: 500;" v-text="data.beverage?.name" />
                                             <br>
                                             <em class="fs-12">Bibita</em>
                                         </div>

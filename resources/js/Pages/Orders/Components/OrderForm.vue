@@ -19,11 +19,17 @@ const openDialog = ref(false);
 const props = defineProps({
     form : Object,
     menus : Array,
+    beverage : Array,
     order : Object,
     auth : Object,
     errors : Object,
     statuses : Array,
 });
+
+const MoneyFormat = new Intl.NumberFormat("it-IT", {
+    style : 'currency',
+    currency : 'EUR'
+})
 
 const emit = defineEmits(['submit']);
 
@@ -33,13 +39,15 @@ const selectedMenu = computed(() => {
     return props.menus.find(m => m.id === props.form.menu_id) || null;
 });
 
+/* If the customer adds a beverage, the costs must be added to the total */
 const order_total = computed(() => {
-
     if(!selectedMenu.value) return 0;
 
     let subtotal = parseFloat(selectedMenu.value.price);
     let second_menu_price = add_second_menu.value ? parseFloat(selectedMenu.value.second_price) : 0;
-    return subtotal + second_menu_price - parseFloat(props.form.discount);
+    let beverage_cost = props.form.beverage_id != null ? props.beverage.find(({ id }) => id === props.form.beverage_id).price : 0
+
+    return subtotal + second_menu_price - parseFloat(props.form.discount) + beverage_cost;
 });
 
 const first_dishes = computed(() => {
@@ -139,7 +147,7 @@ const goBack = () => {
                 </div>
             </div>
             <div class="row pb-3">
-                <div class="col-md-12">
+                <div class="col-md-6">
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" v-model="add_second_menu" id="add_second_menu" />
                         <label for="add_second_menu" class="form-checl-label">Aggiungi un secondo menù (+{{ parseFloat(selectedMenu.second_price).toFixed(2) }} &euro;)</label> <br>
@@ -321,6 +329,30 @@ const goBack = () => {
                                     </Listbox>
                                 </td>
                             </tr>
+                            <tr>
+                                <td>
+                                    <p class="fw-bold border-bottom pb-2">Bibita a piacere</p>
+                                    <Listbox 
+                                        v-model="form.beverage_id" 
+                                        :options="beverage" 
+                                        optionLabel="name" 
+                                        optionValue="id"
+                                        class="w-100" 
+                                        listStyle="max-height: 12rem;"
+                                        :disabled="form.second_dish_id != null && !add_second_menu"
+                                    >
+                                        <template #option="{ option }">
+                                            <div class="d-flex flex-column w-100">
+                                                {{ option.name }}
+                                                <span class="text-muted" style="font-size: 12px">
+                                                    (+{{ MoneyFormat.format(option.price) }})
+                                                </span>
+                                            </div>
+                                        </template>
+                                    </Listbox>
+                                    <small class="fst-italic text-muted">N.B. La bibita non è obbligatoria</small>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -392,17 +424,41 @@ const goBack = () => {
                 </div>
             </div>
             <div class="row pb-3">
-                <div class="col-md-12">
+                <div class="col-md-6 pt-2 d-none d-md-table">
+                    <label class="form-label">Bibita a piacere</label>
+                    <Listbox 
+                        v-model="form.beverage_id" 
+                        :options="beverage" 
+                        optionLabel="name" 
+                        optionValue="id"
+                        class="w-100" 
+                        listStyle="max-height: 13rem;"
+                    >
+                        <template #option="{ option }">
+                            <div class="d-flex flex-column w-100">
+                                {{ option.name }}
+                                <span class="text-muted" style="font-size: 12px">
+                                    (+{{ MoneyFormat.format(option.price) }})
+                                </span>
+                            </div>
+                        </template>
+                    </Listbox>
+                    <small class="text-muted">
+                        <em>
+                            N.B. La scelta della bibita non è obbligatoria
+                        </em>
+                    </small>
+                </div>
+                <div class="col-md-6 pt-2">
                     <label for="notes" class="form-label">Note</label>
                     <Textarea 
                         v-model="form.notes"
                         inputId="notes"
                         :class="{ 'is-invalid': errors.notes }"
                         class="w-100"
-                        rows="3"
+                        style="height: 13rem"
                         placeholder="Note aggiuntive..."
                     />
-                    <InputError class="mt-2" :message="errors.notes" />
                     <small class="text-muted">
                         <em>
                             N.B. Le note aggiuntive sono relative alle rimozioni di ingredienti. Richieste come la sostituzione con un prodotto fuori menù non verranno considerate valide
@@ -421,7 +477,7 @@ const goBack = () => {
         </div>
 
         <div class="row pb-3 justify-content-center">
-            <div class="col-md-4 col-sm-12 text-center pb-3 pb-md-0" v-if="form.id == undefined">
+            <div class="col-md-4 col-sm-12 text-md-end text-center pb-3 pb-md-0" v-if="form.id == undefined">
                 <button 
                     class="btn btn-alt-info btn-sm w-75"
                     type="submit"
@@ -430,21 +486,21 @@ const goBack = () => {
                     Conferma e paga
                 </button>
             </div>
-            <div class="col-md-4 col-sm-12 text-md-start text-center pb-3 pb-md-0">
+            <div class="col-md-4 text-center" v-if="form.id != undefined" >
                 <Link 
                     class="btn btn-alt-warning btn-sm w-75" 
                     type="button" 
-                    v-if="form.id != undefined" 
                     :href="route('orders.index')"
                 >
                     <i class="fa fa-arrow-left me-1"></i>
                     Indietro
                 </Link>
+            </div>
+            <div class="col-md-4 col-sm-12 text-md-start text-center pb-3 pb-md-0" v-else>
                 <button
                     class="btn btn-alt-danger btn-sm w-75"
                     type="button"
                     @click="goBack"
-                    v-else
                 >
                     <i class="fa fa-times me-1"></i>
                     Annulla

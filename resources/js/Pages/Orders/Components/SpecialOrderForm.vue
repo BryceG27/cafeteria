@@ -3,7 +3,6 @@ import Listbox from 'primevue/listbox';
 import Textarea from 'primevue/textarea';
 import DatePicker from 'primevue/datepicker';
 import InputNumber from 'primevue/inputnumber';
-import Select from 'primevue/select';
 import InputError from '@/Components/InputError.vue';
 
 import { computed } from 'vue';
@@ -59,7 +58,7 @@ const minDate = moment().hours() >= 10 ? moment().add(1, 'day').toDate() : momen
         </div>
         
         <div class="row pb-4">
-            <div class="col-md-4 h-100">
+            <div class="col-md-4 h-100" v-show="false">
                 <h6 class="my-2">
                     Hai scelto
                 </h6>
@@ -81,12 +80,12 @@ const minDate = moment().hours() >= 10 ? moment().add(1, 'day').toDate() : momen
                 </div>
                 <InputError class="mt-2 text-danger" :message="errors.special_menu_id" />
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <h6 class="my-2">
                     Scegli una bibita
                 </h6>
                 <Listbox 
-                    v-model="form.first_dish_id" 
+                    v-model="form.beverage_id" 
                     :options="beverage" 
                     optionLabel="name" 
                     optionValue="id"
@@ -103,9 +102,9 @@ const minDate = moment().hours() >= 10 ? moment().add(1, 'day').toDate() : momen
                         </div>
                     </template>
                 </Listbox>
-                <InputError class="mt-2 text-danger" :message="errors.first_dish_id" />
+                <InputError class="mt-2 text-danger" :message="errors.beverage_id" />
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <h6 class="my-2">
                     Hai delle richieste?
                 </h6>
@@ -134,18 +133,6 @@ const minDate = moment().hours() >= 10 ? moment().add(1, 'day').toDate() : momen
                     readonly
                 />
             </div>
-            <!-- <div class="col-md-6 pt-3" v-if="auth.user.user_group_id == 1">
-                <label for="status" class="form-label">Stato</label>
-                <Select 
-                    inputId="status"
-                    optionValue="value"
-                    optionLabel="label"
-                    class="w-100"
-                    inputClass="w-100"
-                    :options="statuses"
-                    v-model="form.status"
-                />
-            </div> -->
             <div class="col-md-6 pt-2 pt-md-0" :class="{ 'pt-3' : auth.user.user_group_id == 1 }">
                 <label for="order_date" class="form-label">Ordine valido il:</label>
                 <DatePicker 

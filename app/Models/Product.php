@@ -18,6 +18,7 @@ class Product extends Model
         'name',
         'description',
         'image',
+        'price',
         'is_active',
         'category_id',
         'product_type_id'
@@ -61,6 +62,7 @@ class Product extends Model
             'category_id' => 'required|exists:categories,id',
             'product_type_id' => 'required|exists:product_types,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'price' => 'required|min:0|numeric',
             'is_active' => 'required|boolean',
         ], [
             'name.required' => 'Il campo nome è obbligatorio.',

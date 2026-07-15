@@ -24,7 +24,7 @@ const form = useForm({
     order_date : null,
     subtotal_amount : 0,
     total_amount : 0,
-    first_dish_id : null
+    beverage_id : null
 })
 
 const submit = () => {

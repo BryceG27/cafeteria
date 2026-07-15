@@ -34,7 +34,7 @@ class OrderController extends Controller
                 'orders' => Order::where('customer_id', Auth::user()->id)
                                     ->where('status', '<>', 2)
                                     ->orderBy('created_at', 'desc')
-                                    ->with(['first_dish', 'second_dish', 'side_dish', 'menu', 'special_menu.product'])
+                                    ->with(['first_dish', 'second_dish', 'side_dish', 'beverage', 'menu', 'special_menu.product'])
                                     ->get()
                                     ->map(function($order) {
                     $order->status_info = $order->get_status();
@@ -58,7 +58,7 @@ class OrderController extends Controller
                                     ->when(isset($request->status), function($query) use ($request) {
                                         $query->where('status', $request->status);
                                     })
-                                    ->with(['customer', 'first_dish', 'second_dish', 'side_dish', 'menu', 'special_menu.product'])
+                                    ->with(['customer', 'first_dish', 'second_dish', 'side_dish', 'beverage', 'menu', 'special_menu.product'])
                                     ->orderBy('created_at', 'desc')
                                     ->paginate(50)
                                     ->through(function ($order) {
@@ -144,6 +144,7 @@ class OrderController extends Controller
         return Inertia::render('Orders/Create', [
             'menus' => $menus,
             'order' => new Order(),
+            'beverage' => Product::get_beverage()->get(),
             'statuses' => Order::get_statuses(),
         ]);
     }
@@ -225,6 +226,7 @@ class OrderController extends Controller
         return Inertia::render('Orders/Edit', [
             'menus' => $menus,
             'order' => $order->load('customer'),
+            'beverage' => Product::get_beverage()->get(),
             'order_statuses' => Order::get_statuses(),
         ]);
     }

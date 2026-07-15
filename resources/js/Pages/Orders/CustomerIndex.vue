@@ -9,6 +9,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import Popover from 'primevue/popover'
+import Divider from 'primevue/divider'
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 
@@ -45,14 +46,14 @@ const new_order = (event) => {
 
 onUpdated(() => {
     if(props.orders_to_be_paid.length) {
-        selectedOrders.value = props.orders_to_be_paid;
+        selectedOrders.value = props.orders_to_be_paid.filter(order => order.status == 0).filter(order => moment(order.order_date).isSameOrAfter(moment(), 'day'));
         showDialog.value = true;
     }
 });
 
 onMounted(() => {
     if(props.orders_to_be_paid.length) {
-        selectedOrders.value = props.orders_to_be_paid;
+        selectedOrders.value = props.orders_to_be_paid.filter(order => order.status == 0).filter(order => moment(order.order_date).isSameOrAfter(moment(), 'day'));
         showDialog.value = true;
     } else {
         selectedOrders.value = props.orders
@@ -116,22 +117,20 @@ const payWithCreditAvailable = () => {
 }
 
 const checkSelectedOrders = () => {
+    const originalLength = selectedOrders.value.length;
     selectedOrders.value = selectedOrders.value.filter(order => order.status == 0).filter(order => moment(order.order_date).isSameOrAfter(moment(), 'day'));
 
     if(moment().format('HH:mm') >= '10:00') {
-        const originalLength = selectedOrders.value.length;
         selectedOrders.value = selectedOrders.value.filter(order => {
             return moment(order.order_date).isAfter(moment(), 'day')
         });
 
-        if(originalLength != selectedOrders.value.length && selectedOrders.value.length != 0)
+        if(originalLength != selectedOrders.value.length)
             toast.add({severity:'error', summary: 'Attenzione', detail:'Data e ora utili per il pagamento superati.', life: 7000});
     }
 }
 
 const get_checkout_title = computed(() => {
-    console.log(selectedOrders.value);
-    
     if(selectedOrders.value.length == 1 && selectedOrders.value[0]?.menu_id != undefined)
         return `Pagamento menù: ${selectedOrders.value[0]?.menu?.name} - ${moment(selectedOrders.value[0]?.order_date).format('DD/MM')}`;
     else if (selectedOrders.value.length == 1 && selectedOrders.value[0]?.special_menu_id != undefined)
@@ -168,9 +167,9 @@ const total_to_be_paid = computed(() => {
 <template>
     <Head title="Ordini" />
 
-    <Toast />
-
+    
     <AuthenticatedLayout>
+        <Toast />
         <div class="content">
             <ErrorMessage v-if="!showDialog" />
 
@@ -420,107 +419,80 @@ const total_to_be_paid = computed(() => {
                     </Column>
                     <Column style="width: 25%" header="Prodotti">
                         <template #body="{ data }">
-                            <table class="table table-bordered rounded-2 h-100 align-middle">
-                                <tbody v-if="data.menu_id">
-                                    <tr v-if="data.first_dish">
-                                        <td class="p-2 align-middle">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <span>
-                                                    <strong>Primo:</strong> <span v-text="data.first_dish.name" />
-                                                </span>
-                                                <button class="btn btn-link" v-if="data.first_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="fa fa-camera"></i>
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <li class="dropdown-item">
-                                                        <div style="width: 15rem; height: 10rem">
-                                                            <img :src="`/storage/app/public/${data.first_dish.image}`" :alt="data.first_dish.name" class="img-fluid">
-                                                        </div>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="data.second_dish">
-                                        <td class="p-2 align-middle">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <span>
-                                                    <strong>Secondo:</strong> <span v-text="data.second_dish.name" />
-                                                </span>
-                                                <button class="btn btn-link" v-if="data.second_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="fa fa-camera"></i>
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <li class="dropdown-item">
-                                                        <div style="width: 15rem; height: 10rem">
-                                                            <img :src="`/storage/app/public/${data.second_dish.image}`" :alt="data.second_dish.name" class="img-fluid">
-                                                        </div>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="data.side_dish">
-                                        <td class="p-2 align-middle">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <span>
-                                                    <strong>Contorno:</strong> <span v-text="data.side_dish.name" />
-                                                </span>
-                                                <button class="btn btn-link" v-if="data.side_dish.image" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="fa fa-camera"></i>
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <li class="dropdown-item">
-                                                        <div style="width: 15rem; height: 10rem">
-                                                            <img :src="`/storage/app/public/${data.side_dish.image}`" :alt="data.side_dish.name" class="img-fluid">
-                                                        </div>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                                <tbody v-else-if="data.special_menu">
-                                    <tr>
-                                        <td class="p-2 align-middle">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <span>
-                                                    <strong>Piatto:</strong> <span v-text="data.special_menu?.product.name" />
-                                                </span>
-                                                <button class="btn btn-link" v-if="data.special_menu?.product.image" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="fa fa-camera"></i>
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <li class="dropdown-item">
-                                                        <div style="width: 15rem; height: 10rem">
-                                                            <img :src="`/storage/app/public/${data.special_menu?.product.image}`" :alt="data.special_menu?.product.name" class="img-fluid">
-                                                        </div>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="p-2 align-middle">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <span>
-                                                    <strong>Bibita:</strong> <span v-text="data.first_dish?.name" />
-                                                </span>
-                                                <button class="btn btn-link" v-if="data.first_dish?.image" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="fa fa-camera"></i>
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <li class="dropdown-item">
-                                                        <div style="width: 15rem; height: 10rem">
-                                                            <img :src="`/storage/app/public/${data.first_dish?.image}`" :alt="data.special_menu?.product.name" class="img-fluid">
-                                                        </div>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="row">
+                                <div class="col-md-10 border rounded-2 px-0" v-if="data.menu">
+                                    <div class="row py-1" v-if="data.first_dish">
+                                        <div class="col-md-10 offset-md-1">
+                                            <span class="fs-14" style="font-weight: 500;" v-text="data.first_dish.name" />
+                                            <br>
+                                            <em class="fs-12">Primo piatto</em>
+                                        </div>
+                                    </div>
+
+                                    <Divider class="my-1" v-if="data.first_dish && data.second_dish" />
+
+                                    <div class="row py-1" v-if="data.second_dish">
+                                        <div class="col-md-10 offset-md-1">
+                                            <span class="fs-14" style="font-weight: 500;" v-text="data.second_dish.name" />
+                                            <br>
+                                            <em class="fs-12">Secondo piatto</em>
+                                        </div>
+                                    </div>
+
+                                    <Divider class="my-1" v-if="data.second_dish && data.side_dish" />
+
+                                    <div class="row py-1" v-if="data.side_dish">
+                                        <div class="col-md-10 offset-md-1">
+                                            <span class="fs-14" style="font-weight: 500;" v-text="data.side_dish.name" />
+                                            <br>
+                                            <em class="fs-12">Contorno</em>
+                                        </div>
+                                    </div>
+
+                                    <Divider class="my-1" v-if="data.beverage" />
+
+                                    <div class="row py-1" v-if="data.beverage">
+                                        <div class="col-md-10 offset-md-1">
+                                            <span class="fs-14" style="font-weight: 500;" v-text="data.beverage?.name" />
+                                            <br>
+                                            <em class="fs-12">Bibita</em>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-10 border rounded-2 px-0" v-else-if="data.special_menu">
+                                    <div class="row">
+                                        <div class="col-md-10 offset-md-1">
+                                            <span class="fs-14" style="font-weight: 500;" v-text="data.special_menu.product?.name" />
+                                            <br>
+                                            <em class="fs-12">Prodotto del menù</em>
+                                        </div>
+                                    </div>
+
+                                    <Divider class="my-1" />
+
+                                    <div class="row">
+                                        <div class="col-md-10 offset-md-1">
+                                            <span class="fs-14" style="font-weight: 500;" v-text="data.beverage?.name" />
+                                            <br>
+                                            <em class="fs-12">Bibita</em>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div 
+                                    v-if="data.notes != undefined && data.notes != ''" class="rounded-2 rounded-start-0 border border-start-0 col-md-1 px-0 d-flex justify-content-center align-items-center">
+                                    <a class="link-primary attention" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fa fa-question"></i>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li class="dropdown-item">
+                                            <strong>Note: </strong><span v-text="`${data.notes}`" />
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
                         </template>
                     </Column>
                     <Column style="width: 15%" header="Totale">

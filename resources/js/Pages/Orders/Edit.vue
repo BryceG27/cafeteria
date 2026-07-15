@@ -7,6 +7,7 @@ import OrderForm from './Components/OrderForm.vue';
 const props = defineProps({
     menus : Array,
     order : Object,
+    beverage : Array,
     auth : Object,
     errors : Object,
     statuses : Array,
@@ -31,6 +32,7 @@ const form = useForm({
     first_dish_id : props.order.first_dish_id,
     second_dish_id : props.order.second_dish_id,
     side_dish_id : props.order.side_dish_id,
+    beverage_id : props.order.beverage_id
 })
 
 </script>
@@ -40,26 +42,10 @@ const form = useForm({
     <AuthenticatedLayout>
         <div class="content">
             <BaseBlock :title="`Modifica ordine ${auth.user.user_group_id != 3 ? ' | ' + order.customer.child : ''}`" class="mb-4">
-                <!-- <template #options>
-                    <button 
-                        class="btn btn-alt-success btn-sm"
-                        @click="submit"
-                    >
-                        <i class="fa fa-save me-1"></i>
-                        Salva
-                    </button>
-                    <Link
-                        class="btn btn-alt-danger btn-sm"
-                        :href="route('orders.index')"
-                    >
-                        <i class="fa fa-times me-1"></i>
-                        Annulla
-                    </Link>
-                </template> -->
-
                 <OrderForm 
                     :form="form" 
                     :menus="menus" 
+                    :beverage="beverage"
                     :order="order"
                     :auth="auth"
                     :errors="errors"
