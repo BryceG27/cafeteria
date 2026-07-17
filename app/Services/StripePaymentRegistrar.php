@@ -7,6 +7,7 @@ use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Stripe\StripeObject;
 
 class StripePaymentRegistrar
@@ -41,19 +42,25 @@ class StripePaymentRegistrar
         $sessionId = $this->getSessionValue($session, 'id');
 
         return DB::transaction(function () use ($session, $sessionId, $orders) {
+            $paymentData = [
+                'user_id' => $orders->first()->customer_id,
+                'amount' => $this->getAmountFromSession($session) ?? $orders->sum('to_be_paid'),
+                'payment_date' => Carbon::now()->setTimezone('Europe/Rome')->format('Y-m-d'),
+                'notes' => $orders->count() === 1
+                    ? "Pagamento effettuato tramite Stripe. Ordine: {$orders->first()->id}"
+                    : 'Pagamento effettuato tramite Stripe per ordini: ' . $orders->pluck('id')->implode(', '),
+                'status' => 1,
+                'payment_method_id' => 3,
+                'stripe_payment_id' => $this->stripePaymentResolver->getPaymentIntentIdFromSession($session),
+            ];
+
+            if (Schema::hasColumn('payments', 'receipt_requested')) {
+                $paymentData['receipt_requested'] = $this->receiptWasRequested($session);
+            }
+
             $payment = Payment::updateOrCreate(
                 ['stripe_session_id' => $sessionId],
-                [
-                    'user_id' => $orders->first()->customer_id,
-                    'amount' => $this->getAmountFromSession($session) ?? $orders->sum('to_be_paid'),
-                    'payment_date' => Carbon::now()->setTimezone('Europe/Rome')->format('Y-m-d'),
-                    'notes' => $orders->count() === 1
-                        ? "Pagamento effettuato tramite Stripe. Ordine: {$orders->first()->id}"
-                        : 'Pagamento effettuato tramite Stripe per ordini: ' . $orders->pluck('id')->implode(', '),
-                    'status' => 1,
-                    'payment_method_id' => 3,
-                    'stripe_payment_id' => $this->stripePaymentResolver->getPaymentIntentIdFromSession($session),
-                ]
+                $paymentData
             );
 
             $orders->each(function (Order $order) use ($payment) {
@@ -92,6 +99,13 @@ class StripePaymentRegistrar
         $amountTotal = $this->getSessionValue($session, 'amount_total');
 
         return is_numeric($amountTotal) ? $amountTotal / 100 : null;
+    }
+
+    private function receiptWasRequested(StripeObject|array $session): bool
+    {
+        $metadata = $this->getSessionValue($session, 'metadata');
+
+        return ($metadata['receipt_requested'] ?? $metadata?->receipt_requested ?? null) === '1';
     }
 
     private function getSessionValue(StripeObject|array $session, string $key): mixed

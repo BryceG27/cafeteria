@@ -112,7 +112,7 @@ class PaymentController extends Controller
                 break;
 
             case 3:
-                return $this->checkout_with_stripe($order);
+                return $this->checkout_with_stripe($order, $request->boolean('receipt_requested'));
                 break;
 
             default:
@@ -134,7 +134,7 @@ class PaymentController extends Controller
                 break;
 
             case 3:
-                return $this->checkout_with_stripe($orders);
+                return $this->checkout_with_stripe($orders, $request->boolean('receipt_requested'));
                 break;
 
             default:
@@ -143,7 +143,7 @@ class PaymentController extends Controller
         }
     }
 
-    public function checkout_with_stripe($orders) {
+    public function checkout_with_stripe($orders, bool $receiptRequested = false) {
         $customer = $orders[0]->customer;
         $payment_name = '';
 
@@ -200,11 +200,15 @@ class PaymentController extends Controller
             'metadata' => [
                 'orders' => $ids,
                 'user_id' => auth()->id(),
+                'receipt_requested' => $receiptRequested ? '1' : '0',
             ]
         ];
 
         if ($customer?->email) {
             $sessionData['customer_email'] = $customer->email;
+        }
+
+        if ($receiptRequested && $customer?->email) {
             $sessionData['payment_intent_data']['receipt_email'] = $customer->email;
         }
 

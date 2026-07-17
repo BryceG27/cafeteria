@@ -25,6 +25,7 @@ const props = defineProps({
     auth: Object,
     variables : Object,
     credits : Array,
+    can_request_stripe_receipt : Boolean,
     orders_to_be_paid : Object,
     orders: Array,
     errors : Object,
@@ -36,6 +37,7 @@ const op = ref(null);
 const selectedOrders = ref([]);
 const showDialog = ref(false);
 const disablePayButton = ref(false);
+const receiptRequested = ref(false);
 const credit_available = computed(() => {
     return props.credits.reduce((acc, credit) => acc + parseFloat(credit.amount_available) , 0).toFixed(2);
 });
@@ -91,7 +93,10 @@ const destroy = (id) => {
 }
 
 const payWithStripe = () => {
-    axios.post(route('payments.checkout-multiple', { payment_method: 3 }), { orders : selectedOrders.value.map(o => o.id) })
+    axios.post(route('payments.checkout-multiple', { payment_method: 3 }), { 
+        orders : selectedOrders.value.map(o => o.id),
+        receipt_requested : props.can_request_stripe_receipt ? receiptRequested.value : false,
+    })
         .then(response => {
             const stripe = Stripe(props.variables.stripe_key);
             stripe.redirectToCheckout({ sessionId: response.data.id });
@@ -261,6 +266,17 @@ const total_to_be_paid = computed(() => {
                                     </tr>
                                 </tbody>
                             </table>
+                            <div class="form-check mt-3" v-if="can_request_stripe_receipt">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    id="receipt-requested" 
+                                    v-model="receiptRequested"
+                                >
+                                <label class="form-check-label" for="receipt-requested">
+                                    Richiedi ricevuta via email
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -36,6 +36,7 @@ class Payment extends Model
         'payment_method_id',
         'stripe_session_id',
         'stripe_payment_id',
+        'receipt_requested',
         'paypal_transaction_id',
         'status',
         'user_id',

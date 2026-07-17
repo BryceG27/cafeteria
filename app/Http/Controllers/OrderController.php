@@ -14,6 +14,7 @@ use App\Services\StripePaymentRegistrar;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Rest\ApiContext;
@@ -32,6 +33,7 @@ class OrderController extends Controller
 
             return Inertia::render('Orders/CustomerIndex', [
                 'credits' => Auth::user()->credits,
+                'can_request_stripe_receipt' => Schema::hasColumn('payments', 'receipt_requested') && filled(Auth::user()->email),
                 'orders' => Order::where('customer_id', Auth::user()->id)
                                     ->where('status', '<>', 2)
                                     ->orderBy('created_at', 'desc')
