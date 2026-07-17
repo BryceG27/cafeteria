@@ -43,7 +43,7 @@ const minDate = moment().hours() >= 10 ? moment().add(1, 'day').toDate() : momen
                             <h5 class="card-title">{{ menu.name }}</h5>
 
                             <p class="card-text mb-0">
-                                {{ menu.description }}
+                                {{ menu.product.description }}
                             </p>
                         </div>
                     </div>
