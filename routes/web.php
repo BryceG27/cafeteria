@@ -19,6 +19,11 @@ Route::get('/update', function() {
     dump(Artisan::output());
 });
 
+Route::get('/downgrade', function() {
+    Artisan::call('migrate:rollback', ['--force' => true]);
+    dump(Artisan::output());
+});
+
 Route::get('/seed', function() {
     Artisan::call('db:seed');
 

@@ -66,39 +66,61 @@ class PaymentController extends Controller
         return redirect()->back()->with('message', 'Pagamento e credito aggiunti con successo.');
     }
 
-    public function stripe_webhook(Request $request, StripePaymentRegistrar $stripePaymentRegistrar) {
-        $webhookSecret = env('STRIPE_WEBHOOK_SECRET');
+    public function stripe_webhook(Request $request) {
+        $endpoint_secret = env('STRIPE_WEBHOOK_SECRET');
 
-        if (!$webhookSecret) {
-            return response('Stripe webhook secret not configured.', 500);
-        }
+        $payload = $request->getContent();
+        $sig_header = $request->header('Stripe-Signature');
+        $event = null;
 
         try {
-            $event = Webhook::constructEvent(
-                $request->getContent(),
-                $request->header('Stripe-Signature'),
-                $webhookSecret
-            );
-        } catch (UnexpectedValueException $exception) {
-            return response('Invalid payload.', 400);
-        } catch (SignatureVerificationException $exception) {
-            return response('Invalid signature.', 400);
+            $event = Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
+        } catch(\UnexpectedValueException $e) {
+            return response('Invalid payload', 400);
+        } catch(\Stripe\Exception\SignatureVerificationException $e) {
+            return response('Invalid signature', 400);
         }
 
-        if ($event->type === 'checkout.session.completed') {
-            $payment = $stripePaymentRegistrar->registerFromSession($event->data->object);
+        if($event->type == 'checkout.session.completed') {
+            $session = $event->data->object;
 
-            if ($payment) {
-                Log::info('Stripe Webhook - Payment Created for orders', [
-                    'payment_id' => $payment->id,
-                    'stripe_session_id' => $payment->stripe_session_id,
-                    'stripe_payment_id' => $payment->stripe_payment_id,
-                    'orders' => $payment->orders()->pluck('orders.id')->all(),
+            $order_ids = explode('-', $session->metadata->orders);
+
+            $orders = Order::whereIn('id', $order_ids)->where('status', '!=', 1)->where('to_be_paid', '!=', 0)->get();
+
+            if(count($orders) != 0) {
+                $payment = Payment::create([
+                    'user_id' => $session->metadata->user_id,
+                    'amount' => $session->amount_total / 100,
+                    'payment_date' => Carbon::now()->format('Y-m-d'),
+                    'notes' => 'Pagamento effettuato tramite Stripe. ID Transazione: ' . $session->payment_intent,
+                    'status' => 1,
+                    'payment_method_id' => 3,
                 ]);
+    
+                if ($payment) {
+                    Log::info('Stripe Webhook - Payment Created for orders', [
+                        'orders' => $payment->orders()->pluck('orders.id')->all(),
+                    ]);
+                }
+    
+                foreach ($orders as $order) {
+                    $total_amount = $order->total_amount;
+                    $to_be_paid = $order->to_be_paid;
+                    $order->update([
+                        'to_be_paid' => 0,
+                        'status' => 1,
+                        'payment_method' => 3,
+                    ]);
+    
+                    $order->payments()->attach($payment->id, ['amount' => $total_amount - $to_be_paid]);
+                }
             }
+                
+
         }
 
-        return response('Webhook handled.', 200);
+        return response('Webhook handled', 200);
     }
 
     public function checkout(Order $order, Request $request) {
