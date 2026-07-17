@@ -31,7 +31,10 @@ class Payment extends Model
 
     protected $fillable = [
         'amount',
+        'payment_date',
+        'notes',
         'payment_method_id',
+        'stripe_session_id',
         'stripe_payment_id',
         'paypal_transaction_id',
         'status',

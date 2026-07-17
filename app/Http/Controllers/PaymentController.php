@@ -10,13 +10,18 @@ use PayPal\Api\Payer;
 use App\Models\Credit;
 use PayPal\Api\Amount;
 use App\Models\Payment;
+use App\Services\StripePaymentRegistrar;
 use PayPal\Api\Transaction;
 use PayPal\Rest\ApiContext;
 use Illuminate\Http\Request;
 use PayPal\Api\RedirectUrls;
 use Stripe\Checkout\Session;
+use Illuminate\Support\Facades\Log;
 use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Api\Payment as PayPalPayment;
+use Stripe\Exception\SignatureVerificationException;
+use Stripe\Webhook;
+use UnexpectedValueException;
 
 class PaymentController extends Controller
 {
@@ -59,6 +64,41 @@ class PaymentController extends Controller
         ]);
 
         return redirect()->back()->with('message', 'Pagamento e credito aggiunti con successo.');
+    }
+
+    public function stripe_webhook(Request $request, StripePaymentRegistrar $stripePaymentRegistrar) {
+        $webhookSecret = env('STRIPE_WEBHOOK_SECRET');
+
+        if (!$webhookSecret) {
+            return response('Stripe webhook secret not configured.', 500);
+        }
+
+        try {
+            $event = Webhook::constructEvent(
+                $request->getContent(),
+                $request->header('Stripe-Signature'),
+                $webhookSecret
+            );
+        } catch (UnexpectedValueException $exception) {
+            return response('Invalid payload.', 400);
+        } catch (SignatureVerificationException $exception) {
+            return response('Invalid signature.', 400);
+        }
+
+        if ($event->type === 'checkout.session.completed') {
+            $payment = $stripePaymentRegistrar->registerFromSession($event->data->object);
+
+            if ($payment) {
+                Log::info('Stripe Webhook - Payment Created for orders', [
+                    'payment_id' => $payment->id,
+                    'stripe_session_id' => $payment->stripe_session_id,
+                    'stripe_payment_id' => $payment->stripe_payment_id,
+                    'orders' => $payment->orders()->pluck('orders.id')->all(),
+                ]);
+            }
+        }
+
+        return response('Webhook handled.', 200);
     }
 
     public function checkout(Order $order, Request $request) {
@@ -136,7 +176,7 @@ class PaymentController extends Controller
 
         Stripe::setApiKey(env('STRIPE_SECRET'));
 
-        $session = Session::create([
+        $sessionData = [
             'payment_method_types' => ['card'],
             'line_items' => [[
                 'price_data' => [
@@ -148,7 +188,9 @@ class PaymentController extends Controller
                 ],
                 'quantity' => 1,
             ]],
-            'customer_email' => $customer?->email ?? '',
+            'payment_intent_data' => [
+                'description' => $payment_name,
+            ],
             'invoice_creation' => [
                 'enabled' => true
             ],
@@ -159,7 +201,14 @@ class PaymentController extends Controller
                 'orders' => $ids,
                 'user_id' => auth()->id(),
             ]
-        ]);
+        ];
+
+        if ($customer?->email) {
+            $sessionData['customer_email'] = $customer->email;
+            $sessionData['payment_intent_data']['receipt_email'] = $customer->email;
+        }
+
+        $session = Session::create($sessionData);
 
         return response()->json([
             'id' => $session->id

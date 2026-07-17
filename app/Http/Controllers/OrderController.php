@@ -10,6 +10,7 @@ use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\SpecialMenu;
 use App\Models\User;
+use App\Services\StripePaymentRegistrar;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -316,7 +317,16 @@ class OrderController extends Controller
         return redirect()->back()->with('message', 'Stato ordine aggiornato con successo.');
     }
 
-    public function confirm(Order $order, Request $request) {
+    public function confirm(Order $order, Request $request, StripePaymentRegistrar $stripePaymentRegistrar) {
+        if($request->payment_method == 3) {
+            $payment = $stripePaymentRegistrar->registerFromSessionId($request->session_id);
+
+            if(!$payment)
+                return redirect()->route('orders.index')->withErrors('Si è verificato un errore durante l\'elaborazione del pagamento Stripe. Ordine non confermato.');
+
+            return redirect()->route('orders.index')->with('message', 'Pagamento registrato con successo. Grazie!');
+        }
+
         if($request->payment_method == 2) {
 
             $transactionid = $this->set_paypal_payment($request);
@@ -335,7 +345,7 @@ class OrderController extends Controller
             'status' => 1,
             'payment_method_id' => $request->payment_method,
             'stripe_session_id' => $request->session_id ?? null,
-            'transaction_id' => $request->payment_method == 2 ? $this->set_paypal_payment($request) : null,
+            'paypal_transaction_id' => $request->payment_method == 2 ? $transactionid : null,
         ]);
 
         $order->update([
@@ -349,7 +359,16 @@ class OrderController extends Controller
         return redirect()->route('orders.index')->with('message', 'Pagamento registrato con successo. Grazie!');
     }
 
-    public function confirm_multiples(Request $request) {
+    public function confirm_multiples(Request $request, StripePaymentRegistrar $stripePaymentRegistrar) {
+        if($request->payment_method == 3) {
+            $payment = $stripePaymentRegistrar->registerFromSessionId($request->session_id);
+
+            if(!$payment)
+                return redirect()->route('orders.index')->withErrors('Si è verificato un errore durante l\'elaborazione del pagamento Stripe. Ordini non confermati.');
+
+            return redirect()->route('orders.index')->with('message', 'Pagamenti registrati con successo. Grazie!');
+        }
+
         $orders = Order::whereIn('id', explode('-', $request->orders))->get();
         if($orders->isEmpty())
             return redirect()->route('orders.index')->withErrors('Nessun ordine selezionato. Ordini non confermati.');
@@ -364,7 +383,7 @@ class OrderController extends Controller
             'status' => 1,
             'payment_method_id' => $request->payment_method,
             'stripe_session_id' => $request->session_id ?? null,
-            'transaction_id' => $request->payment_method == 2 ? $this->set_paypal_payment($request) : null,
+            'paypal_transaction_id' => $request->payment_method == 2 ? $this->set_paypal_payment($request) : null,
         ]);
 
         foreach ($orders as $order) {

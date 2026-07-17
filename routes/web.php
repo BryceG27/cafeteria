@@ -32,6 +32,7 @@ Route::get('/storage-link', function() {
 });
 
 Route::post('/sign-in', [ProfileController::class, 'sign_in'])->name('profile.sign-in');
+Route::post('/payments/webhook/stripe', [PaymentController::class, 'stripe_webhook'])->name('payments.webhook.stripe');
 
 Route::middleware(['auth' , 'verified'])->group(function () {
     /* Orders */
