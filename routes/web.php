@@ -41,28 +41,31 @@ Route::post('/payments/webhook/stripe', [PaymentController::class, 'stripe_webho
 
 Route::middleware(['auth' , 'verified'])->group(function () {
     /* Orders */
-    Route::resource('orders', OrderController::class)->middleware(['auth', 'verified'])->except(['index', 'show']);
-    Route::get('/orders/index', [OrderController::class, 'index'])->middleware(['auth', 'verified'])->name('orders.index');
-    Route::get('/orders/{order}/confirm', [OrderController::class, 'confirm'])->middleware(['auth', 'verified'])->name('orders.confirm-order');
-    Route::get('/orders/confirm/multiples', [OrderController::class, 'confirm_multiples'])->middleware(['auth', 'verified'])->name('orders.confirm-orders');
-    Route::get('/orders/payments/payment-not-completed', [OrderController::class, 'payment_not_completed'])->middleware(['auth', 'verified'])->name('orders.payment-not-completed');
+    Route::resource('orders', OrderController::class)->except(['index', 'show']);
+    Route::get('/orders/index', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}/confirm', [OrderController::class, 'confirm'])->name('orders.confirm-order');
+    Route::get('/orders/confirm/multiples', [OrderController::class, 'confirm_multiples'])->name('orders.confirm-orders');
+    Route::get('/orders/payments/payment-not-completed', [OrderController::class, 'payment_not_completed'])->name('orders.payment-not-completed');
 
-    Route::get('/orders/create/menu-special', [OrderController::class, 'create_special'])->middleware(['auth', 'verified'])->name('orders.create.special-menu');
-    Route::get('/orders/{order}/edit/menu-special', [OrderController::class, 'edit_special'])->middleware(['auth', 'verified'])->name('orders.edit.special-menu');
-    Route::post('/orders/store/menu-special', [OrderController::class, 'store_special'])->middleware(['auth', 'verified'])->name('orders.store.special-menu');
-    Route::patch('/orders/{order}/update/menu-special', [OrderController::class, 'update_special'])->middleware(['auth', 'verified'])->name('orders.update.special-menu');
+    Route::get('/orders/create/menu-special', [OrderController::class, 'create_special'])->name('orders.create.special-menu');
+    Route::get('/orders/{order}/edit/menu-special', [OrderController::class, 'edit_special'])->name('orders.edit.special-menu');
+    Route::post('/orders/store/menu-special', [OrderController::class, 'store_special'])->name('orders.store.special-menu');
+    Route::patch('/orders/{order}/update/menu-special', [OrderController::class, 'update_special'])->name('orders.update.special-menu');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-    Route::resource('payments', PaymentController::class)->middleware(['auth', 'verified'])->except(['show', 'edit', 'update', 'destroy']);
-    Route::post('/payments/store/by-admin', [PaymentController::class, 'store_by_admin'])->middleware(['auth', 'verified'])->name('payments.store-by-admin');
+    Route::resource('payments', PaymentController::class)->except(['show', 'edit', 'update', 'destroy']);
+    Route::post('/payments/store/by-admin', [PaymentController::class, 'store_by_admin'])->name('payments.store-by-admin');
 
-    Route::patch('/credits/{credit}/update', [CreditController::class, 'update'])->middleware(['auth', 'verified'])->name('credits.update');
-    Route::delete('/credits/{credit}/destroy', [CreditController::class, 'destroy'])->middleware(['auth', 'verified'])->name('credits.destroy');
+    Route::patch('/credits/{credit}/update', [CreditController::class, 'update'])->name('credits.update');
+    Route::delete('/credits/{credit}/destroy', [CreditController::class, 'destroy'])->name('credits.destroy');
 
-    Route::post('/payments/{order}/checkout', [PaymentController::class, 'checkout'])->middleware(['auth', 'verified'])->name('payments.checkout');
-    Route::post('/payments/orders/checkout-multiple', [PaymentController::class, 'checkout_multiple'])->middleware(['auth', 'verified'])->name('payments.checkout-multiple');
+    Route::post('/payments/{order}/checkout', [PaymentController::class, 'checkout'])->name('payments.checkout');
+    Route::post('/payments/orders/checkout-multiple', [PaymentController::class, 'checkout_multiple'])->name('payments.checkout-multiple');
+
+    Route::get('/payments/to/check', [PaymentController::class, 'to_check'])->name('payments.to-check');
+    Route::delete('/payments/to/delete', [PaymentController::class, 'to_delete'])->name('payments.to-delete');
     
     Route::get('/', function () {
         if(auth()->user()->user_group_id == 3)

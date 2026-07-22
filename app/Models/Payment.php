@@ -50,7 +50,7 @@ class Payment extends Model
     }
 
     public function orders() : BelongsToMany {
-        return $this->belongsToMany(Order::class);
+        return $this->belongsToMany(Order::class)->withPivot('amount');
     }
 
     public function customer() : BelongsTo {

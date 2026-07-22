@@ -18,7 +18,6 @@ import { Link } from "@inertiajs/vue3";
 const auth = usePage().props.auth
 
 const navigation = computed(() => {
-  
   switch (auth.user.user_group_id) {
     case 1:
       return superadmin_menu.main;

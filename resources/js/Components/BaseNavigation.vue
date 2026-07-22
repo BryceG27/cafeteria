@@ -111,6 +111,7 @@ function linkClicked(e, submenu) {
   <ul :class="classContainer">
     <li
       v-for="(node, index) in nodes"
+      v-show="node.user_id == undefined || node.user_id === $page.props.auth.user.id"
       :key="`node-${index}`"
       :class="{
         'nav-main-heading': node.heading,

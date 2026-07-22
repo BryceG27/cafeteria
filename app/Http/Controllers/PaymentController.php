@@ -345,4 +345,34 @@ class PaymentController extends Controller
             return redirect()->back()->withErrors('Errore durante la creazione del pagamento PayPal: ' . $ex->getMessage());
         }
     }
+
+    public function to_check() {
+        // SELECT
+        //     p.id,
+        //     p.amount,
+        //     p.user_id,
+        //     op.order_id,
+        //     op.payment_id,
+        //     op.amount
+        // FROM
+        //     payments p
+        //     LEFT JOIN order_payment op ON op.payment_id = p.id
+        // WHERE
+        //     p.id <= 7341
+        //     AND op.id IS NOT NULL
+        // ORDER BY
+        //     p.id DESC
+
+        $payments = Payment::whereHas('orders')->with('orders', 'customer')/* ->where('id', '<=', 6742) */->orderBy('id', 'desc')->paginate(300);
+
+        return Inertia::render('Payments/ToCheck', [
+            'payments' => $payments
+        ]);
+    }
+
+    public function to_delete(Request $request) {
+        Payment::whereIn('id', $request->payments)->delete();
+
+        return back()->with('success', "Pagamenti cancellati");
+    }
 }

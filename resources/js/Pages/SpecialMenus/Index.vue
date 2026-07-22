@@ -55,7 +55,7 @@ watchEffect(() => {
                         </template>
                     </Column>
                     <Column header="Nome" field="name" />
-                    <Column header="Descrizione" field="description" />
+                    <Column header="Descrizione" field="product.description" />
                     <Column header="Prodotto" field="product.name" />
                     <Column header="Prezzo" field="price">
                         <template #body="{ data }">

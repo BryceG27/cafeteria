@@ -58,6 +58,13 @@ export default {
       group : 'special-menus',
       icon : "fa fa-table-list"
     },
+    {
+      name : "Pagamenti da sistemare",
+      to : route('payments.to-check'),
+      group : '',
+      icon : "fa fa-list",
+      user_id : 1
+    }
     /* {
       name: "Blocks",
       icon: "si si-energy",
