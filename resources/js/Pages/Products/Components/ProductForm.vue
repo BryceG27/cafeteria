@@ -39,7 +39,7 @@ const loadImage = (event) => {
                 />
             </div>
             <div class="col-md-6 d-flex flex-column">
-                <label for="to_special_menu" class="form-label">Disponibile <em>solo</em> per menù extra</label>
+                <label for="to_special_menu" class="form-label">Disponibile <em>solo</em> per menù special</label>
                 <SelectButton 
                     v-model="form.to_special_menu" 
                     :options="[{ label: 'Sì', value: 1 }, { label: 'No', value: 0 }]"
@@ -49,7 +49,7 @@ const loadImage = (event) => {
                     option-value="value"
                 />
                 <small class="mt-2" style="font-size: 12px;">
-                    <em>* Prodotto disponibile nella selezione dei menù extra</em>
+                    <em>* Prodotto disponibile nella selezione dei menù special</em>
                 </small>
             </div>
         </div>

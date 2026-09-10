@@ -43,7 +43,7 @@ watch(form, (value) => {
 
 </script>
 <template>
-    <Head title="Crea un menù extra" />
+    <Head title="Crea un menù special" />
 
     <AuthenticatedLayout>
         <div class="content">

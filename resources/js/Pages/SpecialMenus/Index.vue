@@ -19,7 +19,7 @@ const props = defineProps({
 
 watchEffect(() => {
     if(props.flash?.message)
-        toast.add({ severity: 'success', summary: 'Menù Extra aggiornato', detail: props.flash.message, life: 3000 })
+        toast.add({ severity: 'success', summary: 'Menù special aggiornato', detail: props.flash.message, life: 3000 })
 })
 
 </script>
@@ -30,7 +30,7 @@ watchEffect(() => {
 
     <AuthenticatedLayout>
         <div class="content">
-            <BaseBlock content-class="pb-3" title="Lista menù extra">
+            <BaseBlock content-class="pb-3" title="Lista menù special">
                 <DataTable
                     :value="menus"
                 >

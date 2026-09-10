@@ -173,7 +173,7 @@ class PaymentController extends Controller
             if($orders[0]->menu)
                 $payment_name = "Pagamento menù: " . $orders[0]->menu->name . " " . Carbon::create($orders[0]->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y');
             else if($orders[0]->special_menu)
-                $payment_name = "Pagamento menù extra: " . $orders[0]->special_menu->name . " " . Carbon::create($orders[0]->order_date)->setTimezone('Europe/Rome')->format('d/m/Y');
+                $payment_name = "Pagamento menù special: " . $orders[0]->special_menu->name . " " . Carbon::create($orders[0]->order_date)->setTimezone('Europe/Rome')->format('d/m/Y');
 
             $to_be_paid = $orders[0]->to_be_paid * 100;
             $success_url = route('orders.confirm-order', ['order' => $orders[0]->id]) . '?payment_method=3&session_id={CHECKOUT_SESSION_ID}';

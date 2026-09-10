@@ -139,7 +139,7 @@ const get_checkout_title = computed(() => {
     if(selectedOrders.value.length == 1 && selectedOrders.value[0]?.menu_id != undefined)
         return `Pagamento menù: ${selectedOrders.value[0]?.menu?.name} - ${moment(selectedOrders.value[0]?.order_date).format('DD/MM')}`;
     else if (selectedOrders.value.length == 1 && selectedOrders.value[0]?.special_menu_id != undefined)
-        return `Pagamento menù extra: ${selectedOrders.value[0]?.special_menu?.name} - ${moment(selectedOrders.value[0]?.order_date).format('DD/MM')}`;
+        return `Pagamento menù special: ${selectedOrders.value[0]?.special_menu?.name} - ${moment(selectedOrders.value[0]?.order_date).format('DD/MM')}`;
     else if (selectedOrders.value.length > 1)
         return `Pagamento di ${selectedOrders.value.length} ordini`;
     else
@@ -190,7 +190,7 @@ const total_to_be_paid = computed(() => {
                     :href="route('orders.create.special-menu')"
                     class="link-dark"
                 >
-                    Menù extra
+                    Menù special
                 </Link>
             </Popover>
 

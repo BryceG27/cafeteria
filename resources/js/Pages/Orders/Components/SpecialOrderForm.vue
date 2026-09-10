@@ -45,6 +45,10 @@ const minDate = moment().hours() >= 10 ? moment().add(1, 'day').toDate() : momen
                             <p class="card-text mb-0">
                                 {{ menu.product.description }}
                             </p>
+
+                            <div class="mt-auto pt-2 fw-semibold text-end">
+                                {{ Number(menu.price).toFixed(2) }} &euro;
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -82,7 +86,7 @@ const minDate = moment().hours() >= 10 ? moment().add(1, 'day').toDate() : momen
             </div>
             <div class="col-md-6">
                 <h6 class="my-2">
-                    Scegli una bibita
+                    Scegli una bibita (inclusa nel prezzo)
                 </h6>
                 <Listbox 
                     v-model="form.beverage_id" 
