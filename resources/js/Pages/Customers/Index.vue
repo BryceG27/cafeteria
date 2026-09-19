@@ -11,6 +11,7 @@ import InputText from 'primevue/inputtext';
 import Popover from 'primevue/popover';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
+import { FilterMatchMode } from '@primevue/core/api';
 
 const props = defineProps({
     customers: Array,
@@ -20,7 +21,10 @@ const props = defineProps({
 });
 
 const showOnlyActive = ref(true);
-const customersFilter = ref('');
+const filters = ref({
+    description: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    child: { value: null, matchMode: FilterMatchMode.STARTS_WITH }
+});
 const selectedCustomer = ref(null)
 const op = ref(null)
 
@@ -53,8 +57,6 @@ const display_op = (event, customer) => {
 
 const filteredCustomers = computed(() => {
     return props.customers.filter(customer => {
-        return `${customer.name} ${customer.surname}`.toLowerCase().includes(customersFilter.value.toLowerCase());
-    }).filter(customer => {
         if (showOnlyActive.value)
             return customer.is_active;
         
@@ -75,6 +77,7 @@ const filteredCustomers = computed(() => {
                     stripedRows
                     :value="filteredCustomers"
                     filterDisplay="row"
+                    v-model:filters="filters"
                     scrollable
                     scrollHeight="40rem"
                 >
@@ -96,27 +99,37 @@ const filteredCustomers = computed(() => {
                             </button>
                         </template>
                     </Column>
-                    <Column header="Cliente" :showFilterMenu="false">
+                    <Column header="Cliente" field="description" :showFilterMenu="false">
                         <template #body="{ data }">
                             <Link
                                 :href="route('users.edit', data.id)"
-                                v-text="`${data.name} ${data.surname}`"
+                                v-text="data.description"
                                 v-if="data.user_group_id == 2"
                             />
                             <span 
                                 v-else
-                                v-text="`${data.name} ${data.surname}`"
+                                v-text="data.description"
                             />
                         </template>
-                        <template #filter>
+                        <template #filter="{ filterCallback, filterModel }">
                             <InputText 
-                                v-model="customersFilter" 
+                                v-model="filterModel.value" 
                                 placeholder="Cerca cliente..." 
                                 class="w-100" 
+                                @input="filterCallback"
                             />
                         </template>
                     </Column>
-                    <Column header="Figlio" field="child" />
+                    <Column header="Figlio" field="child">
+                        <template #filter="{ filterCallback, filterModel }">
+                            <InputText 
+                                v-model="filterModel.value" 
+                                placeholder="Cerca figlio..." 
+                                class="w-100" 
+                                @input="filterCallback"
+                            />
+                        </template>
+                    </Column>
                     <Column field="email" header="Email" />
                     <Column header="Totale pagato">
                         <template #body="{ data }">

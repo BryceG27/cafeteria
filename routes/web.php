@@ -1,18 +1,19 @@
 <?php
 
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan;
-use App\Http\Controllers\MenuController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CreditController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\MenuController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SpecialMenuController;
+use App\Http\Controllers\UserController;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/update', function() {
     Artisan::call('migrate', ['--force' => true]);
@@ -109,6 +110,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/special-menus', [SpecialMenuController::class, 'index'])->middleware(['auth', 'verified'])->name('special-menus.index');
     Route::put('/special-menus/{menu}/toggle-active', [SpecialMenuController::class, 'toggle_active'])->middleware(['auth', 'verified'])->name('special-menus.toggle-active');
 
+});
+
+Route::get('/test', function() {
+    dd(Carbon::now()->setTimezone('Europe/Rome')->format('H:i'));
 });
 
 require __DIR__.'/auth.php';

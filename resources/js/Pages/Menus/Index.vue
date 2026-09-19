@@ -59,14 +59,14 @@ const dateFilter = reactive({
 });
 
 const filteredMenus = computed(() => {
-    console.log(filters.validity_date?.value);
-    
     return props.menus.filter(menu => {
         if(dateFilter.week) {
             const [year, week] = dateFilter.week.split('-W');
             
             const startOfWeek = moment().year(year).week(week).startOf('week').add(1, 'days').format('YYYY-MM-DD');
             const endOfWeek = moment().year(year).week(week).endOf('week').add(1, 'days').format('YYYY-MM-DD');
+
+            console.log(startOfWeek, endOfWeek);
 
             return menu.start_date >= startOfWeek && menu.end_date <= endOfWeek;
         }
@@ -232,7 +232,7 @@ const deleteMenu = (id) => {
                             <span v-if="data.validity_date" v-text="moment(data.validity_date).format('DD/MM')" />
                             <span v-else>-</span>
                         </template>
-                        <!-- <template #filter="{ filterModel, filterCallback }">
+                        <template #filter="{ filterModel, filterCallback }">
                             <div class="d-flex align-items-center gap-2">
                                 <DatePicker 
                                     inputClass="w-75"
@@ -246,7 +246,7 @@ const deleteMenu = (id) => {
                                     <i class="fa fa-times"></i>
                                 </button>
                             </div>
-                        </template> -->
+                        </template>
                     </Column>
                 </DataTable>
             </BaseBlock>

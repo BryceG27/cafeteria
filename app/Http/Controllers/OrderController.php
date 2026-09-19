@@ -126,20 +126,19 @@ class OrderController extends Controller
      */
     public function create()
     {
-        $startDate = Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
-        $endDate = Carbon::now()->endOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+        $startDate = Carbon::now()->setTimezone('Europe/Rome')->startOfWeek(Carbon::MONDAY)->format('Y-m-d');
+        $endDate = Carbon::now()->setTimezone('Europe/Rome')->endOfWeek(Carbon::SUNDAY)->format('Y-m-d');
         $equal_or_after = Carbon::now()->setTimezone('Europe/Rome')->format('H:i') >= '10:00' ? '>' : '>=';
 
         if(in_array(Carbon::now()->locale('it_IT')->dayName, ['sabato', 'domenica'])) {
-            $startDate = Carbon::now()->addWeek()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
-            $endDate = Carbon::now()->addWeek()->endOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
-            // $equal_or_after = '<>';
+            $startDate = Carbon::now()->addWeek()->setTimezone('Europe/Rome')->startOfWeek(Carbon::MONDAY)->format('Y-m-d');
+            $endDate = Carbon::now()->addWeek()->setTimezone('Europe/Rome')->endOfWeek(Carbon::SUNDAY)->format('Y-m-d');
         }
 
         $menus = Menu::where('is_active', true)
                         ->whereDate('start_date', '>=', $startDate)
                         ->whereDate('end_date', '<=', $endDate)
-                        ->whereDate('validity_date', $equal_or_after, Carbon::now()->format('Y-m-d'))
+                        ->whereDate('validity_date', $equal_or_after, Carbon::now()->setTimezone('Europe/Rome')->format('Y-m-d'))
                         ->orderBy('validity_date')
                         ->with('products')
                         ->get();
@@ -185,6 +184,13 @@ class OrderController extends Controller
             $validated['to_be_paid'] += $menu->second_price;
         }
 
+        if($request->beverage_id) {
+            $beverage = Product::find($request->beverage_id);
+            $validated['subtotal_amount'] += $beverage->price;
+            $validated['total_amount'] += $beverage->price;
+            $validated['to_be_paid'] += $beverage->price;
+        }
+
         $validated['order_date'] = \Carbon\Carbon::create($request->order_date)->setTimezone('Europe/Rome')->format('Y-m-d');
 
         $order = Order::create($validated);
@@ -215,11 +221,11 @@ class OrderController extends Controller
     public function edit(Order $order)
     {
        $startDate = Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
-        $endDate = Carbon::now()->endOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+        $endDate = Carbon::now()->endOfWeek(Carbon::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
 
         if(in_array(Carbon::now()->locale('it_IT')->dayName, ['sabato', 'domenica'])) {
             $startDate = Carbon::now()->addWeek()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
-            $endDate = Carbon::now()->addWeek()->endOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+            $endDate = Carbon::now()->addWeek()->endOfWeek(Carbon::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
         }
 
         $equal_or_after = Carbon::now()->setTimezone('Europe/Rome')->format('H:i') >= '10:00' ? '>' : '>=';
@@ -241,8 +247,29 @@ class OrderController extends Controller
     {
         $validated = Order::validate($request);
 
-        $validated['total_amount'] = (Float)$order->subtotal_amount - ($request->discount ?? 0);
-        $validated['to_be_paid'] = (Float)$order->subtotal_amount - ($request->discount ?? 0);
+        $menu = Menu::with('products')->find($request->menu_id);
+
+        if($menu->validity_date == Carbon::now()->setTimezone('Europe/Rome')->format('Y-m-d')) {
+            if(Carbon::now()->setTimezone('Europe/Rome')->format('H:i') >= '10:00')
+                return redirect()->back()->withErrors(['order_date' => 'Non è più possibile modificare l\'ordine per il menu oggi in quanto sono passate le 10:00.']);
+        }
+
+        $validated['subtotal_amount'] = $menu->price;
+        $validated['total_amount'] = $menu->price;
+        $validated['to_be_paid'] = $menu->price;
+
+        if($request->first_dish_id && $request->second_dish_id) {
+            $validated['subtotal_amount'] += $menu->second_price;
+            $validated['total_amount'] += $menu->second_price;
+            $validated['to_be_paid'] += $menu->second_price;
+        }
+
+        if($request->beverage_id) {
+            $beverage = Product::find($request->beverage_id);
+            $validated['subtotal_amount'] += $beverage->price;
+            $validated['total_amount'] += $beverage->price;
+            $validated['to_be_paid'] += $beverage->price;
+        }
 
         $validated['order_date'] = \Carbon\Carbon::create($request->order_date)->setTimezone('Europe/Rome')->format('Y-m-d');
 

@@ -45,7 +45,7 @@ const order_total = computed(() => {
 
     let subtotal = parseFloat(selectedMenu.value.price);
     let second_menu_price = add_second_menu.value ? parseFloat(selectedMenu.value.second_price) : 0;
-    let beverage_cost = props.form.beverage_id != null ? props.beverage.find(({ id }) => id === props.form.beverage_id).price : 0
+    let beverage_cost = props.form.beverage_id != null ? props.beverage.find(({ id }) => id === props.form.beverage_id).price : 0;
 
     return subtotal + second_menu_price - parseFloat(props.form.discount) + beverage_cost;
 });
@@ -477,7 +477,7 @@ const goBack = () => {
         </div>
 
         <div class="row pb-3 justify-content-center">
-            <div class="col-md-4 col-sm-12 text-md-end text-center pb-3 pb-md-0" v-if="form.id == undefined">
+            <div class="col-md-4 col-sm-12 text-md-end text-center pb-3 pb-md-0">
                 <button 
                     class="btn btn-alt-info btn-sm w-75"
                     type="submit"
@@ -486,7 +486,7 @@ const goBack = () => {
                     Conferma e paga
                 </button>
             </div>
-            <div class="col-md-4 text-center" v-if="form.id != undefined" >
+            <div class="col-md-4 col-sm-12 text-md-start text-center pb-3 pb-md-0" v-if="form.id != undefined" >
                 <Link 
                     class="btn btn-alt-warning btn-sm w-75" 
                     type="button" 

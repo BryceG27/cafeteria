@@ -36,7 +36,7 @@ class MenuController extends Controller
                 return $product;
             }),
             'product_types' => ProductType::where('id', '!=', 5)->where('is_active', true)->get(),
-            'menus' => Menu::where('start_date', '>=', Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->where('end_date', '<=', Carbon::now()->endOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->with('products.type')->get(),
+            'menus' => Menu::where('start_date', '>=', Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->where('end_date', '<=', Carbon::now()->endOfWeek(Carbon::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->with('products.type')->get(),
             'menu' => new Menu(),
         ]);
     }
@@ -49,8 +49,8 @@ class MenuController extends Controller
         $validate = Menu::validate($request);
         
         $validate['validity_date'] = Carbon::create($request->validity_date)->setTimezone('Europe/Rome')->format('Y-m-d');
-        $validate['start_date'] = Carbon::create($request->validity_date)->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
-        $validate['end_date'] = Carbon::create($request->validity_date)->endOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+        $validate['start_date'] = Carbon::create($validate['validity_date'])->setTimezone('Europe/Rome')->startOfWeek(Carbon::MONDAY)->format('Y-m-d');
+        $validate['end_date'] = Carbon::create($validate['validity_date'])->setTimezone('Europe/Rome')->endOfWeek(Carbon::SUNDAY)->format('Y-m-d');
 
         $menu = Menu::create($validate);
         if ($request->has('products')) {
@@ -77,7 +77,7 @@ class MenuController extends Controller
                 return $product;
                 }),
             'menu' => $menu->load('products.type'),
-            'menus' => Menu::where('start_date', '>=', Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->where('end_date', '<=', Carbon::now()->endOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->with('products.type')->get(),
+            'menus' => Menu::where('start_date', '>=', Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->where('end_date', '<=', Carbon::now()->endOfWeek(Carbon::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d'))->with('products.type')->get(),
             'product_types' => ProductType::where('id', '!=', 5)->where('is_active', true)->get()
         ]);
     }
@@ -89,8 +89,8 @@ class MenuController extends Controller
     {
         $validate = Menu::validate($request);
         $validate['validity_date'] = Carbon::create($request->validity_date)->setTimezone('Europe/Rome')->format('Y-m-d');
-        $validate['start_date'] = Carbon::create($request->validity_date)->setTimezone('Europe/Rome')->startOfWeek(CARBON::MONDAY)->format('Y-m-d');
-        $validate['end_date'] = Carbon::create($request->validity_date)->setTimezone('Europe/Rome')->endOfWeek(Carbon::MONDAY)->format('Y-m-d');
+        $validate['start_date'] = Carbon::create($validate['validity_date'])->setTimezone('Europe/Rome')->startOfWeek(Carbon::MONDAY)->format('Y-m-d');
+        $validate['end_date'] = Carbon::create($validate['validity_date'])->setTimezone('Europe/Rome')->endOfWeek(Carbon::SUNDAY)->format('Y-m-d');
 
         $menu->update($validate);
         if ($request->has('products')) {
