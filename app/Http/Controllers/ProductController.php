@@ -112,6 +112,13 @@ class ProductController extends Controller
         $carbon = Carbon::create($request->selectedDate)->setTimezone('Europe/Rome');
 
         $products = [];
+        $columnProducts = [
+            'first_dishes' => [],
+            'second_dishes' => [],
+            'side_dishes' => [],
+            'special_menus' => [],
+            'beverages' => [],
+        ];
 
         $orders = \App\Models\Order::whereNotIn('status', [0, 2])->where(function($query) use ($request, $carbon) {
             switch ((Int)$request->filterType) {
@@ -139,23 +146,41 @@ class ProductController extends Controller
                     # code...
                     break;
             }
-        })->with(['first_dish', 'second_dish', 'side_dish', 'customer'])->get()->map(function($order) use (&$products) {
+        })->with(['first_dish', 'second_dish', 'side_dish', 'beverage', 'special_menu.product', 'customer'])->get()->map(function($order) use (&$products, &$columnProducts) {
             if($order->first_dish) {
-                $dish = $order->first_dish->load('type');
+                $dish = $order->first_dish->load('type', 'category');
                 $dish->detail = $order->load('customer')->only(['notes', 'customer', 'order_date']);
                 $products[] = clone $dish;
+                $columnProducts['first_dishes'][] = clone $dish;
             }
 
             if($order->second_dish) {
-                $dish = $order->second_dish->load('type');
+                $dish = $order->second_dish->load('type', 'category');
                 $dish->detail = $order->load('customer')->only(['notes', 'customer', 'order_date']);
                 $products[] = clone $dish;
+                $columnProducts['second_dishes'][] = clone $dish;
             }
 
             if($order->side_dish) {
-                $dish = $order->side_dish->load('type');
+                $dish = $order->side_dish->load('type', 'category');
                 $dish->detail = $order->load('customer')->only(['notes', 'customer', 'order_date']);
                 $products[] = clone $dish;
+                $columnProducts['side_dishes'][] = clone $dish;
+            }
+
+            if($order->special_menu) {
+                $columnProducts['special_menus'][] = [
+                    'id' => $order->special_menu->id,
+                    'name' => $order->special_menu->name,
+                    'product_name' => $order->special_menu->product?->name,
+                    'detail' => $order->load('customer')->only(['notes', 'customer', 'order_date']),
+                ];
+            }
+
+            if($order->beverage) {
+                $beverage = $order->beverage->load('type', 'category');
+                $beverage->detail = $order->load('customer')->only(['notes', 'customer', 'order_date']);
+                $columnProducts['beverages'][] = clone $beverage;
             }
         });
 
@@ -164,13 +189,48 @@ class ProductController extends Controller
             return [
                 'id' => $item[0]->id,
                 'name' => $item[0]->name,
+                'category_id' => $item[0]->category_id,
+                'category_name' => $item[0]->category?->name,
                 'type' => $item[0]->type->name,
                 'image' => $item[0]->image,
                 'times_ordered' => count($item),
                 'detail' => $item->pluck('detail')->all()
             ];
         })->sortByDesc('times_ordered')->values();
+
+        $groupProducts = function ($items) {
+            return collect($items)->groupBy('id')->map(function($item) {
+                $product = $item[0];
+
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'times_ordered' => count($item),
+                    'detail' => $item->pluck('detail')->all(),
+                ];
+            })->sortByDesc('times_ordered')->values();
+        };
+
+        $groupSpecialMenus = collect($columnProducts['special_menus'])->groupBy('id')->map(function($item) {
+            return [
+                'id' => $item[0]['id'],
+                'name' => $item[0]['name'],
+                'product_name' => $item[0]['product_name'],
+                'times_ordered' => count($item),
+                'detail' => collect($item)->pluck('detail')->all(),
+            ];
+        })->sortByDesc('times_ordered')->values();
         
-        return response()->json($products);
+        return response()->json([
+            'categories' => Category::query()->orderBy('id')->get(['id', 'name']),
+            'products' => $products,
+            'export_columns' => [
+                'first_dishes' => $groupProducts($columnProducts['first_dishes']),
+                'second_dishes' => $groupProducts($columnProducts['second_dishes']),
+                'side_dishes' => $groupProducts($columnProducts['side_dishes']),
+                'special_menus' => $groupSpecialMenus,
+                'beverages' => $groupProducts($columnProducts['beverages']),
+            ],
+        ]);
     }
 }

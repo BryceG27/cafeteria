@@ -7,17 +7,18 @@ import Column from 'primevue/column';
 import Select from 'primevue/select';
 import InputText from 'primevue/inputtext';
 import DatePicker from 'primevue/datepicker';
-import Fieldset from 'primevue/fieldset';
 import Divider from 'primevue/divider';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
+import Button from 'primevue/button';
+import { InputGroup, InputGroupAddon } from 'primevue';
 
 const toast = useToast();
 
 import { FilterMatchMode } from '@primevue/core/api';
 
 import { Head, router, useForm } from "@inertiajs/vue3";
-import { reactive, watch } from 'vue';
+import { reactive, watch, ref, onMounted } from 'vue';
 import moment from 'moment';
 import debounce from "lodash/debounce"
 
@@ -27,6 +28,16 @@ const props = defineProps({
     orders: Object,
     auth: Object,
     order_statuses: Array,
+});
+
+const periods = ref([]);
+const selectedPeriod = ref(null);
+
+onMounted(() => {
+    for(let year = 2025; year <= moment().year(); year++)
+        periods.value.push(`${year}-${year + 1}`);
+
+    selectedPeriod.value = moment().month() + 1 <= 8 ? periods.value.filter(p => p == (moment().year() - 1) + '-' + moment().year())[0] : periods.value.filter(p => p == moment().year() + '-' + (moment().year() + 1))[0];    
 });
 
 watch(
@@ -77,21 +88,24 @@ const updateOrderStatus = (event) => {
     });
 }
 
-const onPage = debounce((page = 1) => {
-    router.get(route('orders.index'),
-        { 
-            page : page,
-            child_name : filters.child_name?.value,
-            order_date : filters.order_date.value ? (filters.order_date.value).toISOString() : null,
-            created_at: filters.created_at.value ? (filters.created_at.value).toISOString() : null,
-            status : filters['status_info.value'].value,
-        },
-        {
-            preserveState : true,
-            preserveScroll : true,
-            replace : true
-        })
-}, 300)
+const getOrderQuery = (page = 1) => ({
+    page,
+    period: selectedPeriod.value,
+    child_name: filters.child_name?.value,
+    order_date: filters.order_date.value ? filters.order_date.value.toISOString() : null,
+    created_at: filters.created_at.value ? filters.created_at.value.toISOString() : null,
+    status: filters['status_info.value'].value,
+});
+
+const loadOrders = (page = 1) => {
+    router.get(route('orders.index'), getOrderQuery(page), {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+};
+
+const onPage = debounce((page = 1) => loadOrders(page), 300);
 
 </script>
 <template>
@@ -102,6 +116,7 @@ const onPage = debounce((page = 1) => {
 
         <div class="content">
             <BaseBlock title="Ordini clienti" contentClass="pb-3">
+
                 <DataTable
                     striped-rows
                     :value="orders.data"
@@ -113,11 +128,29 @@ const onPage = debounce((page = 1) => {
                     filterDisplay="row"
                     lazy
                     paginator
-                    :rows="50"
+                    :rows="25"
                     :totalRecords="orders.total"
                     @page="onPage($event.page + 1)"
-                    @filter="onPage(1)""
+                    @filter="onPage(1)"
                 >
+                    <template #header>
+                        <div class="row justify-content-end align-items-center">
+                            <div class="col-md-2 text-end">
+                                <label class="m-0">Mostra dati del:</label>
+                            </div> 
+                            <div class="col-md-2">
+                                 <InputGroup>
+                                    <Select 
+                                        v-model="selectedPeriod"
+                                        :options="periods"
+                                    />
+                                    <InputGroupAddon>
+                                        <Button icon="fa fa-check" @click="onPage(1)" />
+                                    </InputGroupAddon>
+                                </InputGroup>
+                            </div>
+                        </div>
+                    </template>
                     <template #empty>
                         <div class="p-4 text-center">
                             <i class="fa fa-exclamation-triangle fa-2x"></i>
@@ -188,6 +221,19 @@ const onPage = debounce((page = 1) => {
                                             <em class="fs-12">Contorno</em>
                                         </div>
                                     </div>
+
+                                    <template v-if="data.beverage">
+                                        <Divider class="my-1" />
+
+                                        <div class="row py-1">
+                                            <div class="col-md-10 offset-md-1">
+                                                <span class="fs-14" style="font-weight: 500;" v-text="data.beverage.name" />
+                                                <br>
+                                                <em class="fs-12">Bibita</em>
+                                            </div>
+                                        </div>
+                                    </template>
+
                                 </div>
 
                                 <div class="col-md-10 border rounded-2 px-0" :class="{'rounded-start-0' : data.customer.child_allergies != undefined, 'rounded-end-0' : data.notes != undefined, 'col-md-12' : data.customer.child_allergies == undefined && data.notes == undefined, 'col-md-11' : data.customer.child_allergies == undefined || data.notes == undefined}" v-else-if="data.special_menu">

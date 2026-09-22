@@ -14,6 +14,7 @@ use App\Services\StripePaymentRegistrar;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use PayPal\Auth\OAuthTokenCredential;
@@ -26,6 +27,9 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
+        $period = $request->period ?? (Carbon::now()->setTimezone('Europe/Rome')->month <= 8 ? (Carbon::now()->setTimezone('Europe/Rome')->year - 1) . '-' . Carbon::now()->setTimezone('Europe/Rome')->year : Carbon::now()->setTimezone('Europe/Rome')->year . '-' . (Carbon::now()->setTimezone('Europe/Rome')->year + 1));
+        $years = explode('-', $period);
+
         if(Auth::user()->user_group_id == 3) {
             $orders_to_be_paid = [];
             if($request->has('orders'))
@@ -46,8 +50,10 @@ class OrderController extends Controller
                 'orders_to_be_paid' => $orders_to_be_paid,
             ]);
         } else {
+
             return Inertia::render('Orders/Index', [
-                'orders' => Order::when(isset($request->child_name), function($query) use ($request) {
+                'orders' => Order::whereBetween('order_date', [$years[0] . "-09-01", $years[1] . "-08-31"])
+                    ->when(isset($request->child_name), function($query) use ($request) {
                     $query->whereHas('customer', function($query) use ($request) {
                         $query->where('child', 'like', "%{$request->child_name}%");
                     });
@@ -63,7 +69,7 @@ class OrderController extends Controller
                                     })
                                     ->with(['customer', 'first_dish', 'second_dish', 'side_dish', 'beverage', 'menu', 'special_menu.product'])
                                     ->orderBy('created_at', 'desc')
-                                    ->paginate(50)
+                                    ->paginate(25)
                                     ->through(function ($order) {
 
                     $order->status_info = $order->get_status();
@@ -80,7 +86,10 @@ class OrderController extends Controller
     public function dashboard() {
         $ordered_food = [];
 
-        $orders = Order::where('status', '<>', 2)->whereBetween('order_date', [Carbon::now()->startOfMonth()->format('Y-m-d'), Carbon::now()->endOfMonth()->format('Y-m-d')])->with(['customer', 'first_dish', 'second_dish', 'side_dish', 'menu', 'payments'])->orderBy('created_at', 'desc')->get()->map(function($order) use (&$ordered_food) {
+        $period = request()->period ?? (Carbon::now()->setTimezone('Europe/Rome')->month <= 8 ? (Carbon::now()->setTimezone('Europe/Rome')->year - 1) . '-' . Carbon::now()->setTimezone('Europe/Rome')->year : Carbon::now()->setTimezone('Europe/Rome')->year . '-' . (Carbon::now()->setTimezone('Europe/Rome')->year + 1));
+        $years = explode('-', $period);
+
+        $orders = Order::where('status', '<>', 2)->whereBetween('order_date', [Carbon::now()->startOfMonth()->format('Y-m-d'), Carbon::now()->endOfMonth()->format('Y-m-d')])->with(['customer', 'first_dish', 'second_dish', 'side_dish', 'beverage', 'menu', 'special_menu.product', 'payments'])->orderBy('created_at', 'desc')->get()->map(function($order) use (&$ordered_food) {
                     $order->status_info = $order->get_status();
 
                     $order->child_name = $order->customer->child . " ";
@@ -107,6 +116,8 @@ class OrderController extends Controller
                         $ordered_food[$order->side_dish->id]['ordered_by'][] = $order->customer->child;
                     }
 
+                    $order->menu_name = $order->special_menu ? $order->special_menu->name : ($order->menu ? $order->menu->name : '');
+
                     return $order;
                 });
 
@@ -115,7 +126,7 @@ class OrderController extends Controller
         arsort($ordered_food);
         $ordered_food = array_slice($ordered_food, 0, 5);
 
-        $payments = Payment::where('status', 1)->get();
+        $payments = Payment::whereBetween(DB::raw('DATE(created_at)'), [$years[0] . "-09-01", $years[1] . "-08-31"])->where('status', 1)->get();
 
         $customers = User::where('user_group_id', 3)->where('is_active', true)->with('user_group', 'orders', 'payments')->get();
         return Inertia::render('Dashboard', compact('orders', 'customers', 'ordered_food', 'orders_month_ago', 'payments'));

@@ -12,8 +12,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
-import InputGroup from 'primevue/inputgroup';
-import InputGroupAddon from 'primevue/inputgroupaddon';
 import DatePicker from 'primevue/datepicker';
 import Select from 'primevue/select';
 
@@ -94,12 +92,14 @@ const total_payments = (method = null) => {
 }
 
 const productsFiltered    = ref([]);
+const productCategories   = ref([]);
+const exportColumns        = ref({});
 const currentOrderView    = ref(1);
 const currentPaymentsView = ref(1);
 const paymentsFilterDate  = ref([]);
 
 const paymentsView = ref([
-    { label : 'Riassunto guadagni assoluto', id : 1 },
+    { label : 'Riassunto guadagni anno scolastico corrente', id : 1 },
     { label : 'Riassunto guadagni del mese', id : 2 },
     { label : 'Riassunto guadagni del giorno', id: 3 },
     { label : 'Riassunto guadagni per periodo', id: 4 }
@@ -111,12 +111,27 @@ const ordersViews = ref([
     { label : 'Prodotti venduti', id: 3}
 ]);
 
+const productsForOrderView = computed(() => [
+    ...productsFiltered.value.map(product => ({
+        ...product,
+        is_special_menu: false,
+    })),
+    ...(exportColumns.value.special_menus || []).map(specialMenu => ({
+        id: `special-menu-${specialMenu.id}`,
+        special_menu_id: specialMenu.id,
+        name: specialMenu.product_name,
+        product_name: specialMenu.name,
+        type: specialMenu.product_name ? `Menù special - ${specialMenu.name}` : 'Menù special',
+        times_ordered: specialMenu.times_ordered,
+        detail: specialMenu.detail,
+        is_special_menu: true,
+    })),
+]);
+
 
 const filteredOrders = computed(() => {
     return props.orders.filter(order => currentOrderView.value == 1 ? true : order.order_date == moment().format('YYYY-MM-DD')).filter(order => order_date_filter.value == null ? true : moment(order_date_filter.value).format('YYYY-MM-DD') == order.order_date)
 })
-
-const filterOrders = () => {}
 
 const selectedDateType = computed(() => {
     if(productFilters.filterType)
@@ -185,7 +200,7 @@ const expandedRows          = ref([]);
 const productsExpandedRows  = ref([]);
 const filters = ref({
     child_name : { value : null, matchMode : FilterMatchMode.CONTAINS },
-    'menu.name' : { value : null, matchMode : FilterMatchMode.CONTAINS },
+    menu_name : { value : null, matchMode : FilterMatchMode.CONTAINS },
     order_date : { value : null, matchMode: FilterMatchMode.DATE_IS},
     'status_info.value' : { value : null, matchMode : FilterMatchMode.EQUALS}
 })
@@ -470,50 +485,144 @@ const filter_products_by_date = () => {
     axios.get(route('products.filter-by-date', {
         filterType : productFilters.filterType, selectedDate : productFilters.selectedDate
     })).then(response => {
-        productsFiltered.value = response.data
+        productsFiltered.value = response.data.products;
+        productCategories.value = response.data.categories;
+        exportColumns.value = response.data.export_columns;
     });
 }
 
 const export_products_filtered = (data) => {
-    // If data is given, use it, otherwise productsFiltered
-    const products = data ? [data] : productsFiltered.value;
-    const doc = new jsPDF();
+    const selectedDate = moment(productFilters.selectedDate).format('DD/MM/YYYY');
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 10;
+    const columnGap = 4;
+    const columnCount = 5;
+    const columnWidth = (pageWidth - (margin * 2) - (columnGap * (columnCount - 1))) / columnCount;
+    const contentTop = 42;
+    const contentBottom = pageHeight - 10;
+    const categoryColors = [
+        [37, 99, 235],
+        [5, 150, 105],
+        [217, 119, 6],
+        [147, 51, 234],
+    ];
+    const columns = [
+        { key: 'first_dishes', title: 'PRIMO PIATTO' },
+        { key: 'second_dishes', title: 'SECONDO PIATTO' },
+        { key: 'side_dishes', title: 'CONTORNO' },
+        { key: 'special_menus', title: 'MENÙ SPECIALE' },
+        { key: 'beverages', title: 'BIBITA' },
+    ].map(column => ({
+        ...column,
+        products: data
+            ? (column.key === 'special_menus'
+                ? (data.is_special_menu
+                    ? (exportColumns.value?.[column.key] || []).filter(menu => menu.id === data.special_menu_id)
+                    : [])
+                : (data.is_special_menu || column.key === 'beverages'
+                    ? []
+                    : (exportColumns.value?.[column.key] || []).filter(product => product.id === data.id)))
+            : (exportColumns.value?.[column.key] || []),
+    }));
 
-    // Central title
-    const selectedDate = moment(productFilters.selectedDate).format('DD-MM-YYYY');
+    const drawPageHeader = () => {
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, pageWidth, 29, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(19);
+        doc.text('Riepilogo ordini', margin, 12);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(203, 213, 225);
+        doc.text(`Data: ${selectedDate}`, margin, 20);
+        doc.text('Dettaglio ordini', pageWidth - margin, 20, { align: 'right' });
 
-    doc.setFontSize(18);
-    doc.text(`Ordini giorno ${selectedDate}`, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+        columns.forEach((column, index) => {
+            const x = margin + index * (columnWidth + columnGap);
+            const [red, green, blue] = categoryColors[index % categoryColors.length];
+            doc.setFillColor(red, green, blue);
+            doc.roundedRect(x, 34, columnWidth, 5, 1.5, 1.5, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.text(column.title, x + 3, 37.5);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`${column.products.length}`, x + columnWidth - 3, 37.5, { align: 'right' });
+        });
+    };
 
-    let y = 35;
-    products.forEach((product, idx) => {
-        doc.setFontSize(14);
-        doc.text(`${product.name} (${product.times_ordered})`, 20, y);
-        y += 8;
-        if(product.detail && product.detail.length > 0) {
-            product.detail.forEach((detail) => {
-                doc.setFontSize(11);
-                doc.text(`- ${detail.customer.child}`, 30, y);
-                y += 7;
-                if (y > doc.internal.pageSize.getHeight() - 20) {
-                    doc.addPage();
-                    y = 20;
-                }
-            });
-        } else {
-            doc.setFontSize(11);
-            doc.text('Nessun cliente', 30, y);
-            y += 7;
-        }
-        y += 5;
-        if (y > doc.internal.pageSize.getHeight() - 20) {
-            doc.addPage();
-            y = 20;
+    const addPage = () => {
+        doc.addPage();
+        drawPageHeader();
+    };
+
+    drawPageHeader();
+
+    columns.forEach((column, columnIndex) => {
+        let y = contentTop;
+
+        column.products.forEach(product => {
+            const [red, green, blue] = categoryColors[columnIndex % categoryColors.length];
+            const customers = product.detail?.length
+                ? product.detail.map(detail => detail.customer?.child || 'Cliente non indicato')
+                : ['Nessun cliente'];
+            // Reserve space on the right for the portions count so long names never overlap it.
+            const quantityWidth = 20;
+            const productTextWidth = columnWidth - 8 - quantityWidth;
+            const productLines = doc.splitTextToSize(product.name || 'Prodotto non indicato', productTextWidth);
+            const subtitleLines = product.product_name
+                ? doc.splitTextToSize(product.product_name, columnWidth - 8)
+                : [];
+            const customerLines = customers.flatMap(customer => doc.splitTextToSize(`• ${customer}`, columnWidth - 8));
+            const cardHeight = 13 + (productLines.length * 4) + (subtitleLines.length * 3.2) + (customerLines.length * 3.5) + 4;
+
+            if (y + cardHeight > contentBottom) {
+                addPage();
+                y = contentTop;
+            }
+
+            const cardX = margin + columnIndex * (columnWidth + columnGap);
+            doc.setFillColor(248, 250, 252);
+            doc.setDrawColor(226, 232, 240);
+            doc.roundedRect(cardX, y, columnWidth, cardHeight, 2, 2, 'FD');
+            doc.setFillColor(red, green, blue);
+            doc.roundedRect(cardX, y, 2.5, cardHeight, 1, 1, 'F');
+
+            doc.setTextColor(15, 23, 42);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            const nameY = y + 6;
+            doc.text(productLines, cardX + 5, nameY, { lineHeightFactor: 1.05 });
+
+            const quantityY = y + 5.5;
+            doc.setTextColor(red, green, blue);
+            doc.setFontSize(9);
+            doc.text(`${product.times_ordered || 0} porzioni`, cardX + columnWidth - 4, quantityY, { align: 'right' });
+
+            doc.setTextColor(71, 85, 105);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(product.product_name ? 6.8 : 7.5);
+            const subtitleY = nameY + (productLines.length * 4);
+            if (subtitleLines.length)
+                doc.text(subtitleLines, cardX + 5, subtitleY, { lineHeightFactor: 1.05 });
+            const customersY = subtitleY + (subtitleLines.length ? subtitleLines.length * 3.2 + 2 : 2);
+            doc.setFontSize(7.5);
+            doc.text(customerLines, cardX + 5, customersY, { lineHeightFactor: 1.05 });
+            y += cardHeight + 4;
+        });
+        if (column.products.length === 0) {
+            const x = margin + columnIndex * (columnWidth + columnGap);
+            doc.setTextColor(100, 116, 139);
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(8);
+            doc.text('Nessun prodotto', x + 3, y + 6);
         }
     });
 
     const title = data ? `Ordini Prodotto ${data.name} ${selectedDate}.pdf` : `Ordini Prodotti ${selectedDate}.pdf`;
-
     doc.save(title);
 }
 
@@ -882,18 +991,24 @@ onMounted (() => {
                             </div>
                         </template>
                         <template #expansion="{ data }">
-                            <div class="p-4">
-                                <h5>Prodotti nel menu</h5>
-                                <table class="table">
-                                    <thead>
-                                        <tr>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <template v-if="data.menu">
                                             <th>Primo piatto</th>
                                             <th>Secondo piatto</th>
                                             <th>Contorno</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
+                                        </template>
+                                        <template v-else-if="data.special_menu">
+                                            <th>Nome Menù</th>
+                                            <th>Prodotto</th>
+                                        </template>
+                                        <th>Bibita</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <template v-if="data.menu">
                                             <td>
                                                 <span v-if="data.first_dish" v-text="data.first_dish.name" />
                                                 <span v-else>---</span>
@@ -904,6 +1019,71 @@ onMounted (() => {
                                             </td>
                                             <td>
                                                 <span v-if="data.side_dish" v-text="data.side_dish.name" />
+                                                <span v-else>---</span>
+                                            </td>
+                                        </template>
+                                        <template v-else-if="data.special_menu">
+                                            <td>
+                                                <span v-if="data.special_menu" v-text="data.special_menu.name" />
+                                                <span v-else>---</span>
+                                            </td>
+                                            <td>
+                                                <span v-if="data.special_menu.product" v-text="data.special_menu.product.name" />
+                                                <span v-else>---</span>
+                                            </td>
+                                        </template>
+                                        <td>
+                                            <span v-if="data.beverage" v-text="data.beverage.name" />
+                                            <span v-else>---</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="p-4" v-if="false">
+                                <h5>Prodotti nel menu</h5>
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <template v-if="data.menu">
+                                                <th>Primo piatto</th>
+                                                <th>Secondo piatto</th>
+                                                <th>Contorno</th>
+                                            </template>
+                                            <template v-else-if="data.special_menu">
+                                                <th>Nome Menù</th>
+                                                <th>Prodotto</th>
+                                            </template>
+                                            <th>Bibita</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <template v-if="data.menu">
+                                                <td>
+                                                    <span v-if="data.first_dish" v-text="data.first_dish.name" />
+                                                    <span v-else>---</span>
+                                                </td>
+                                                <td>
+                                                    <span v-if="data.second_dish" v-text="data.second_dish.name" />
+                                                    <span v-else>---</span>
+                                                </td>
+                                                <td>
+                                                    <span v-if="data.side_dish" v-text="data.side_dish.name" />
+                                                    <span v-else>---</span>
+                                                </td>
+                                            </template>
+                                            <template v-else-if="data.special_menu">
+                                                <td>
+                                                    <span v-if="data.special_menu" v-text="data.special_menu.name" />
+                                                    <span v-else>---</span>
+                                                </td>
+                                                <td>
+                                                    <span v-if="data.special_menu.product" v-text="data.special_menu.product.name" />
+                                                    <span v-else>---</span>
+                                                </td>
+                                            </template>
+                                            <td>
+                                                <span v-if="data.beverage" v-text="data.beverage.name" />
                                                 <span v-else>---</span>
                                             </td>
                                         </tr>
@@ -941,7 +1121,7 @@ onMounted (() => {
                                 </div>
                             </template>
                         </Column>
-                        <Column style="width: 25%" header="Nome" field="menu.name" :showFilterMenu="false">
+                        <Column style="width: 25%" header="Nome" field="menu_name" :showFilterMenu="false">
                             <template #filter="{ filterModel, filterCallback }">
                                 <div class="d-flex align-items-center gap-2">
                                     <InputText 
@@ -1007,46 +1187,45 @@ onMounted (() => {
                         paginator
                         :rows="10"
                         v-if="currentOrderView === 3"
-                        :value="productsFiltered"
+                        :value="productsForOrderView"
                         v-model:expandedRows="productsExpandedRows"
                     >
                         <template #expansion="{ data }">
-                            <div style="overflow-y: auto; max-height: 20rem;">
-                                <table class="table table-info rounded-2">
+                            <div class="table-responsive customer-orders-table-wrapper">
+                                <table class="table table-sm align-middle mb-0 customer-orders-table">
                                     <thead>
                                         <tr>
-                                            <th style="width: 40%">Cliente</th>
-                                            <th style="width: 35%">Note</th>
-                                            <th style="width: 25%">Data</th>
+                                            <th>Cliente</th>
+                                            <th>Note</th>
+                                            <th class="text-end">Data ordine</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr v-for="(detail, index) in data.detail" :key="index">
-                                            <td v-text="detail.customer.child" />
-                                            <td v-text="detail.notes ? detail.notes : '---'" />
-                                            <td>{{ moment(detail.order_date).format('DD/MM/YYYY') }}</td>
+                                            <td>
+                                                <span class="fw-medium" v-text="detail.customer?.child || 'Cliente non indicato'" />
+                                            </td>
+                                            <td>
+                                                <span v-if="detail.notes" class="customer-note" v-text="detail.notes" />
+                                                <span v-else class="text-muted">Nessuna nota</span>
+                                            </td>
+                                            <td class="text-end text-muted small">
+                                                {{ moment(detail.order_date).format('DD/MM/YYYY') }}
+                                            </td>
+                                        </tr>
+                                        <tr v-if="!data.detail?.length">
+                                            <td colspan="3" class="text-center text-muted py-3">Nessun cliente associato</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
-                                
                         </template>
                         <template #header>
                             <div class="row align-items-center">
-                                <div class="pb-3 col-12 col-md-2 px-0 order-3 order-md-1">
-                                    <button 
-                                        class="btn btn-sm btn-alt-danger w-100"
-                                        type="button"
-                                        @click="export_products_filtered(null)"
-                                    >
-                                        <i class="fa fa-file-pdf me-1"></i>
-                                        Esporta
-                                    </button>
-                                </div>
-                                <div class="pb-3 col-12 col-md-4 offset-md-3 order-md-2 order-1">
+                                <div class="pb-2 col-12 col-md-4 order-md-2 order-1">
                                     <div class="d-md-flex align-items-center">
-                                        <label class="form-label w-100 d-md-none text-center" for="filter-for">Filtra per:</label>
-                                        <label class="form-label w-25 d-md-inline d-none" for="filter-for">Filtra per:</label>
+                                        <label class="w-100 d-md-none text-center" for="filter-for">Filtra per:</label>
+                                        <label class="w-25 d-md-inline d-none" for="filter-for">Filtra per:</label>
                                         <Select
                                             class="w-100"
                                             inputClass="w-100"
@@ -1057,37 +1236,49 @@ onMounted (() => {
                                         />
                                     </div>
                                 </div>
-                                <div class="pb-3 col-md-3 order-md-3 order-2">
-                                    <div class="d-flex align-items-center">
-                                        <DatePicker 
-                                            class="w-100"
-                                            inputClass="w-100"
-                                            date-format="dd/mm/yy"
-                                            v-model="productFilters.selectedDate"
-                                            :placeholder="selectedDateType"
-                                        />
-                                        <button 
-                                            class="btn btn-alt-success rounded-start-0" 
-                                            @click.prevent="filter_products_by_date"
-                                            :disabled="!productFilters.selectedDate"
-                                        >
-                                            <i class="fa fa-search"></i>
-                                        </button>
-                                    </div>
+                                
+                                <div class="pb-2 col-md-4 order-md-3 order-2">
+                                    <DatePicker 
+                                        class="w-100"
+                                        inputClass="w-100"
+                                        date-format="dd/mm/yy"
+                                        v-model="productFilters.selectedDate"
+                                        :placeholder="selectedDateType"
+                                    />
+                                </div>
+                                <div class="pb-2 col-md-2 order-3">
+                                    <button 
+                                        class="btn btn-sm btn-alt-success w-100" 
+                                        @click.prevent="filter_products_by_date"
+                                        :disabled="!productFilters.selectedDate"
+                                    >
+                                        <i class="fa fa-search me-1"></i>
+                                        Cerca
+                                    </button>
+                                </div>
+                                <div class="pb-2 col-md-2 order-4">
+                                    <button 
+                                        class="btn btn-sm btn-alt-danger w-100"
+                                        type="button"
+                                        @click="export_products_filtered(null)"
+                                    >
+                                        <i class="fa fa-file-pdf me-1"></i>
+                                        Esporta
+                                    </button>
                                 </div>
                             </div>
                         </template>
                         <template #empty>
                             <div class="p-4 text-center">
                                 <i class="fa fa-exclamation-triangle fa-2x"></i>
-                                <p class="mt-2">Nessun prodotto trovato</p>
+                                <p class="mt-2">Nessun prodotto o menù speciale trovato</p>
                             </div>
                         </template>
                         <Column style="width: 5%" expander />
                         <Column style="width: 5%">
                             <template #body="{ data }">
                                 <button 
-                                    class="btn-link link-danger"
+                                    class="btn btn-link link-danger"
                                     type="button"
                                     @click="export_products_filtered(data)"
                                 >
@@ -1095,16 +1286,7 @@ onMounted (() => {
                                 </button>
                             </template>
                         </Column>
-                        <Column style="width: 45%" header="Nome" field="name">
-                            <template #body="{ data }">
-                                <Link
-                                    :href="route('products.show', data.id)"
-                                    class="text-decoration-none"
-                                    target="_blank"
-                                    v-text="data.name"
-                                />
-                            </template>
-                        </Column>
+                        <Column style="width: 45%" header="Nome" field="name" />
                         <Column style="width: 30%" header="Tipologia" field="type" />
                         <Column style="width: 15%" header="Quantità" field="times_ordered" />
                     </DataTable>
@@ -1126,5 +1308,73 @@ onMounted (() => {
 
     .bg-warning-light {
         background-color: rgba(255, 193, 7, 0.15) !important;
+    }
+
+    .customer-orders-panel {
+        padding: 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: .75rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    }
+
+    .customer-orders-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 50%;
+        color: #2563eb;
+        background-color: #dbeafe;
+    }
+
+    .customer-orders-table-wrapper {
+        border: 1px solid #e2e8f0;
+        border-radius: .5rem;
+        background-color: #fff;
+    }
+
+    .customer-orders-table thead th {
+        padding: .65rem .75rem;
+        color: #64748b;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        background-color: #f8fafc;
+        border-bottom-color: #e2e8f0;
+    }
+
+    .customer-orders-table tbody td {
+        padding: .7rem .75rem;
+        border-bottom-color: #f1f5f9;
+    }
+
+    .customer-orders-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .customer-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.8rem;
+        height: 1.8rem;
+        flex: 0 0 1.8rem;
+        border-radius: 50%;
+        color: #1d4ed8;
+        font-size: .75rem;
+        font-weight: 700;
+        background-color: #dbeafe;
+    }
+
+    .customer-note {
+        display: inline-block;
+        max-width: 100%;
+        padding: .25rem .5rem;
+        border-radius: .35rem;
+        color: #475569;
+        font-size: .8rem;
+        background-color: #f1f5f9;
     }
 </style>

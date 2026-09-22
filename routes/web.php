@@ -13,6 +13,7 @@ use App\Http\Controllers\UserController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Inertia\Inertia;
 
 Route::get('/update', function() {
@@ -38,7 +39,9 @@ Route::get('/storage-link', function() {
 });
 
 Route::post('/sign-in', [ProfileController::class, 'sign_in'])->name('profile.sign-in');
-Route::post('/payments/webhook/stripe', [PaymentController::class, 'stripe_webhook'])->name('payments.webhook.stripe');
+Route::post('/payments/webhook/stripe', [PaymentController::class, 'stripe_webhook'])
+    ->withoutMiddleware(ValidateCsrfToken::class)
+    ->name('payments.webhook.stripe');
 
 Route::middleware(['auth' , 'verified'])->group(function () {
     /* Orders */
