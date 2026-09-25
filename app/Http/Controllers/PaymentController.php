@@ -19,7 +19,6 @@ use Stripe\Checkout\Session;
 use Illuminate\Support\Facades\Log;
 use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Api\Payment as PayPalPayment;
-use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
 use UnexpectedValueException;
 
@@ -51,11 +50,6 @@ class PaymentController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        /* $validate['status'] = 1; // Completed
-        $validate['order_id'] = null;
-
-        Payment::create($validate); */
-
         Credit::create([
             'amount_available' => $validate['amount'],
             'total' => $validate['amount'],
@@ -66,7 +60,7 @@ class PaymentController extends Controller
         return redirect()->back()->with('message', 'Pagamento e credito aggiunti con successo.');
     }
 
-    public function stripe_webhook(Request $request) {
+    public function stripe_webhook(Request $request, StripePaymentRegistrar $stripePaymentRegistrar) {
         $endpoint_secret = env('STRIPE_WEBHOOK_SECRET');
 
         $payload = $request->getContent();
@@ -81,43 +75,14 @@ class PaymentController extends Controller
             return response('Invalid signature', 400);
         }
 
-        if($event->type == 'checkout.session.completed') {
-            $session = $event->data->object;
+        if (in_array($event->type, ['checkout.session.completed', 'checkout.session.async_payment_succeeded'], true)) {
+            $payment = $stripePaymentRegistrar->registerFromSession($event->data->object);
 
-            $order_ids = explode('-', $session->metadata->orders);
-
-            $orders = Order::whereIn('id', $order_ids)->where('status', '!=', 1)->where('to_be_paid', '!=', 0)->get();
-
-            if(count($orders) != 0) {
-                $payment = Payment::create([
-                    'user_id' => $session->metadata->user_id,
-                    'amount' => $session->amount_total / 100,
-                    'payment_date' => Carbon::now()->format('Y-m-d'),
-                    'notes' => 'Pagamento effettuato tramite Stripe. ID Transazione: ' . $session->payment_intent,
-                    'status' => 1,
-                    'payment_method_id' => 3,
-                ]);
-    
-                if ($payment) {
-                    Log::info('Stripe Webhook - Payment Created for orders', [
-                        'orders' => $payment->orders()->pluck('orders.id')->all(),
-                    ]);
-                }
-    
-                foreach ($orders as $order) {
-                    $total_amount = $order->total_amount;
-                    $to_be_paid = $order->to_be_paid;
-                    $order->update([
-                        'to_be_paid' => 0,
-                        'status' => 1,
-                        'payment_method' => 3,
-                    ]);
-    
-                    $order->payments()->attach($payment->id, ['amount' => $total_amount - $to_be_paid]);
-                }
-            }
-                
-
+            Log::info('Stripe Webhook - Checkout Session processed', [
+                'event_id' => $event->id,
+                'session_id' => $event->data->object->id ?? null,
+                'payment_id' => $payment?->id,
+            ]);
         }
 
         return response('Webhook handled', 200);

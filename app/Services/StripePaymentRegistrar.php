@@ -40,25 +40,28 @@ class StripePaymentRegistrar
         }
 
         $sessionId = $this->getSessionValue($session, 'id');
+        $paymentIntentId = $this->stripePaymentResolver->getPaymentIntentIdFromSession($session);
 
-        return DB::transaction(function () use ($session, $sessionId, $orders) {
+        return DB::transaction(function () use ($session, $sessionId, $paymentIntentId, $orders) {
             $paymentData = [
                 'user_id' => $orders->first()->customer_id,
                 'amount' => $this->getAmountFromSession($session) ?? $orders->sum('to_be_paid'),
                 'payment_date' => Carbon::now()->setTimezone('Europe/Rome')->format('Y-m-d'),
-                'notes' => $orders->count() === 1
+                'notes' => ($orders->count() === 1
                     ? "Pagamento effettuato tramite Stripe. Ordine: {$orders->first()->id}"
-                    : 'Pagamento effettuato tramite Stripe per ordini: ' . $orders->pluck('id')->implode(', '),
+                    : 'Pagamento effettuato tramite Stripe per ordini: ' . $orders->pluck('id')->implode(', '))
+                    . ($paymentIntentId ? " ID Transazione: {$paymentIntentId}" : ''),
                 'status' => 1,
                 'payment_method_id' => 3,
-                'stripe_payment_id' => $this->stripePaymentResolver->getPaymentIntentIdFromSession($session),
+                'stripe_payment_id' => $paymentIntentId,
             ];
 
             if (Schema::hasColumn('payments', 'receipt_requested')) {
                 $paymentData['receipt_requested'] = $this->receiptWasRequested($session);
             }
 
-            $payment = Payment::updateOrCreate(
+            // Stripe may redeliver an event; preserve the original payment row.
+            $payment = Payment::firstOrCreate(
                 ['stripe_session_id' => $sessionId],
                 $paymentData
             );
