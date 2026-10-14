@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use PayPal\Auth\OAuthTokenCredential;
@@ -216,6 +217,11 @@ class OrderController extends Controller
         $menu = SpecialMenu::find($validate['special_menu_id']);
 
         $validate['order_date'] = Carbon::create($request->order_date)->setTimezone('Europe/Rome')->format('Y-m-d');
+        $now = now()->setTimezone('Europe/Rome');
+
+        if($now->format('Y-m-d') == $menu->validity_date && $now->format('H:i') >= '10:00')
+            return redirect()->back()->withErrors(['order_date' => 'Non è possibile ordinare un menu per oggi.']);
+
         $validate['special_menu_id'] = $menu->id;
         $validate['subtotal_amount'] = $menu->price;
         $validate['total_amount'] = $menu->price;
@@ -231,7 +237,10 @@ class OrderController extends Controller
      */
     public function edit(Order $order)
     {
-       $startDate = Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
+        if($order->special_menu_id)
+            return redirect()->route('orders.edit.special-menu', ['order' => $order->id]);
+
+        $startDate = Carbon::now()->startOfWeek(Carbon::MONDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
         $endDate = Carbon::now()->endOfWeek(Carbon::SUNDAY)->setTimezone('Europe/Rome')->format('Y-m-d');
 
         if(in_array(Carbon::now()->locale('it_IT')->dayName, ['sabato', 'domenica'])) {
@@ -248,6 +257,15 @@ class OrderController extends Controller
             'order' => $order->load('customer'),
             'beverage' => Product::get_beverage()->get(),
             'order_statuses' => Order::get_statuses(),
+        ]);
+    }
+
+    public function edit_special(Order $order) {
+        return Inertia::render('Orders/Edit-Special', [
+            'menus' => SpecialMenu::where('active', true)->with('product')->get(),
+            'order' => $order->load('customer'),
+            'statuses' => Order::get_statuses(),
+            'beverage' => Product::get_beverage()->get()
         ]);
     }
 
@@ -401,6 +419,15 @@ class OrderController extends Controller
 
     public function confirm_multiples(Request $request, StripePaymentRegistrar $stripePaymentRegistrar) {
         if($request->payment_method == 3) {
+
+            $orders = Order::whereIn('id', explode('-', $request->orders))->get();
+
+            Log::info('Stripe Fallback - Checkout Session in process', [
+                'order_ids' => $request->orders ?? [],
+                'user_id' => $orders->first()->customer_id ?? null,
+                'amount' => $orders->sum('total_amount') ?? null,
+            ]);
+
             $payment = $stripePaymentRegistrar->registerFromSessionId($request->session_id);
 
             if(!$payment)

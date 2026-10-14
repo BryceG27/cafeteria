@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CustomerController extends Controller
@@ -15,7 +14,7 @@ class CustomerController extends Controller
     public function index()
     {
         return Inertia::render('Customers/Index', [
-            'customers' => User::select(['*', DB::raw('CONCAT(name, " ", surname) AS description')])->where('user_group_id', 3)->with('user_group', 'orders', 'payments')->get()
+            'customers' => User::get_customers()->orderBy('surname')->with('user_group', 'orders', 'payments')->get()
         ]);
     }
 
@@ -29,9 +28,8 @@ class CustomerController extends Controller
 
         $customer->orders = $customer->orders()->orderBy('created_at', 'desc')->get()->map(function($order) {
             $order->status_info = $order->get_status();
-            $order->first_dish = $order->first_dish;
-            $order->second_dish = $order->second_dish;
-            $order->side_dish = $order->side_dish;
+            $order->load(['menu', 'special_menu.product', 'first_dish', 'second_dish', 'side_dish', 'beverage']);
+
             return $order;
         });
 

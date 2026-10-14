@@ -25,13 +25,11 @@ class StripePaymentRegistrar
 
     public function registerFromSession(StripeObject|array|null $session): ?Payment
     {
-        if (!$session || !$this->getSessionValue($session, 'id')) {
+        if (!$session || !$this->getSessionValue($session, 'id'))
             return null;
-        }
 
-        if ($this->getSessionValue($session, 'payment_status') !== 'paid') {
+        if ($this->getSessionValue($session, 'payment_status') !== 'paid')
             return null;
-        }
 
         $orders = $this->getOrdersFromSession($session);
 

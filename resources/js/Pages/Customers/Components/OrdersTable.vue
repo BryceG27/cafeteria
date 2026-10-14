@@ -1,7 +1,8 @@
 <script setup>
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
+import Divider from 'primevue/divider';
 
 import { Link } from "@inertiajs/vue3";
 import moment from 'moment';
@@ -36,42 +37,71 @@ const emit = defineEmits(['on-status-change']);
                             <p class="mt-2">Nessun ordine inserito</p>
                         </div>
                     </template>
-                    <Column class="text-center" v-if="auth.user.user_group_id == 1">
-                        <template #body="{ data }">
-                            <Link
-                                :href="route('orders.edit', data.id)"
-                                class="btn btn-alt-info btn-sm"
-                            >
-                                <i class="fa fa-eye"></i>
-                            </Link>
-                        </template>
-                    </Column>
+                    <Column header="#" field="id" class="text-center" v-if="auth.user.user_group_id == 1" />
                     <Column header="Prodotti">
                         <template #body="{ data }">
-                            <div class="row">
-                                <div class="col-md-10 px-0">
-                                    <table class="table table-bordered rounded-2 h-100">
-                                        <tbody>
-                                            <tr v-if="data.first_dish">
-                                                <td class="py-2">
-                                                    <strong>Primo:</strong> <span v-text="data.first_dish.name" />
-                                                </td>
-                                            </tr>
-                                            <tr v-if="data.second_dish">
-                                                <td class="py-2">
-                                                    <strong>Secondo:</strong> <span v-text="data.second_dish.name" />
-                                                </td>
-                                            </tr>
-                                            <tr v-if="data.side_dish">
-                                                <td class="py-2">
-                                                    <strong>Contorno:</strong> <span v-text="data.side_dish.name" />
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                            <div class="col-md-12 border rounded-2 px-0" v-if="data.menu">
+                                <div class="row py-1" v-if="data.first_dish">
+                                    <div class="col-md-10 offset-md-1">
+                                        <span class="fs-14" style="font-weight: 500;" v-text="data.first_dish.name" />
+                                        <br>
+                                        <em class="fs-12">Primo piatto</em>
+                                    </div>
                                 </div>
+
+                                <Divider class="my-1" v-if="data.first_dish && data.second_dish" />
+
+                                <div class="row py-1" v-if="data.second_dish">
+                                    <div class="col-md-10 offset-md-1">
+                                        <span class="fs-14" style="font-weight: 500;" v-text="data.second_dish.name" />
+                                        <br>
+                                        <em class="fs-12">Secondo piatto</em>
+                                    </div>
+                                </div>
+
+                                <Divider class="my-1" v-if="data.second_dish && data.side_dish" />
+
+                                <div class="row py-1" v-if="data.side_dish">
+                                    <div class="col-md-10 offset-md-1">
+                                        <span class="fs-14" style="font-weight: 500;" v-text="data.side_dish.name" />
+                                        <br>
+                                        <em class="fs-12">Contorno</em>
+                                    </div>
+                                </div>
+
+                                <template v-if="data.beverage">
+                                    <Divider class="my-1" />
+
+                                    <div class="row py-1">
+                                        <div class="col-md-10 offset-md-1">
+                                            <span class="fs-14" style="font-weight: 500;" v-text="data.beverage.name" />
+                                            <br>
+                                            <em class="fs-12">Bibita</em>
+                                        </div>
+                                    </div>
+                                </template>
+
                             </div>
 
+                            <div class="col-md-12 border rounded-2 px-0" v-else-if="data.special_menu">
+                                <div class="row">
+                                    <div class="col-md-10 offset-md-1">
+                                        <span class="fs-14" style="font-weight: 500;" v-text="data.special_menu.product?.name" />
+                                        <br>
+                                        <em class="fs-12">Prodotto del menù</em>
+                                    </div>
+                                </div>
+
+                                <Divider class="my-1" />
+
+                                <div class="row">
+                                    <div class="col-md-10 offset-md-1">
+                                        <span class="fs-14" style="font-weight: 500;" v-text="data.beverage?.name" />
+                                        <br>
+                                        <em class="fs-12">Bibita</em>
+                                    </div>
+                                </div>
+                            </div>
                         </template>
                     </Column>
                     <Column header="Totale">
@@ -94,7 +124,7 @@ const emit = defineEmits(['on-status-change']);
                             <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
                         </template>
                         <template #editor="{ data }">
-                            <Dropdown 
+                            <Select 
                                 v-model="data.status"
                                 :options="order_statuses" 
                                 optionLabel="label" 

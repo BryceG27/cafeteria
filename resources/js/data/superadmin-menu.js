@@ -53,7 +53,7 @@ export default {
       icon : "fa fa-calendar-alt"
     },
     {
-      name : "Menu Extra",
+      name : "Menu Special",
       to : route('special-menus.index'),
       group : 'special-menus',
       icon : "fa fa-table-list"

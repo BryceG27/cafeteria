@@ -107,9 +107,9 @@ const total_credit = computed(() => {
                         </div>
                     </template>
 
-                    <Column field="order_id" style="width: 15%" header="Ordine #">
+                    <Column field="orders" style="width: 15%" header="Ordine #">
                         <template #body="{ data }">
-                            {{ data.order_id }}
+                            {{ data.orders.map(order => order.id).join(', ') }}
                         </template>
                     </Column>
                     <Column field="amount" style="width: 15%" header="Totale">

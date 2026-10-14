@@ -3,13 +3,14 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Http\Request;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class User extends Authenticatable
 {
@@ -71,6 +72,10 @@ class User extends Authenticatable
         ],[
             'password.required_if' => 'La password è richiesta durante la creazione di un nuovo utente.',
         ]);
+    }
+
+    public static function get_customers() {
+        return SELF::select(['*', DB::raw('CONCAT(surname, " ", name) AS description')])->where('user_group_id', 3);
     }
 
     public function user_group() {

@@ -10,9 +10,9 @@ use PayPal\Api\Payer;
 use App\Models\Credit;
 use PayPal\Api\Amount;
 use App\Models\Payment;
-use App\Services\StripePaymentRegistrar;
 use PayPal\Api\Transaction;
 use PayPal\Rest\ApiContext;
+use App\Services\StripePaymentRegistrar;
 use Illuminate\Http\Request;
 use PayPal\Api\RedirectUrls;
 use Stripe\Checkout\Session;
@@ -75,14 +75,19 @@ class PaymentController extends Controller
             return response('Invalid signature', 400);
         }
 
+        Log::info('Stripe Webhook - Checkout Session in process', [
+            'order_ids' => $event?->data?->object?->metadata?->orders ?? [],
+            'user_id' => $event?->data?->object?->metadata?->user_id ?? null,
+            'amount' => $event?->data?->object?->amount_total ?? null,
+        ]);
+
         if (in_array($event->type, ['checkout.session.completed', 'checkout.session.async_payment_succeeded'], true)) {
             $payment = $stripePaymentRegistrar->registerFromSession($event->data->object);
-
-            Log::info('Stripe Webhook - Checkout Session processed', [
-                'event_id' => $event->id,
-                'session_id' => $event->data->object->id ?? null,
-                'payment_id' => $payment?->id,
-            ]);
+            // Log::info('Stripe Webhook - Checkout Session processed', [
+            //     'event_id' => $event->id,
+            //     'session_id' => $event->data->object->id ?? null,
+            //     'payment_id' => $payment?->id,
+            // ]);
         }
 
         return response('Webhook handled', 200);
@@ -131,27 +136,37 @@ class PaymentController extends Controller
     }
 
     public function checkout_with_stripe($orders, bool $receiptRequested = false) {
+        $orders = $orders instanceof Order ? collect([$orders]) : $orders;
+        $orders->load([
+            'customer',
+            'first_dish',
+            'second_dish',
+            'side_dish',
+            'beverage',
+            'special_menu.product',
+        ]);
+
         $customer = $orders[0]->customer;
         $payment_name = '';
 
         if(count($orders) == 1) {
             if($orders[0]->menu)
-                $payment_name = "Pagamento menù: " . $orders[0]->menu->name . " " . Carbon::create($orders[0]->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y');
+                $payment_name = "Ordine #{$orders[0]->id} - menù: " . $orders[0]->menu->name . " " . Carbon::create($orders[0]->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y');
             else if($orders[0]->special_menu)
-                $payment_name = "Pagamento menù special: " . $orders[0]->special_menu->name . " " . Carbon::create($orders[0]->order_date)->setTimezone('Europe/Rome')->format('d/m/Y');
+                $payment_name = "Ordine #{$orders[0]->id} - menù special: " . $orders[0]->special_menu->name . " " . Carbon::create($orders[0]->order_date)->setTimezone('Europe/Rome')->format('d/m/Y');
 
             $to_be_paid = $orders[0]->to_be_paid * 100;
             $success_url = route('orders.confirm-order', ['order' => $orders[0]->id]) . '?payment_method=3&session_id={CHECKOUT_SESSION_ID}';
             $ids = $orders[0]->id;
         } else {
-            $payment_name = "Pagamento dei menù";
+            $payment_name = "Ordini Multipli | #" . implode(' #', $orders->pluck('id')->toArray());
             $to_be_paid = 0;
             $ids = [];
             $orders->map(function($order) use (&$payment_name, &$to_be_paid, &$ids) {
-                if($order->menu)
-                    $payment_name .= " | " . $order->menu->name . " " . Carbon::create($order->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y');
+                if($order->menu) 
+                    $payment_name .= " - " . $order->menu->name . " " . Carbon::create($order->menu->validity_date)->setTimezone('Europe/Rome')->format('d/m/Y');
                 else if($order->special_menu)
-                    $payment_name .= " | " . $order->special_menu->name . " " . Carbon::create($order->special_menu->order_date)->setTimezone('Europe/Rome')->format('d/m/Y');
+                    $payment_name .= " - " . $order->special_menu->name . " " . Carbon::create($order->special_menu->order_date)->setTimezone('Europe/Rome')->format('d/m/Y');
 
                 $to_be_paid += $order->to_be_paid * 100;
                 $ids[] = $order->id;
@@ -163,20 +178,51 @@ class PaymentController extends Controller
 
         Stripe::setApiKey(env('STRIPE_SECRET'));
 
+        $metadata = [
+            'orders' => (string) $ids,
+            'user_id' => (string) auth()->id(),
+            'receipt_requested' => $receiptRequested ? '1' : '0',
+            'customer_name' => (string) ($customer?->name ?? ''),
+            'customer_surname' => (string) ($customer?->surname ?? ''),
+            'customer_email' => (string) ($customer?->email ?? ''),
+            'customer_child' => (string) ($customer?->child ?? ''),
+        ];
+
+        // Stripe limits metadata values to 500 characters and keys to 40 characters.
+        // Keeping one key per order makes the product summary immediately readable
+        // in the Stripe dashboard and preserves the relationship with the order ID.
+        foreach ($orders as $order) {
+            $products = collect([
+                'Primo' => $order->first_dish,
+                'Secondo' => $order->second_dish,
+                'Contorno' => $order->side_dish,
+                'Bevanda' => $order->beverage,
+            ]);
+
+            if ($order->special_menu?->product) {
+                $products->prepend($order->special_menu->product, 'Prodotto menù special');
+            }
+
+            $productSummary = $products
+                ->filter()
+                ->map(fn ($product, $type) => "{$type}: {$product->name} (#{$product->id})")
+                ->implode(' | ');
+
+            $metadataKey = "order_{$order->id}_products";
+            $metadata[$metadataKey] = mb_substr($productSummary, 0, 500);
+        }
+
+        $lineItems = $orders
+            ->flatMap(fn (Order $order) => $this->getStripeLineItems($order))
+            ->values()
+            ->all();
+
         $sessionData = [
             'payment_method_types' => ['card'],
-            'line_items' => [[
-                'price_data' => [
-                    'currency' => 'eur',
-                    'product_data' => [
-                        'name' => $payment_name
-                    ],
-                    'unit_amount' => $to_be_paid,
-                ],
-                'quantity' => 1,
-            ]],
+            'line_items' => $lineItems,
             'payment_intent_data' => [
                 'description' => $payment_name,
+                'metadata' => $metadata,
             ],
             'invoice_creation' => [
                 'enabled' => true
@@ -184,11 +230,7 @@ class PaymentController extends Controller
             'mode' => 'payment',
             'success_url' => $success_url,
             'cancel_url' => route('orders.payment-not-completed'),
-            'metadata' => [
-                'orders' => $ids,
-                'user_id' => auth()->id(),
-                'receipt_requested' => $receiptRequested ? '1' : '0',
-            ]
+            'metadata' => $metadata,
         ];
 
         if ($customer?->email) {
@@ -204,6 +246,98 @@ class PaymentController extends Controller
         return response()->json([
             'id' => $session->id
         ]);
+    }
+
+    private function getStripeLineItems(Order $order): array
+    {
+        $orderPrefix = "Ordine #{$order->id}";
+        $items = [];
+
+        if ($order->special_menu) {
+            $productNames = collect([
+                $order->special_menu->product?->name,
+                $order->beverage?->name,
+            ])->filter()->implode(' + ');
+
+            $items[] = [
+                'name' => "$orderPrefix - {$order->special_menu->name}" . ($productNames ? ": {$productNames}" : ''),
+                'amount' => $this->stripeAmount($order->special_menu->price),
+            ];
+        } elseif ($order->menu) {
+            $baseProductNames = collect([
+                $order->first_dish?->name,
+                $order->side_dish?->name,
+            ])->filter()->implode(' + ');
+
+            if ($order->first_dish && $order->second_dish) {
+                $items[] = [
+                    'name' => "$orderPrefix - {$baseProductNames}",
+                    'amount' => $this->stripeAmount($order->menu->price),
+                ];
+                $items[] = [
+                    'name' => "$orderPrefix - {$order->second_dish->name}",
+                    'amount' => $this->stripeAmount($order->menu->second_price),
+                ];
+            } else {
+                $baseProductNames = collect([
+                    $order->first_dish?->name,
+                    $order->second_dish?->name,
+                    $order->side_dish?->name,
+                ])->filter()->implode(' + ');
+
+                $items[] = [
+                    'name' => "$orderPrefix - {$baseProductNames}",
+                    'amount' => $this->stripeAmount($order->menu->price),
+                ];
+            }
+
+            if ($order->beverage) {
+                $items[] = [
+                    'name' => "$orderPrefix - {$order->beverage->name}",
+                    'amount' => $this->stripeAmount($order->beverage->price),
+                ];
+            }
+        }
+
+        $total = $this->stripeAmount($order->to_be_paid);
+        $items = collect($items)->filter(fn ($item) => $item['amount'] > 0)->values();
+
+        if ($items->isEmpty()) {
+            $items->push([
+                'name' => $orderPrefix,
+                'amount' => $total,
+            ]);
+        } else {
+            // Apply any discount or rounding difference to the first line item.
+            $firstItem = $items->first();
+            $firstItem['amount'] += $total - $items->sum('amount');
+            $items->put(0, $firstItem);
+
+            // Never send a zero/negative Stripe line item if the order discount
+            // is greater than the first product amount.
+            if ($items[0]['amount'] <= 0) {
+                $items = collect([[
+                    'name' => $orderPrefix,
+                    'amount' => $total,
+                ]]);
+            }
+        }
+
+        return $items->map(fn ($item) => [
+            'price_data' => [
+                'currency' => 'eur',
+                'product_data' => [
+                    'name' => $item['name'],
+                ],
+                'unit_amount' => $item['amount'],
+            ],
+            'quantity' => 1,
+        ])->all();
+    }
+
+    private function stripeAmount($amount): int
+    {
+        return (int) round(((float) $amount) * 100);
     }
 
     public function checkout_with_credit($orders) {

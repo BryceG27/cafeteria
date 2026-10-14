@@ -125,6 +125,9 @@ const checkSelectedOrders = () => {
     const originalLength = selectedOrders.value.length;
     selectedOrders.value = selectedOrders.value.filter(order => order.status == 0).filter(order => moment(order.order_date).isSameOrAfter(moment(), 'day'));
 
+    if(selectedOrders.value.length == 0)
+        return;
+
     if(moment().format('HH:mm') >= '10:00') {
         selectedOrders.value = selectedOrders.value.filter(order => {
             return moment(order.order_date).isAfter(moment(), 'day')
@@ -167,6 +170,16 @@ const total_to_be_paid = computed(() => {
     return parseFloat(selectedOrders.value.reduce((acc, order) => acc + parseFloat(order.to_be_paid), 0)).toFixed(2)
 })
 
+const getOrderMenuName = (order) => order.menu?.name ?? order.special_menu?.name ?? 'Ordine'
+
+const getOrderProducts = (order) => [
+    order.first_dish?.name,
+    order.second_dish?.name,
+    order.side_dish?.name,
+    order.beverage?.name,
+    order.special_menu?.product?.name,
+].filter(Boolean)
+
 </script>
 
 <template>
@@ -205,79 +218,90 @@ const total_to_be_paid = computed(() => {
             <Dialog
                 v-model:visible="showDialog"
                 modal
-                :header="get_checkout_title"
-                :style="{ width: '50rem', minHeight: '46vh', maxHeight: '60vh' }"
+                :style="{ width: 'min(94vw, 50rem)', maxHeight: '90vh' }"
+                class="checkout-dialog"
             >
-                <div class="container">
-                    <div class="row py-1" v-if="Object.keys($page.props.errors).length">
-                        <p class="text-warning" v-for="error in $page.props.errors" v-text="error" />
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <table class="table">
-                                <tbody>
-                                    <template v-if="selectedOrders.length <= 1">
-                                        <tr>
-                                            <th style="width: 40%">Menù</th>
-                                            <td style="width: 60%" v-text="selectedOrders[0]?.menu?.name" v-if="selectedOrders.length <= 1 && selectedOrders[0].menu" />
-                                            <td style="width: 60%" v-text="selectedOrders[0]?.special_menu?.name" v-else-if="selectedOrders.length <= 1 && selectedOrders[0].special_menu" />
-                                        </tr>
-                                        <tr v-if="selectedOrders.length == 1">
-                                            <th style="width: 40%">Data</th>
-                                            <td style="width: 60%" v-text="moment(selectedOrders[0]?.order_date).format('DD/MM/YYYY')" />
-                                        </tr>
-                                    </template>
-                                    <tr v-else>
-                                        <td class="w-100" colspan="2">
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th class="text-center" style="width: 10%"></th>
-                                                        <th style="width: 60%">Nome menù</th>
-                                                        <th class="text-center" style="width: 30%">Giorno</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr v-for="order in selectedOrders" :key="order.id">
-                                                        <td class="text-center">
-                                                            <button class="btn btn-link link-danger me-3" @click="selectedOrders = selectedOrders.filter(o => o.id !== order.id)">
-                                                                <i class="fa fa-minus"></i>
-                                                            </button>
-                                                        </td>
-                                                        <td v-if="order.menu" v-text="order.menu.name" />
-                                                        <td v-else-if="order.special_menu" v-text="order.special_menu.name" />
-                                                        <td class="text-center" v-text="moment(order.order_date).format('DD/MM/YYYY')" />
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th style="width: 40%">Totale</th>
-                                        <td style="width: 60%" v-text="total_orders + ' €'" />
-                                    </tr>
-                                    <tr>
-                                        <th style="width: 40%">Da pagare</th>
-                                        <td style="width: 60%" v-text="total_to_be_paid + ' €'" />
-                                    </tr>
-                                    <tr v-if="credit_available > 0">
-                                        <th style="width: 40%">Credito disponibile</th>
-                                        <td style="width: 60%" v-text="credit_available + ' €'" />
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div class="form-check mt-3" v-if="can_request_stripe_receipt">
-                                <input 
-                                    class="form-check-input" 
-                                    type="checkbox" 
-                                    id="receipt-requested" 
-                                    v-model="receiptRequested"
-                                >
-                                <label class="form-check-label" for="receipt-requested">
-                                    Richiedi ricevuta via email
-                                </label>
-                            </div>
+                <template #header>
+                    <div class="checkout-dialog__header">
+                        <div class="checkout-dialog__icon">
+                            <i class="fa fa-receipt"></i>
                         </div>
+                        <div>
+                            <span class="checkout-dialog__eyebrow">Riepilogo pagamento</span>
+                            <h2 class="checkout-dialog__title">{{ get_checkout_title }}</h2>
+                        </div>
+                    </div>
+                </template>
+
+                <div class="py-1">
+                    <div class="alert alert-warning d-flex align-items-start gap-2 mb-3" v-if="Object.keys($page.props.errors).length">
+                        <i class="fa fa-circle-exclamation mt-1"></i>
+                        <div>
+                            <div v-for="error in $page.props.errors" :key="error" v-text="error" />
+                        </div>
+                    </div>
+
+                    <div class="row g-3 overflow-auto px-1" style="max-height: 31rem">
+                        <div
+                            v-for="order in selectedOrders"
+                            :key="order.id"
+                            :class="selectedOrders.length === 1 ? 'col-12 d-flex' : 'col-12 col-md-6 d-flex'"
+                        >
+                            <button
+                                v-if="selectedOrders.length > 1"
+                                class="btn btn-outline-danger btn-sm rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 align-self-center p-0 me-2"
+                                style="width: 1.65rem; height: 1.65rem"
+                                type="button"
+                                title="Rimuovi ordine"
+                                @click="selectedOrders = selectedOrders.filter(o => o.id !== order.id)"
+                            >
+                                <i class="fa fa-minus"></i>
+                            </button>
+                            <article class="flex-grow-1 h-100 p-3 border rounded-3 shadow-sm">
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="d-flex align-items-start justify-content-between gap-2">
+                                        <span class="badge text-bg-primary">Ordine #{{ order.id }}</span>
+                                        <span class="fw-bold text-nowrap">{{ parseFloat(order.to_be_paid).toFixed(2) }} €</span>
+                                    </div>
+                                    <div class="fw-semibold text-truncate mt-2">{{ getOrderMenuName(order) }}</div>
+                                    <div class="d-flex flex-wrap gap-2 text-muted small mt-2">
+                                        <span><i class="fa fa-calendar-day me-1"></i>{{ moment(order.order_date).format('DD/MM/YYYY') }}</span>
+                                        <span v-if="getOrderProducts(order).length" class="text-truncate" :title="getOrderProducts(order).join(' · ')">
+                                            <i class="fa fa-utensils me-1"></i>{{ getOrderProducts(order).join(' · ') }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+
+                    <table class="table mt-3 mb-0">
+                        <tbody>
+                            <tr>
+                                <th style="width: 40%">Totale</th>
+                                <td style="width: 60%" v-text="total_orders + ' €'" />
+                            </tr>
+                            <tr>
+                                <th style="width: 40%">Da pagare</th>
+                                <td style="width: 60%" v-text="total_to_be_paid + ' €'" />
+                            </tr>
+                            <tr v-if="credit_available > 0">
+                                <th style="width: 40%">Credito disponibile</th>
+                                <td style="width: 60%" v-text="credit_available + ' €'" />
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="form-check mt-3" v-if="can_request_stripe_receipt">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            id="receipt-requested"
+                            v-model="receiptRequested"
+                        >
+                        <label class="form-check-label" for="receipt-requested">
+                            Richiedi ricevuta via email
+                        </label>
                     </div>
                 </div>
                 <template #footer>
@@ -289,8 +313,8 @@ const total_to_be_paid = computed(() => {
                                     Paga con metodo elettronico
                                 </button>
                             </div>
-                            <div class="col-md-6" v-if="credit_available > 0" @click.prevent="payWithCreditAvailable" :disabled="disablePayButton">
-                                <button class="btn btn-cash btn-lg w-100" :disabled="total_to_be_paid == 0">
+                            <div class="col-md-6" v-if="credit_available > 0" @click.prevent="payWithCreditAvailable">
+                                <button class="btn btn-cash btn-lg w-100" :disabled="total_to_be_paid == 0 || disablePayButton">
                                     <i class="fa fa-euro-sign me-1"></i>
                                     Paga con credito residuo
                                 </button>
@@ -367,12 +391,12 @@ const total_to_be_paid = computed(() => {
 
                     <Column style="width: 10%" class="text-center">
                         <template #body="{ data }">
-                            <Link
+                            <!-- <Link
                                 :href="route('orders.edit', data.id)"
                                 class="btn btn-alt-info btn-sm d-none d-xl-inline"
                             >
                                 <i class="fa fa-eye"></i>
-                            </Link>
+                            </Link> -->
 
                             <button class="btn btn-alt-secondary btn-sm ms-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" v-if="data.status != 3 && (moment(data.created_at).format('YYYY-MM-DD') <= moment().format('YYYY-MM-DD'))">
                                 ...
@@ -557,4 +581,40 @@ const total_to_be_paid = computed(() => {
     background-color: #3d9b2c;
     color: #ffffff;
 }
+
+.checkout-dialog__header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.checkout-dialog__icon {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border-radius: 0.85rem;
+    background: linear-gradient(135deg, #6772e5, #4f46b8);
+    color: #fff;
+    font-size: 1.1rem;
+    box-shadow: 0 0.4rem 1rem rgba(79, 70, 184, 0.25);
+}
+
+.checkout-dialog__eyebrow {
+    display: block;
+    margin-bottom: 0.1rem;
+    color: #6b7280;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.checkout-dialog__title {
+    margin: 0;
+    color: #1f2937;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
 </style>

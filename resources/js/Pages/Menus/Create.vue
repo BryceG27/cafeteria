@@ -45,12 +45,24 @@ const form = useForm({
                 <template #options>
                     <button
                         class="btn btn-alt-success btn-sm"
+                        type="button"
                         @click="submit"
+                        v-if="!form.processing"
                     >
-                        <i class="fa fa-save me-1">
-                        </i>
+                        <i class="fa fa-save me-1"></i>
                         Salva
                     </button>
+
+                    <button
+                        class="btn btn-alt-success btn-sm"
+                        type="button"
+                        disabled
+                        v-else
+                    >
+                        <i class="fa fa-spinner fa-spin me-1"></i>
+                        Salvataggio...
+                    </button>
+
                     <Link
                         class="btn btn-alt-danger btn-sm"
                         :href="route('menus.index')"

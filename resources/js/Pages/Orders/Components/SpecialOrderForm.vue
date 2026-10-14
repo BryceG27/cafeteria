@@ -159,9 +159,19 @@ const minDate = moment().hours() >= 10 ? moment().add(1, 'day').toDate() : momen
                 <button 
                     class="btn btn-alt-info btn-sm w-75"
                     type="submit"
+                    v-if="!form.processing"
                 >
                     <i class="fa fa-dollar-sign me-1"></i>
                     Conferma e paga
+                </button>
+                <button 
+                    class="btn btn-alt-info btn-sm w-75" 
+                    type="button"
+                    disabled
+                    v-else
+                >
+                    <i class="fa fa-spinner fa-spin me-1"></i>
+                    Salvataggio ordine...
                 </button>
             </div>
             <div class="col-md-4 col-sm-12 text-center pb-3 pb-md-0">

@@ -90,14 +90,15 @@ const total_credit = computed(() => {
                         </div>
                     </template>
 
-                    <Column field="order_id" style="width: 15%" header="Ordine #">
+                    <Column field="orders" style="width: 15%" header="Ordine/i #">
                         <template #body="{ data }">
-                            <Link
+                            {{ data.orders.map(order => order.id).join(', ') }}
+                            <!-- <Link
                                 :href="route('orders.edit', data.id)"
                                 class="link-info"
                             >
                                 {{ data.order_id }}
-                            </Link>
+                            </Link> -->
                         </template>
                     </Column>
                     <Column field="amount" style="width: 15%" header="Totale">

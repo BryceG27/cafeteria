@@ -419,6 +419,7 @@ const goBack = () => {
                         dateFormat="dd/mm/yy"
                         placeholder="gg/mm/aaaa"
                         readonly
+                        disabled
                     />
                     <InputError class="mt-2" :message="errors.order_date" />
                 </div>
@@ -481,9 +482,19 @@ const goBack = () => {
                 <button 
                     class="btn btn-alt-info btn-sm w-75"
                     type="submit"
+                    v-if="!form.processing"
                 >
                     <i class="fa fa-dollar-sign me-1"></i>
                     Conferma e paga
+                </button>
+                <button 
+                    class="btn btn-alt-info btn-sm w-75" 
+                    type="button"
+                    disabled
+                    v-else
+                >
+                    <i class="fa fa-spinner fa-spin me-1"></i>
+                    Salvataggio ordine...
                 </button>
             </div>
             <div class="col-md-4 col-sm-12 text-md-start text-center pb-3 pb-md-0" v-if="form.id != undefined" >
