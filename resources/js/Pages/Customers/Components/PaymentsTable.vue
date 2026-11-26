@@ -3,14 +3,21 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputNumber from 'primevue/inputnumber';
 import FloatLabel from 'primevue/floatlabel';
+import MultiSelect from 'primevue/multiselect';
+import DatePicker from 'primevue/datepicker';
 
-import { Link } from "@inertiajs/vue3";
-import { computed } from "vue";
-
+import { computed, ref } from "vue";
 import moment from 'moment';
+import { FilterMatchMode } from '@primevue/core/api';
 
 const props = defineProps({
     customer: Object,
+});
+
+const filters = ref({
+    status: { value: null, matchMode: FilterMatchMode.IN },
+    "method.id": { value: null, matchMode: FilterMatchMode.IN },
+    created_at: { value: null, matchMode: FilterMatchMode.DATE_IS }
 });
 
 const total_paid = computed(() => {
@@ -25,6 +32,14 @@ const total_credit = computed(() => {
     return props.customer.credits.reduce((total, credit) => {
         return total + parseFloat(credit.amount_available);
     }, 0);
+});
+
+const statuses = computed(() => {
+    return props.customer.payments.map(payment => payment.status);
+})
+
+const paymentMethods = computed(() => {
+    return props.customer.payments.map(payment => payment.method);
 });
 
 </script>
@@ -106,18 +121,49 @@ const total_credit = computed(() => {
                             {{ parseFloat(data.amount).toFixed(2) }} &euro;
                         </template>
                     </Column>
-                    <Column field="method.name" style="width: 30%" header="Metodo di pagamento" />
-                    <Column field="created_at" style="width: 20%" header="Data">
+                    <Column filterField="method.id" field="method.name" style="width: 30%" header="Metodo di pagamento" :showFilterMatchModes="false" :showApplyButton="false">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <MultiSelect
+                                v-model="filterModel.value"
+                                :options="paymentMethods"
+                                optionLabel="name"
+                                optionValue="id"
+                                append-to="self"
+                                class="w-100"
+                                @update:modelValue="filterCallback"
+                            />
+                        </template>
+                    </Column>
+                    <Column field="created_at" style="width: 20%" header="Data" :showFilterMatchModes="false" :showApplyButton="false">
                         <template #body="{ data }">
                             {{ moment(data.created_at).format('DD/MM/YYYY') }}
                         </template>
+                        <template #filter="{ filterModel, filterCallback }">
+                            <DatePicker
+                                v-model="filterModel.value"
+                                append-to="self"
+                                class="w-100"
+                                @update:modelValue="filterCallback"
+                            />
+                        </template>
                     </Column>
-                    <Column field="status" style="width: 20%" header="Stato">
+                    <Column field="status" filterField="status.id" style="width: 20%" header="Stato" :showFilterMatchModes="false" :showApplyButton="false">
                         <template #body="{ data }">
                             <span :class="`badge text-bg-${data.status_info.color}`" v-text="data.status_info.label" />
                             <span class="badge text-bg-danger ms-2" v-if="data.order && data.order.status == 2">
                                 Ordine annullato
                             </span>
+                        </template>
+                        <template #filter="{ filterModel, filterCallback }">
+                            <MultiSelect
+                                v-model="filterModel.value"
+                                :options="paymentStatuses"
+                                optionLabel="label"
+                                optionValue="id"
+                                append-to="self"
+                                class="w-100"
+                                @update:modelValue="filterCallback"
+                            />
                         </template>
                     </Column>
                 </DataTable>

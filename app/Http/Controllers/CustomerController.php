@@ -39,7 +39,7 @@ class CustomerController extends Controller
         });
 
         return Inertia::render('Customers/Show', [
-            'customer' => $customer->load('user_group',  'credits'),
+            'customer' => $customer->load(['user_group',  'credits' => fn($query) => $query->orderBy('created_at', 'desc')]),
             'order_statuses' => Order::get_statuses(),
         ]);
     }

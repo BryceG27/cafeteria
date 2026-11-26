@@ -350,6 +350,7 @@ class PaymentController extends Controller
             foreach ($credit_available as $credit) {
                 if($credit->amount_available >= $order->to_be_paid) {
                     // The available credit is enough to cover the order total
+                    $total += $order->to_be_paid;
                     $to_be_paid -= $order->to_be_paid;
 
                     // Deduct the used amount from the credit
@@ -365,6 +366,7 @@ class PaymentController extends Controller
                     continue 2;
                 } else {
                     // Deduct the used amount from the credit (which will be zero now)
+                    $total += $credit->amount_available;
                     $to_be_paid -= $credit->amount_available;
                     $order->to_be_paid = $order->to_be_paid - $credit->amount_available;
                     $credit->amount_available = 0;
